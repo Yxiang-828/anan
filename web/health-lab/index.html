@@ -41,6 +41,35 @@
   </div>
 </div>
 <div id="privacy">Camera stays on this device — only the score leaves. 画面不离开设备, 只上传分数。</div>
+<div id="devtoast" style="display:none; font-family:system-ui; margin:8px 12px; padding:12px 14px;
+     border-radius:12px; background:#26324a; color:#dfe6f3; font-size:13.5px; line-height:1.5;
+     opacity:0; transition:opacity .25s ease">
+  <span id="devtoast-text"></span>
+  <div style="height:3px; background:rgba(255,255,255,.18); border-radius:2px; margin-top:8px; overflow:hidden">
+    <i id="devtoast-bar" style="display:block; height:100%; background:#35c26e; width:100%"></i></div>
+</div>
+<script>
+(async () => {
+  const game = new URLSearchParams(location.search).get('game') || 'heart-rate';
+  let cams = 0;
+  try { cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput').length; }
+  catch (e) { cams = navigator.mediaDevices ? 1 : 0; }
+  const isPhone = /Android|iPhone|iPad/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && innerWidth < 900);
+  const el = document.getElementById('devtoast'), txt = document.getElementById('devtoast-text'),
+        bar = document.getElementById('devtoast-bar');
+  let msg = '', sticky = false;
+  if (cams === 0) { msg = '⚠️ 这台设备没有摄像头 — 请用手机打开。 No camera here — open this on a phone.'; sticky = true;
+                    el.style.background = '#7a2d22'; }
+  else if (game === 'heart-rate' && !isPhone) msg = '💡 心率检查最好用手机 (后置镜头+闪光灯); 电脑摄像头信号会偏弱。 Heart rate works best on a phone (rear camera + flash) — a webcam signal is weak.';
+  else if (isPhone) msg = '✅ 手机很适合这个检查。 This phone is ideal for this check.';
+  else msg = '✅ 这台电脑的摄像头可以做这个检查。 This webcam works for this check.';
+  txt.textContent = msg;
+  el.style.display = 'block';
+  requestAnimationFrame(() => { el.style.opacity = '1';
+    if (!sticky) { bar.style.transition = 'width 7000ms linear'; requestAnimationFrame(() => bar.style.width = '0'); } });
+  if (!sticky) setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 300); }, 7000);
+})();
+</script>
 <script>
   const _g = new URLSearchParams(location.search).get('game') || 'heart-rate';
   document.querySelectorAll('#topbar .tabs a').forEach(a =>

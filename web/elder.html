@@ -120,9 +120,22 @@
   #gohome { display:none; text-align:center; text-decoration:none; background:var(--blue); color:#fff;
             border-radius:16px; padding:16px; font-size:20px; margin-bottom:12px; }
   #gohome.show { display:block; }
+  /* device-suggestion toast: appear → hold with draining bar → vanish */
+  #toast { position:absolute; left:14px; right:14px; bottom:calc(96px + env(safe-area-inset-bottom));
+           background:#2b2620; color:#fff; border-radius:16px; padding:14px 16px 10px; z-index:90;
+           box-shadow:0 8px 30px rgba(0,0,0,.35); opacity:0; transform:translateY(16px);
+           pointer-events:none; transition:opacity 250ms var(--ease-out), transform 250ms var(--ease-out); }
+  #toast.show { opacity:1; transform:translateY(0); pointer-events:auto; }
+  #toast .t-zh { font-size:17px; line-height:1.45; }
+  #toast .t-en { font-size:13px; opacity:.75; margin-top:3px; }
+  #toast .t-bar { height:3px; background:rgba(255,255,255,.25); border-radius:2px; margin-top:10px; overflow:hidden; }
+  #toast .t-bar i { display:block; height:100%; background:var(--green); width:100%; }
+  #toast.show .t-bar i { transition:width linear; width:0; }
+  #toast.warn { background:#7a2d22; } #toast.warn .t-bar i { background:var(--amber); }
   @media (prefers-reduced-motion: reduce) {
     .card, .btn, .tab, #holdbtn, .call, #sosbtn, #beat { transition:opacity 200ms ease; transform:none !important; }
     .bird { animation:none !important; }
+    #toast { transition:opacity 200ms ease; transform:none; }
   }
 </style>
 </head>
@@ -195,6 +208,7 @@
     </section>
 
   </div>
+  <div id="toast"><p class="t-zh"></p><p class="t-en"></p><div class="t-bar"><i></i></div></div>
   <nav id="tabs">
     <button class="tab on" data-s="home"><span class="ico">🏠</span>今天 Today</button>
     <button class="tab" data-s="talk"><span class="ico">🎙️</span>说话 Talk</button>
@@ -344,6 +358,41 @@ function show(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', s.id==='s-'+name));
 }
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>show(t.dataset.s)));
+
+/* device-aware suggestion toast (shows, drains, disappears; sticky if no camera) */
+let toastTimer=null;
+function toast(zh, en, ms=6000, warn=false){
+  const el=$('toast');
+  el.classList.toggle('warn', warn);
+  el.querySelector('.t-zh').textContent=zh;
+  el.querySelector('.t-en').textContent=en;
+  const bar=el.querySelector('.t-bar i');
+  bar.style.transition='none'; bar.style.width='100%';
+  requestAnimationFrame(()=>{ el.classList.add('show');
+    if(ms>0){ requestAnimationFrame(()=>{ bar.style.transition=`width ${ms}ms linear`; bar.style.width='0'; }); } });
+  clearTimeout(toastTimer);
+  if(ms>0) toastTimer=setTimeout(()=>el.classList.remove('show'), ms);
+}
+let camHintShown=false;
+async function healthDeviceHint(){
+  if(camHintShown) return; camHintShown=true;
+  let cams=0;
+  try{ cams=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='videoinput').length; }
+  catch(e){ cams=-1; }
+  const isPhone=/Android|iPhone|iPad/i.test(navigator.userAgent) || (navigator.maxTouchPoints>1 && innerWidth<900);
+  if(cams===0 || (cams===-1 && !navigator.mediaDevices)){
+    toast('这台设备没有摄像头 — 请用手机打开这个页面再检查。',
+          'No camera on this device — open this page on a phone instead.', 0, true);
+  } else if(isPhone){
+    toast('这台手机很适合做所有检查 — 心率请用后置镜头加闪光灯。',
+          'This phone is perfect for every check — heart rate uses the rear camera + flash.');
+  } else {
+    toast('笑一笑和坐立运动用这台电脑的摄像头就行; 心率检查建议用手机 (需要闪光灯)。',
+          'Smile & sit-stand work fine on this webcam; for heart rate use a phone (needs the flash).', 7000);
+  }
+}
+const _origShow = show;
+show = function(name){ _origShow(name); if(name==='health') healthDeviceHint(); };
 const deep=new URLSearchParams(location.search).get('s');
 if(deep) show(deep);
 
