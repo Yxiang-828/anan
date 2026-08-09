@@ -10,7 +10,7 @@
   "react": "https://esm.sh/react@19",
   "react-dom/client": "https://esm.sh/react-dom@19/client",
   "react/jsx-runtime": "https://esm.sh/react@19/jsx-runtime",
-  "@mediapipe/tasks-vision": "https://esm.sh/@mediapipe/tasks-vision@0.10.32",
+  "@mediapipe/tasks-vision": "/health-lab/mp-wrap.js",
   "useVoice-shim": "/health-lab/useVoice.js"
 } }
 </script>
@@ -41,6 +41,33 @@
   </div>
 </div>
 <div id="privacy">Camera stays on this device — only the score leaves. 画面不离开设备, 只上传分数。</div>
+<div id="stages" style="font-family:ui-monospace,monospace; font-size:11px; display:flex; gap:6px;
+     flex-wrap:wrap; padding:4px 12px 8px;"></div>
+<div id="laberr" style="display:none; font-family:system-ui; margin:0 12px 8px; padding:10px 12px;
+     border-radius:10px; background:#7a2d22; color:#ffd9d3; font-size:12.5px; line-height:1.5;
+     white-space:pre-wrap;"></div>
+<script>
+  /* stage strip + loud errors: a broken stage must SAY SO on the page */
+  const STAGES = ['react','page','mediapipe','camera','detect'];
+  const stEl = {};
+  const box = document.getElementById('stages');
+  STAGES.forEach(n => { const s = document.createElement('span');
+    s.style.cssText = 'padding:3px 8px;border-radius:6px;background:#1c2536;color:#8b98ac';
+    s.textContent = '○ ' + n; box.appendChild(s); stEl[n] = s; });
+  window.__labStage = (name, state, extra = '') => {
+    const s = stEl[name]; if (!s) return;
+    if (state === 'ok')  { s.style.background = '#173527'; s.style.color = '#6fdc9a'; s.textContent = '✓ ' + name + (extra ? ' ' + extra : ''); }
+    if (state === 'run') { s.style.background = '#20304d'; s.style.color = '#8fb4ff'; s.textContent = '… ' + name + (extra ? ' ' + extra : ''); }
+    if (state === 'fail'){ s.style.background = '#4d1d16'; s.style.color = '#ff9c8e'; s.textContent = '✗ ' + name + (extra ? ': ' + extra : ''); }
+  };
+  const errBox = document.getElementById('laberr'); const errs = [];
+  window.__labError = (m) => { errs.push(String(m).slice(0, 220));
+    errBox.textContent = '⚠️ ' + errs.slice(-3).join('\n⚠️ '); errBox.style.display = 'block'; };
+  window.addEventListener('error', e => __labError(e.message || e.type));
+  window.addEventListener('unhandledrejection', e => __labError(e.reason && (e.reason.message || e.reason)));
+  const _ce = console.error.bind(console);
+  console.error = (...a) => { __labError(a.map(x => x && (x.message || x)).join(' ')); _ce(...a); };
+</script>
 <div id="devtoast" style="display:none; font-family:system-ui; margin:8px 12px; padding:12px 14px;
      border-radius:12px; background:#26324a; color:#dfe6f3; font-size:13.5px; line-height:1.5;
      opacity:0; transition:opacity .25s ease">
@@ -82,9 +109,13 @@
    (On a desktop webcam, fingertip PPG has no torch — phone is the real venue.) */
 if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
   const orig = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+  const camOk = (s) => { try { const t = s.getVideoTracks()[0].getSettings();
+    window.__labStage && __labStage('camera', 'ok', `${t.width}×${t.height}`); } catch (e) {} return s; };
   navigator.mediaDevices.getUserMedia = async (c) => {
-    try { return await orig(c); }
+    window.__labStage && __labStage('camera', 'run');
+    try { return camOk(await orig(c)); }
     catch (e) {
+      window.__labStage && __labStage('camera', 'fail', e.name);
       if (c && c.video && (e.name === 'NotFoundError' || e.name === 'OverconstrainedError')) {
         console.warn('requested camera not found — falling back to any camera');
         return await orig({ video: true, audio: c.audio || false });
@@ -107,6 +138,7 @@ const GAMES = { 'heart-rate':'/health-lab/heart-rate.tsx',
 const game = new URLSearchParams(location.search).get('game') || 'heart-rate';
 const src = GAMES[game] || GAMES['heart-rate'];
 try {
+  __labStage('page', 'run');
   const tsx = await (await fetch(src)).text();
   const js = Babel.transform(tsx.replace(/^['"]use client['"];?\s*/, ''), {
     filename: src,
@@ -117,9 +149,13 @@ try {
   const mod = await import(URL.createObjectURL(blob));
   const React = await import('react');
   const { createRoot } = await import('react-dom/client');
+  __labStage('react', 'ok');
   const Page = mod.default;
   createRoot(document.getElementById('root')).render(React.createElement(Page));
+  __labStage('page', 'ok', game);
 } catch (e) {
+  __labStage('page', 'fail', String(e).slice(0, 80));
+  __labError(e);
   document.getElementById('root').innerHTML =
     `<div id="loading">This check could not load: ${String(e).slice(0,200)}<br>
      Needs internet for React/MediaPipe CDN, and HTTPS/localhost for the camera.</div>`;
