@@ -130,6 +130,7 @@
   <span class="badge" id="uptime">—</span>
   <span class="badge" id="conn">connecting…</span>
   <button id="langbtn" onclick="toggleLang()">中文</button>
+  <button id="resetbtn" style="background:#3a2222;border:1px solid #5a3030;color:#e0a0a0;border-radius:8px;padding:5px 12px;font:inherit;font-size:12px;cursor:pointer" onclick="doReset()">⟲ Reset</button>
   <div id="mascothead"><div id="mascot">🐤</div><div id="mstate">idle</div></div>
 </header>
 <div class="main">
@@ -293,6 +294,8 @@ const fsmEl=$('fsm');
 STATES.forEach(s=>{const d=document.createElement('div');d.className='state '+s;d.id='st-'+s;d.textContent=s;fsmEl.appendChild(d);});
 function setState(s){STATES.forEach(x=>$('st-'+x).classList.toggle('on',x===s));}
 function sc(name){fetch('/inject/scenario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});}
+function doReset(){ ACTS.forEach(a=>{a.ran=false;a.open=false;}); ACTS[0].open=true;
+  fetch('/reset',{method:'POST'}); }
 const M_EMOJI={idle:'🐤',sleep:'😴',alert:'🚨',think:'🤔',talk:'💬',work:'🛠️',fly:'🕊️',happy:'😊',listen:'👂',dizzy:'😵‍💫'};
 const sprites={};
 Object.keys(M_EMOJI).forEach(s=>{ const img=new Image();
@@ -374,6 +377,7 @@ es.onerror=()=>$('conn').textContent='○ reconnecting…';
 es.onmessage=m=>{
   const d=JSON.parse(m.data);
   if(d.kind==='hello'){ (d.history||[]).forEach(addEvent); mhold=0; refresh(d.state); }
+  if(d.kind==='reset'){ location.reload(); }
   if(d.kind==='event'){ addEvent(d.event); refresh(d.state); }
   if(d.kind==='family_card') addFamily(d);
 };

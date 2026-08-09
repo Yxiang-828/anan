@@ -45,7 +45,9 @@ from core.store import Store  # noqa: E402
 from core.kernel import Kernel  # noqa: E402
 from core import skills_anan  # noqa: E402
 
-RUNTIME = ROOT / "runtime"
+# ANAN_RUNTIME lets a dev instance run with its OWN state (port via PORT env) —
+# claude's test probes must never pollute the live demo's trace again
+RUNTIME = ROOT / os.environ.get("ANAN_RUNTIME", "runtime")
 RUNTIME.mkdir(exist_ok=True)
 
 clock = DemoClock()
@@ -768,6 +770,28 @@ async def elder_say(request: Request) -> dict:
 async def elder_sos() -> dict:
     kernel.submit("heartbeat", "elder_app", {"via": "SOS"})
     family_send("🆘 妈妈按了 SOS 按钮! 请立刻回电。", {})
+    return {"ok": True}
+
+
+@app.post("/reset")
+def reset() -> dict:
+    """One-key demo reset: wipe events/logs, FSM to IDLE, clock to real time.
+    Storyboard §6.4's 一键重置 — the next judge starts from a known state."""
+    with store._lock:
+        for table in ("events", "med_log", "mood_log", "conversations",
+                      "insights", "escalation_log", "kv"):
+            store._conn.execute(f"DELETE FROM {table}")
+        store._conn.commit()
+    kernel.loop.state = "IDLE"
+    kernel.loop.deadline = None
+    kernel.loop.channel_idx = 0
+    kernel.loop.contact_idx = 0
+    kernel.loop.extended = False
+    clock.reset()
+    elder_feed.clear()
+    store.event(kernel.clock.now().strftime("%Y-%m-%d %H:%M:%S"), "inject", "console",
+                {"reset": True}, effect="demo reset: state wiped, FSM IDLE, clock realtime")
+    _broadcast({"kind": "reset"})
     return {"ok": True}
 
 
