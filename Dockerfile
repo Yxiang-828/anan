@@ -8,5 +8,6 @@ COPY web/ web/
 COPY server.py .
 COPY config.default.json .
 COPY deliverables/ deliverables/
+COPY docs/ docs/
 ENV PYTHONUNBUFFERED=1
 CMD ["python", "server.py"]

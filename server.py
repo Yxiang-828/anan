@@ -366,6 +366,37 @@ def demo_mp4():
            JSONResponse({"error": "not bundled"}, status_code=404)
 
 
+@app.get("/story")
+def story_page():
+    from fastapi.responses import FileResponse
+    p = ROOT / "docs" / "story.html"
+    return FileResponse(p, media_type="text/html") if p.is_file() else \
+           JSONResponse({"error": "not bundled"}, status_code=404)
+
+
+# the story page links deliverables by filename (works as-is on GitHub Pages)
+@app.get("/AnAn-Deck-SyntaxError.pdf")
+def story_deck_alias():
+    return deck_pdf()
+
+
+@app.get("/AnAn-DemoVideo-SyntaxError.mp4")
+def story_video_alias():
+    return demo_mp4()
+
+
+@app.get("/story-assets/{name}")
+@app.get("/img/{name}")
+def story_asset(name: str, request: Request):
+    from fastapi.responses import FileResponse
+    sub = "story-assets" if "story-assets" in str(request.url.path) else "img"
+    p = (ROOT / "docs" / sub / name).resolve()
+    if not str(p).startswith(str((ROOT / "docs" / sub).resolve())) or not p.is_file():
+        return JSONResponse({"error": "not found"}, status_code=404)
+    media = {"jpg": "image/jpeg", "png": "image/png", "mp4": "video/mp4"}.get(p.suffix[1:], "application/octet-stream")
+    return FileResponse(p, media_type=media)
+
+
 @app.get("/healthz")
 def healthz() -> dict:
     return {"status": "ok", "fsm": kernel.loop.state, "uptime_h": kernel.snapshot()["uptime_h"],
