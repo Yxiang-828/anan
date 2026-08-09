@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AnAn — Team SyntaxError</title>
+<style>
+  @page { size: 1280px 720px; margin: 0; }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: system-ui, "PingFang SC", sans-serif; background:#000; }
+  .slide { width:1280px; height:720px; page-break-after:always; position:relative; overflow:hidden;
+           background:#10141f; color:#dfe6f3; padding:58px 72px; display:flex; flex-direction:column; }
+  .band { position:absolute; top:0; left:0; right:0; height:6px;
+          background:linear-gradient(90deg,#35c26e,#4f7cff,#f0a53c,#ef5350,#9b7ef0); }
+  .kicker { font-size:13px; letter-spacing:.22em; color:#f0a53c; text-transform:uppercase; margin-bottom:10px; }
+  h1 { font-size:56px; line-height:1.15; } h2 { font-size:38px; line-height:1.2; margin-bottom:10px; }
+  .zh { color:#7d8aa5; font-weight:400; }
+  p.lead { font-size:20px; color:#aeb9d0; line-height:1.55; }
+  .foot { position:absolute; bottom:26px; left:72px; right:72px; display:flex; justify-content:space-between;
+          font-size:12px; color:#5f6b85; }
+  .mono { font-family:ui-monospace,monospace; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:34px; flex:1; align-items:center; }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:22px; flex:1; align-items:center; }
+  img.shot { width:100%; border-radius:12px; border:1px solid #2a3350; }
+  .stat { text-align:center; padding:26px 10px; border:1px solid #2a3350; border-radius:16px; background:#1a2030; }
+  .stat b { display:block; font-size:58px; color:#fff; }
+  .stat span { font-size:15px; color:#8fb4ff; } .stat i { display:block; font-style:normal; font-size:12px; color:#5f6b85; margin-top:8px; }
+  .pipe { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:22px 0; }
+  .ph { padding:12px 16px; border:1px solid #2a3350; border-radius:10px; font-size:17px; color:#8b98ac; font-family:ui-monospace,monospace; }
+  .ph.hot { border-color:#35c26e; color:#fff; background:#12331f; }
+  .arrow { color:#3a4568; }
+  table { border-collapse:collapse; width:100%; font-size:14.5px; }
+  th { text-align:left; color:#f0a53c; font-size:12px; text-transform:uppercase; letter-spacing:.1em;
+       padding:7px 10px; border-bottom:1px solid #2a3350; }
+  td { padding:6.5px 10px; border-bottom:1px solid #1f2740; color:#aeb9d0; vertical-align:top; }
+  td:first-child { color:#6fdc9a; font-family:ui-monospace,monospace; white-space:nowrap; }
+  .tag { display:inline-block; border-radius:7px; padding:3px 10px; font-size:12.5px; margin:0 6px 6px 0; }
+  .t-g { background:#12331f; color:#6fdc9a; } .t-b { background:#1b2a4a; color:#8fb4ff; }
+  .t-a { background:#3a2b12; color:#f0c56a; } .t-r { background:#3a1a16; color:#ff9c8e; }
+  .t-p { background:#241b3d; color:#b79df0; }
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:30px; flex:1; }
+  ul { list-style:none; } li { font-size:17px; color:#aeb9d0; line-height:1.5; padding:7px 0 7px 26px; position:relative; }
+  li::before { content:"▸"; position:absolute; left:0; color:#35c26e; }
+  .quote { font-size:26px; color:#fff; border-left:4px solid #35c26e; padding-left:22px; margin:18px 0; line-height:1.4; }
+  .receipt { font-family:ui-monospace,monospace; font-size:14px; background:#101820; border:1px solid #21262d;
+             border-radius:10px; padding:14px 18px; color:#9db4d0; line-height:1.7; }
+  .receipt b { color:#b79df0; } .receipt .g { color:#6fdc9a; } .receipt .r { color:#ff9c8e; }
+</style>
+</head>
+<body>
+
+<!-- 1 · COVER -->
+<section class="slide"><div class="band"></div>
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; text-align:center">
+    <p class="kicker">Age Well · Social Good Challenge SG · AI Agent / Skills Track</p>
+    <h1 style="font-size:88px">安安 <span style="color:#35c26e">AnAn</span></h1>
+    <p style="font-size:30px; color:#8fb4ff; margin:14px 0 8px">Silence is an input.</p>
+    <p class="lead">A chatbot's input domain is {text}. AnAn's is <b style="color:#fff">{time, silence, state}</b> —<br>
+      an autonomous companion for seniors living alone.</p>
+    <p style="margin-top:26px; font-size:16px; color:#5f6b85" class="mono">live: anan-iax1.onrender.com · github.com/Yxiang-828/anan</p>
+  </div>
+  <div class="foot"><span>Team SyntaxError · Yao Xiang</span><span>安安 AnAn</span></div>
+</section>
+
+<!-- 2 · PROBLEM -->
+<section class="slide"><div class="band"></div>
+  <p class="kicker">The problem · 问题</p>
+  <h2>Living alone isn't the crisis. <span class="zh">无人知晓才是。</span></h2>
+  <div class="grid3">
+    <div class="stat"><b>88,400</b><span>seniors 65+ living alone in SG</span><i>doubled in 10 years · DOS/MOH 2024</i></div>
+    <div class="stat"><b>2×</b><span>depression risk when alone</span><i>Duke-NUS CARE 2018</i></div>
+    <div class="stat"><b>S$37k</b><span>avg. scam loss for 60+ victims</span><i>highest of all ages · SPF 2025</i></div>
+  </div>
+  <p class="lead">The dangerous moment is never a message. It's a morning where <b style="color:#fff">nothing happens.</b></p>
+  <div class="foot"><span>Team SyntaxError</span><span>2</span></div>
+</section>
+
+<!-- 3 · INSIGHT -->
+<section class="slide"><div class="band"></div>
+  <p class="kicker">The insight · 洞察</p>
+  <h2>Passive tools never meet her. <span class="zh">被动的工具, 等不到主动的她。</span></h2>
+  <div class="cols" style="align-items:center">
+    <div>
+      <ul>
+        <li>85.3% of 60+ are online — but only 34.7% have ever shopped online. <b style="color:#fff">Being online ≠ using apps.</b></li>
+        <li>Her health app's unread badge reads 99+.</li>
+        <li>A chatbot that waits for text simply does not exist for her.</li>
+      </ul>
+      <div class="quote">Chatbots read {text}.<br>AnAn reads {time, silence, state}.</div>
+    </div>
+    <div class="receipt">input domain — chatbot<br>&nbsp;&nbsp;{ text } <span class="r">← she never types. it never exists.</span><br><br>
+      input domain — 安安<br>&nbsp;&nbsp;{ <span class="g">time</span> } 07:30 came and went<br>
+      &nbsp;&nbsp;{ <span class="g">silence</span> } no touch for 61 minutes<br>
+      &nbsp;&nbsp;{ <span class="g">state</span> } meds unconfirmed · outside safe radius</div>
+  </div>
+  <div class="foot"><span>Team SyntaxError</span><span>3</span></div>
+</section>
+
+<!-- 4 · ORIGIN -->
+<section class="slide"><div class="band"></div>
+  <p class="kicker">The origin · 起点</p>
+  <h2>Not a chat window — an autonomy research program.</h2>
+  <p class="lead">Eighteen research artifacts on what makes an agent more than an LLM plus a scheduler.
+     The core law: <b style="color:#fff">WAKE ≠ THINK ≠ ACT</b> — a trigger is only the opportunity to inspect;
+     cognition is a separate decision; action is another.</p>
+  <div class="pipe">
+    <span class="ph">WAKE</span><span class="arrow">→</span><span class="ph">THINK</span><span class="arrow">→</span>
+    <span class="ph hot">REVALIDATE</span><span class="arrow">→</span><span class="ph hot">GATE</span><span class="arrow">→</span>
+    <span class="ph">ACT</span><span class="arrow">→</span><span class="ph hot">RECEIPT</span><span class="arrow">→</span><span class="ph">COMMIT</span>
+  </div>
+  <p class="lead">Every action, seven phases — <b style="color:#6fdc9a">every phase writes a receipt</b> into the store,
+     streamed live to the judges' console. Claims are not the interface. Receipts are.</p>
+  <div class="foot"><span>Team SyntaxError</span><span>4</span></div>
+</section>
+
+<!-- 5 · SKELETON -->
+<section class="slide"><div class="band"></div>
+  <p class="kicker">The skeleton · 骨架</p>
+  <h2>A state machine for one question: <span class="zh">她没回应, 然后呢?</span></h2>
+  <div class="grid2">
+    <div>
+      <p class="mono" style="font-size:15px; color:#8fb4ff; line-height:2">
+        IDLE → CHECKIN_SENT <span style="color:#5f6b85">(07:30 greeting arms 60′)</span><br>
+        &nbsp;→ SILENCE_1 <span style="color:#5f6b85">(retry, another channel)</span><br>
+        &nbsp;→ SILENCE_2 → ESCALATED <span style="color:#5f6b85">(daughter → son → neighbour)</span><br>
+        &nbsp;→ RESOLVED <span style="color:#5f6b85">(a button callback — never a promise)</span></p>
+      <ul>
+        <li>The contact tree <b style="color:#fff">actually walks</b> — per-hop idempotent receipts.</li>
+        <li><b style="color:#fff">Every touch is a heartbeat</b>: a med tap, a word — the net dissolves.</li>
+        <li>All windows are family-configured data, not code.</li>
+      </ul>
+    </div>
+    <img class="shot" src="img/master.png" alt="live FSM cascade">
+  </div>
+  <div class="foot"><span>Team SyntaxError</span><span>5</span></div>
+</section>
+
+<!-- 6 · EXPLORATION -->
+<section class="slide"><div class="band"></div>
+  <p class="kicker">The exploration · 设计过程</p>
+  <h2>93 needs, mapped without bias — then converged.</h2>
+  <div class="grid2">
+    <img class="shot" style="background:#fff" src="img/polygon.png" alt="93-word ternary scatter">
+    <div>
+      <ul>
+        <li>Three poles: the autonomous agent × the elderly × their needs. Position = semantic affinity.</li>
+        <li>Weighted convergence: impact · autonomy visibility · feasibility · demo drama.</li>
+        <li><b style="color:#fff">Deliberately not built:</b> fall detection (hardware), medication OCR (30 teams will), cognitive mini-games (scope).</li>
+      </ul>
+      <div class="quote">We picked the loop that saves lives — the silence loop.</div>
+    </div>
+  </div>
+  <div class="foot"><span>Team SyntaxError</span><span>6</span></div>
+</section>
+
+<!-- 7 · SOUL -->
+<section class="slide"><div class="band"></div>
+  <p class="kicker">The soul · 灵魂</p>
+  <h2>Autonomy you can't see is autonomy you can't trust.</h2>
+  <div class="grid2">
+    <img class="shot" src="img/birds.png" alt="10-state mascot statesheet">
+    <div>
+      <ul>
+        <li>Ten pixel states ↔ kernel states: dormant sleeps, thinking tilts, escalation <b style="color:#fff">flies to the daughter's phone</b>.</li>
+        <li>Drawn by a <b style="color:#fff">second AI agent</b> — which then formally <b style="color:#ff9c8e">blocked</b> our sprite renderer with a reproduced defect report.</li>
+        <li>Multi-agent build with review gates. Not decoration.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>Team SyntaxError</span><span>7</span></div>
+</section>
+
+<!-- 8 · FLESH -->
+<section class="slide"><div class="band"></div>
+  <p class="kicker">The flesh · 血肉</p>
+  <h2>Nine skills. One pipeline. All gated.</h2>
+  <table>
+    <tr><th>skill</th><th>trigger</th><th>what actually happens</th></tr>
+    <tr><td>greet_checkin</td><td>cron 07:30</td><td>bilingual greeting from yesterday's records — delivery arms the silence window</td></tr>
+    <tr><td>companion_chat / relay_family</td><td>her voice (model-routed)</td><td>chat, or her words truly delivered to family — confirmed by receipt, never promised</td></tr>
+    <tr><td>med_reminder</td><td>cron 08:00 / 20:00</td><td>confirmation = liveness heartbeat + celebration reward beat</td></tr>
+    <tr><td>escalate_tree</td><td>SILENCE_2</td><td>Telegram alert with idempotent buttons; the tree walks hop by hop</td></tr>
+    <tr><td>family_bulletin / care_insight</td><td>cron 20:05 / 21:00</td><td>nightly report + one distilled observation — day 7 knows her better than day 1</td></tr>
+    <tr><td>safe_range / health_scan</td><td>geofence / camera scores</td><td>wander alert with live map · on-device CV, anomaly fanout to guardian</td></tr>
+  </table>
+  <p class="lead" style="margin-top:14px">Registry law: name + one-line capability = <b style="color:#fff">97% correct selection at 8% of the tokens</b>.
+     Facts from code, words from the model — <b style="color:#6fdc9a">take the LLM away, the safety net still fires.</b></p>
+  <div class="foot"><span>Team SyntaxError</span><span>8</span></div>
+</section>
+
+<!-- 9 · VOICE -->
+<section class="slide"><div class="band"></div>
+  <p class="kicker">The voice · 声音</p>
+  <h2>We don't clone a voice. We clone presence. <span class="zh">她听到的不是 AI, 是女儿。</span></h2>
+  <div class="cols">
+    <div>
+      <ul>
+        <li>Family picks a language <b style="color:#fff">first</b>, reads a fixed 10-second script → that language's reference voice. Never reused across languages.</li>
+        <li>Hot-reloads instantly; an audition plays any exact line in any voice — including your own clone.</li>
+        <li>Consent-first · family-only · local-only.</li>
+      </ul>
+    </div>
+    <div>
+      <span class="tag t-g">phone app · qwen3-TTS local + cloning</span>
+      <span class="tag t-b">hosted demo · ElevenLabs, 3-key sticky rotation</span>
+      <span class="tag t-a">ears · Whisper local / scribe hosted</span>
+      <span class="tag t-p">every lane recorded in the receipt</span>
+      <div class="quote" style="margin-top:18px">The fallback ladder ends in honest silence —<br>silence beats garbled Chinese.</div>
+    </div>
+  </div>
+  <div class="foot"><span>Team SyntaxError</span><span>9</span></div>
+</section>
+
+<!-- 10 · SURFACES -->
+<section class="slide"><div class="band"></div>
+  <p class="kicker">The surfaces · 五端</p>
+  <h2>Five surfaces, one mind.</h2>
+  <div class="grid3">
+    <div><img class="shot" src="img/wander.png" alt="wander map"><p style="font-size:13px;color:#5f6b85;margin-top:8px">/elder — 5 tabs, no input box; wander map with one blue button home</p></div>
+    <div><img class="shot" src="img/health.png" alt="health checks"><p style="font-size:13px;color:#5f6b85;margin-top:8px">/health-lab — heart rate · mobility · smile/FAST; frames never leave the device</p></div>
+    <div><img class="shot" src="img/telegram.png" alt="telegram + console"><p style="font-size:13px;color:#5f6b85;margin-top:8px">Telegram + the judges' console — nine acts, theatre with receipts</p></div>
+  </div>
+  <div class="foot"><span>Team SyntaxError</span><span>10</span></div>
+</section>
+
+<!-- 11 · PROOF -->
+<section class="slide"><div class="band"></div>
+  <p class="kicker">The proof · 证据</p>
+  <h2>Our proudest moment is a decision that didn't happen.</h2>
+  <div class="grid2">
+    <div>
+      <div class="receipt">[08:32:03] <b>think</b> chooser junction=silence_1<br>
+        &nbsp;&nbsp;chose=retry:voice_call <span class="g">(model)</span><br>
+        [08:32:03] <b>revalidate</b> silence_1 → <span class="r">STALE</span><br>
+        &nbsp;&nbsp;heartbeat arrived after candidate creation<br>
+        &nbsp;&nbsp;→ <span class="g">candidate cancelled — no external action</span></div>
+      <ul style="margin-top:14px">
+        <li>Permission envelope: <span class="tag t-g">autonomous</span><span class="tag t-a">family-approval</span><span class="tag t-r">never: 995 · medical advice · money</span></li>
+        <li>False alarms never harass the family — revalidation kills stale decisions before they act.</li>
+      </ul>
+    </div>
+    <img class="shot" src="img/stale.png" alt="the STALE receipt, live">
+  </div>
+  <div class="foot"><span>Team SyntaxError</span><span>11</span></div>
+</section>
+
+<!-- 12 · LINEAGE -->
+<section class="slide"><div class="band"></div>
+  <p class="kicker">The lineage · 它是怎么被建成的</p>
+  <h2>One human. A fleet of agents. Review gates between them.</h2>
+  <div class="cols">
+    <ul>
+      <li><b style="color:#fff">Autonomy research program</b> — 18 artifacts: the kernel organs and their epistemics.</li>
+      <li><b style="color:#fff">A production agent's measured laws</b> — the skill-menu context law, scheduler failure rules.</li>
+      <li><b style="color:#fff">Two hackathons transplanted whole</b> — the map from one, three clinical CV pages verbatim from another.</li>
+    </ul>
+    <ul>
+      <li><b style="color:#fff">WorkBuddy</b> planned and generated the build — 40+ commits in one day, each a shipped feature.</li>
+      <li>A <b style="color:#fff">second AI agent</b> drew the mascot and adversarially reviewed the code — its block report fixed our renderer.</li>
+      <li>Every claim in this deck is a receipt in the live event store.</li>
+    </ul>
+  </div>
+  <div class="foot"><span>Team SyntaxError</span><span>12</span></div>
+</section>
+
+<!-- 13 · CLOSE -->
+<section class="slide"><div class="band"></div>
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; text-align:center">
+    <p class="kicker">The close · 收尾</p>
+    <h2 style="font-size:44px">88,400 seniors live alone.<br>
+      <span style="color:#8fb4ff">From "a nightly phone call to find out" — to "someone acts within 60 minutes of silence."</span></h2>
+    <p class="lead" style="margin-top:18px">Same name, same rhythm as Singapore's national plan — <b style="color:#fff">Age Well SG</b>.</p>
+    <p style="margin-top:30px; font-size:24px" class="mono">▶ <span style="color:#6fdc9a">anan-iax1.onrender.com</span> — alive right now</p>
+    <p style="font-size:28px; color:#fff; margin-top:26px"><b>Silence is an input.</b></p>
+  </div>
+  <div class="foot"><span>Team SyntaxError · Yao Xiang</span><span>安安 AnAn · 13</span></div>
+</section>
+
+</body>
+</html>
