@@ -348,6 +348,24 @@ def state() -> dict:
             "telegram": bool(_tg), "telegram_error": _tg_error}
 
 
+@app.get("/deck.pdf")
+def deck_pdf():
+    from fastapi.responses import FileResponse
+    p = ROOT / "deliverables" / "AnAn-Deck-SyntaxError.pdf"
+    return FileResponse(p, media_type="application/pdf",
+                        filename="AnAn-Deck-SyntaxError.pdf") if p.is_file() else \
+           JSONResponse({"error": "not bundled"}, status_code=404)
+
+
+@app.get("/demo.mp4")
+def demo_mp4():
+    from fastapi.responses import FileResponse
+    p = ROOT / "deliverables" / "AnAn-DemoVideo-SyntaxError.mp4"
+    return FileResponse(p, media_type="video/mp4",
+                        filename="AnAn-DemoVideo-SyntaxError.mp4") if p.is_file() else \
+           JSONResponse({"error": "not bundled"}, status_code=404)
+
+
 @app.get("/healthz")
 def healthz() -> dict:
     return {"status": "ok", "fsm": kernel.loop.state, "uptime_h": kernel.snapshot()["uptime_h"],
