@@ -380,6 +380,15 @@ class Kernel:
         self.store.event(self._at(), "commit", "kernel",
                          {"fsm": self.loop.snapshot(), "day": self.store.get("day_no", 1)})
 
+    def reset_crons(self) -> None:
+        """Demo reset must reset the DAY too: clear per-cron fired marks and
+        re-anchor the boot guard, or a prior session's timeskip across midnight
+        leaves today's dailies consumed (found live: a reset demo whose 07:30
+        greeting silently never fired)."""
+        for c in self._crons:
+            c["last_day"] = None
+        self._booted_at = self.clock.now()
+
     # --- console surface ----------------------------------------------------
     def snapshot(self) -> dict:
         return {

@@ -623,7 +623,7 @@ def voice_options() -> dict:
 async def voice_preview(request: Request) -> dict:
     """Render an EXACT text line in a chosen test voice — the audition."""
     body = await request.json()
-    text = (body.get("text") or "").strip()[:200]
+    text = (body.get("text") or "").strip()[:620]
     lang = "zh" if body.get("lang", "zh") == "zh" else "en"
     lane = body.get("lane", "")
     vid = body.get("id", "")
@@ -893,6 +893,7 @@ def reset() -> dict:
     kernel.loop.contact_idx = 0
     kernel.loop.extended = False
     clock.reset()
+    kernel.reset_crons()
     elder_feed.clear()
     store.event(kernel.clock.now().strftime("%Y-%m-%d %H:%M:%S"), "inject", "console",
                 {"reset": True}, effect="demo reset: state wiped, FSM IDLE, clock realtime")
