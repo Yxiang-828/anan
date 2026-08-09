@@ -184,7 +184,7 @@ function addCard(c){
   let actions='';
   if(c.type==='med') actions = `<div class="actions">
      <button class="btn ok" onclick="med(this)">✓ 我吃了<small>Taken</small></button>
-     <button class="btn later">等会儿<small>Later</small></button></div>`;
+     <button class="btn later" onclick="medLater(this)">等会儿<small>Later</small></button></div>`;
   el.innerHTML = `<span class="tag ${cls}">${label} · ${c.at||''}</span>
      <p class="zh">${zh}</p>${en?`<p class="en">${en}</p>`:''}${actions}`;
   const feed=$('feed'); feed.prepend(el);
@@ -194,6 +194,10 @@ function addCard(c){
 function med(btn){ btn.textContent='✓ 已记录 Recorded'; btn.disabled=true; beat();
   fetch('/elder/heartbeat',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({via:'med_button',med:state.med})}); }
+function medLater(btn){ btn.textContent='好, 等会儿再提醒 OK, later'; btn.disabled=true; beat();
+  // a postponement is still a TOUCH — liveness signal without a med-taken log
+  fetch('/elder/heartbeat',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({via:'med_later'})}); }
 function sos(){ beat(); fetch('/elder/sos',{method:'POST'}); speak('已经通知家人了, 您别急。'); }
 
 /* tabs (+ ?s=talk|log|sos deep links — a reload must land on the same screen) */
@@ -239,10 +243,15 @@ function addLog(ev){
 
 /* contacts from config via /state */
 function renderContacts(tree){
-  $('contacts').innerHTML=(tree||[]).map((c,i)=>`
+  $('contacts').innerHTML=(tree||[]).map((c,i)=>{
+    const canCall = !!c.phone;
+    return `
     <div class="contact"><div class="avatar">${['👧','👦','🏠'][i]||'👤'}</div>
       <div class="who"><p class="zh">${c.name}</p><p class="en">${c.relation}</p></div>
-      <button class="call" onclick="beat()">📞 呼叫 Call</button></div>`).join('');
+      ${canCall
+        ? `<a class="call" style="text-decoration:none" href="tel:${c.phone}" onclick="beat()">📞 呼叫 Call</a>`
+        : `<button class="call" style="opacity:.45" disabled>📞 未配置<br><small>no number</small></button>`}
+    </div>`;}).join('');
 }
 
 const state={lang:'zh', med:''};

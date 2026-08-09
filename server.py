@@ -141,9 +141,18 @@ try:
         os.environ.get("ANAN_BOT_TOKEN") or os.environ.get("ANAN_TG_TOKEN")
         or os.environ.get("TSUKUMO_TG_BOT_TOKEN", ""))
     _owner = os.environ.get("OWNER_TELEGRAM_ID") or os.environ.get("TELEGRAM_OWNER_USER_ID", "")
-    if _token and _owner:
-        _tg = TelegramTransport(token=_token, owner_ids={_owner},
+    _family_ids = {str(c.get("telegram", "")) for c in CONFIG.get("contact_tree", [])}
+    _family_ids |= set(CONFIG.get("family_extra_ids", []))
+    _family_ids |= {_owner} if _owner else set()
+    _family_ids.discard("")
+    if _token and _family_ids:
+        _tg = TelegramTransport(token=_token, owner_ids=_family_ids,
                                 allowed_chat_ids=set(), offset_path=RUNTIME / "tg-offset.json")
+        _tg.on_refused = lambda ib: store.event(
+            clock.now().strftime("%Y-%m-%d %H:%M:%S"), "telegram_refused", "family_adapter",
+            {"actor_id": ib.actor_id, "name": ib.actor_name, "handle": ib.actor_handle,
+             "text": ib.text[:80]},
+            effect=f"UNKNOWN SENDER id={ib.actor_id} — add to config family_extra_ids to adopt")
         _tg.connect()
 except Exception as exc:  # noqa: BLE001
     _tg, _tg_error = None, str(exc)
@@ -189,6 +198,40 @@ def _tg_handler(inbound, transport) -> None:
             kernel.submit("family_callback", "telegram", {"who": who, "esc_id": esc_id})
         elif action == "neighbor":
             kernel.submit("family_callback", "telegram", {"who": "neighbor", "esc_id": esc_id})
+        return None
+    if inbound.kind == "message" and inbound.text.strip():
+        # family texting AnAn gets a real answer: model-composed from facts
+        store.event(clock.now().strftime("%Y-%m-%d %H:%M:%S"), "wake", "telegram",
+                    {"event": "family_message", "from": inbound.actor_name,
+                     "text": inbound.text[:80]})
+        sender = next((c for c in CONFIG.get("contact_tree", [])
+                       if str(c.get("telegram", "")) == inbound.actor_id), None)
+        p = CONFIG.get("profile", {})
+        meds = store.rows("SELECT med, status FROM med_log ORDER BY id DESC LIMIT 3")
+        insight = store.rows("SELECT text FROM insights ORDER BY id DESC LIMIT 1")
+        facts = {
+            "发信人": {"称呼": (sender or {}).get("name", inbound.actor_name),
+                       "关系": (sender or {}).get("relation", "家人")},
+            "被照顾者": {"名字": p.get("name"), "当前状态": kernel.loop.state},
+            "最近用药": [{"药": m, "状态": s} for m, s in meds],
+            "最近观察": insight[0][0] if insight else "无",
+            "TA问": inbound.text[:300],
+        }
+        try:
+            reply, _lane = brain.think(
+                "意图: 回复家人在 Telegram 上的消息, 按事实回答, 不知道就说不知道。\n"
+                f"事实:\n{json.dumps(facts, ensure_ascii=False, indent=1)}\n"
+                "形式: 先中文后英文各一两行, 两种语言不同行。",
+                system=f"你是{CONFIG.get('agent_name', '安安')}, "
+                       f"{p.get('name', '')}的照护伴侣 agent, 正在和TA的家人说话。"
+                       "你没有身体; 你能做的是陪伴、提醒、观察和联系家人。")
+            store.log("conversations", at=clock.now().strftime("%H:%M"),
+                      role="family_chat", text=inbound.text[:120])
+            return reply
+        except brain.BrainError as exc:
+            store.event(clock.now().strftime("%Y-%m-%d %H:%M:%S"), "error", "family_chat",
+                        {"error": str(exc)[:100]})
+            return None
     return None
 
 
@@ -220,7 +263,8 @@ def state() -> dict:
             "agent_name": CONFIG.get("agent_name", ""),
             "med": CONFIG.get("med", {}),
             # elder surface needs names/relations only — chat ids stay server-side
-            "contact_tree": [{"name": c.get("name", ""), "relation": c.get("relation", "")}
+            "contact_tree": [{"name": c.get("name", ""), "relation": c.get("relation", ""),
+                              "phone": c.get("phone", "")}
                              for c in CONFIG.get("contact_tree", [])],
             "telegram": bool(_tg), "telegram_error": _tg_error}
 
@@ -291,6 +335,17 @@ def tts_file(name: str):
     if not path.is_file() or "/" in name or ".." in name:
         return JSONResponse({"error": "not found"}, status_code=404)
     return FileResponse(path, media_type="audio/wav")
+
+
+@app.get("/mascot/{name}")
+def mascot_asset(name: str):
+    """Codex sprite contract: web/mascot/<state>-atlas.png, 4 frames, 256px
+    cells. 404 until an atlas lands; the console falls back to emoji."""
+    from fastapi.responses import FileResponse
+    path = ROOT / "web" / "mascot" / name
+    if not path.is_file() or "/" in name or ".." in name:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return FileResponse(path)
 
 
 @app.get("/manifest.json")

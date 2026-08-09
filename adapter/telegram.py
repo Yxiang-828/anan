@@ -477,6 +477,15 @@ class TelegramTransport(StampsOutbound):
         allowed = self._in_reach_verdict(inbound)
         if not allowed:
             key = f"{inbound.room_kind}:{inbound.room_id}"
+            # anan correction: every refusal also reaches a host-installed hook,
+            # so the refused sender's id lands in the receipt store — identity
+            # gets adopted from EVIDENCE, not guessed from env files.
+            hook = getattr(self, "on_refused", None)
+            if hook:
+                try:
+                    hook(inbound)
+                except Exception:
+                    pass
             if key not in self._refused_rooms:
                 self._refused_rooms.add(key)
                 reason = ("actor is not an owner" if not inbound.is_owner
