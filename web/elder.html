@@ -99,8 +99,10 @@
   .tab .ico { font-size:26px; display:block; }
   .tab.on { color:var(--ink); background:var(--warm); }
 
+  @keyframes bcycle { to { background-position:-400% 0; } }
   @media (prefers-reduced-motion: reduce) {
     .card, .btn, .tab, #holdbtn, .call, #sosbtn, #beat { transition:opacity 200ms ease; transform:none !important; }
+    #birdy { animation:none !important; }
   }
 </style>
 </head>
@@ -118,6 +120,9 @@
     <section class="screen" id="s-talk">
       <h1>跟安安说话<small>Talk with AnAn</small></h1>
       <div id="talkpad">
+        <div id="birdy" style="width:140px;height:140px;background-repeat:no-repeat;
+             background-size:400% 100%;image-rendering:pixelated;display:none;
+             animation:bcycle .9s steps(4) infinite"></div>
         <button id="holdbtn">🎙️<br>按住说话<br><small style="font-size:14px">Hold to talk</small></button>
         <div id="caption"><p class="zh" id="cap-zh">按住绿色按钮, 像打电话一样和我聊。</p>
           <p class="en" id="cap-en">Press and hold the green button and talk to me like a phone call.</p></div>
@@ -174,7 +179,9 @@ async function speakOne(text, lg, enFallback){
     const d=await r.json();
     if(d.url){ if(audioEl){audioEl.pause();}
       audioEl=new Audio(d.url);
+      birdy('talk');
       await new Promise(res=>{ audioEl.onended=res; audioEl.onerror=res; audioEl.play().catch(res); });
+      birdy('idle');
       return; }
   }catch(e){}
   speak(text, enFallback);
@@ -204,7 +211,24 @@ async function speak(text, enLine=''){
     speechSynthesis.speak(u);
   }catch(e){}
 }
-function beat(){ const b=$('beat'); b.classList.add('pulse'); setTimeout(()=>b.classList.remove('pulse'), 320); }
+function beat(){ const b=$('beat'); b.classList.add('pulse'); setTimeout(()=>b.classList.remove('pulse'), 320); birdy('happy',1500); }
+
+/* mascot on the talk screen (codex sprite pack; hidden if atlases absent) */
+const birdSprites={};
+['idle','listen','talk','happy'].forEach(s=>{
+  const img=new Image();
+  img.onload=()=>{ birdSprites[s]=img.src; if(s==='idle') birdy('idle'); };
+  img.src=`/mascot/${s}-atlas.png`;
+});
+let birdHold=0;
+function birdy(s, holdMs=0){
+  const el=$('birdy'); if(!el || !birdSprites[s]) return;
+  const now=Date.now();
+  if(now<birdHold && s!=='listen') return;
+  birdHold = holdMs ? now+holdMs : 0;
+  el.style.display='block';
+  el.style.backgroundImage=`url(${birdSprites[s]})`;
+}
 
 function addCard(c){
   const [cls,label] = tagFor[c.type]||['chat','安安'];
@@ -254,6 +278,7 @@ hold.addEventListener('pointerdown', async ()=>{
     chunks=[]; recorder = new MediaRecorder(s);
     recorder.ondataavailable = e=>chunks.push(e.data);
     recorder.start();
+    birdy('listen');
     $('cap-zh').textContent='我听着呢…'; $('cap-en').textContent='Listening…';
   }catch(e){ recorder=null; }
 });
