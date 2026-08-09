@@ -273,6 +273,24 @@ store.listen(lambda ev: _broadcast({"kind": "event", "event": ev, "state": kerne
 
 kernel.start()
 
+
+def _warm_praise_tts() -> None:
+    """Pre-render the praise lines so the reward beat's voice is INSTANT —
+    a celebration that arrives four seconds late is not a celebration."""
+    import urllib.request as _rq
+    for pair in CONFIG.get("voice", {}).get("praise", []):
+        for lang, line in zip(("zh", "en"), pair):
+            try:
+                req = _rq.Request("http://127.0.0.1:" + os.environ.get("PORT", "8801") + "/tts",
+                                  data=json.dumps({"text": line, "lang": lang}).encode(),
+                                  headers={"Content-Type": "application/json"}, method="POST")
+                _rq.urlopen(req, timeout=120).read()
+            except Exception:
+                pass
+
+
+threading.Thread(target=lambda: (_time.sleep(6), _warm_praise_tts()), daemon=True).start()
+
 app = FastAPI(title="AnAn 安安")
 
 
@@ -292,6 +310,7 @@ def state() -> dict:
             "agent_name": CONFIG.get("agent_name", ""),
             "med": CONFIG.get("med", {}),
             "voice_speak": CONFIG.get("voice", {}).get("speak", "both"),
+            "praise": CONFIG.get("voice", {}).get("praise", []),
             # elder surface needs names/relations only — chat ids stay server-side
             "contact_tree": [{"name": c.get("name", ""), "relation": c.get("relation", ""),
                               "phone": c.get("phone", "")}

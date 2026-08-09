@@ -69,11 +69,29 @@
   #phone iframe { width:100%; height:100%; border:0; }
   #hero .sub { font-size:11px; color:var(--dim); margin-top:8px; text-align:center; }
   #hero .sub a { color:var(--blue); }
-  .mirror .card { background:#212b45; border-radius:10px; padding:10px; margin-bottom:8px;
-                  font-size:12px; white-space:pre-wrap; }
-  .mirror .card b { color:var(--amber); display:block; margin-bottom:4px; }
-  .tgbtn { display:inline-block; background:#2b3a5e; border-radius:6px; padding:4px 10px;
-           margin:6px 6px 0 0; font-size:11px; color:#9db4e8; }
+  /* Telegram pane — dressed as the real thing */
+  .panel.tg { background:#fff; border-color:#d6dde6; padding:0; overflow:hidden; }
+  .tg-head { display:flex; align-items:center; gap:10px; background:#527da3; color:#fff;
+             padding:10px 14px; font-family:system-ui,sans-serif; }
+  .tg-logo { width:34px; height:34px; border-radius:50%; background:#fff; display:flex;
+             align-items:center; justify-content:center; flex:none; }
+  .tg-name { font-size:14px; font-weight:600; line-height:1.2; }
+  .tg-sub { font-size:11px; opacity:.85; }
+  .tg-body { background:#e7ebf0; padding:12px; min-height:220px; max-height:46vh; overflow-y:auto; }
+  .tg-note { font-size:11px; color:#7b8794; text-align:center; padding:8px;
+             font-family:system-ui,sans-serif; }
+  .tg-msg { display:flex; gap:8px; margin-bottom:10px; align-items:flex-end; }
+  .tg-ava { width:30px; height:30px; border-radius:50%; background:#fff; flex:none;
+            background-repeat:no-repeat; background-size:400% 100%; image-rendering:pixelated;
+            display:flex; align-items:center; justify-content:center; font-size:18px; }
+  .tg-bubble { background:#fff; color:#222; border-radius:12px 12px 12px 4px; padding:8px 12px;
+               font-size:12.5px; line-height:1.5; max-width:85%; white-space:pre-wrap;
+               font-family:system-ui,"PingFang SC",sans-serif;
+               box-shadow:0 1px 1px rgba(0,0,0,.08); }
+  .tg-time { font-size:10px; color:#9aa6b2; text-align:right; margin-top:3px; }
+  .tg-kb { margin-top:6px; }
+  .tg-kb span { display:block; text-align:center; background:rgba(82,125,163,.12); color:#527da3;
+                border-radius:7px; padding:6px; margin-top:4px; font-size:12px; font-weight:500; }
   details { margin-top:10px; }
   details summary { cursor:pointer; font-size:12px; color:var(--dim); padding:8px 4px;
                     border-top:1px solid var(--line); list-style:none; }
@@ -132,11 +150,15 @@
       <span data-i="hero_family"></span> <a href="/family" target="_blank">/family ↗</a></div>
   </div>
   <div>
-    <div class="panel">
-      <span class="roleband role-mirror" data-i="band_family"></span>
-      <div class="mirror" id="family"><div style="color:var(--dim);font-size:11px" data-i="family_hint"></div></div>
+    <div class="panel tg">
+      <div class="tg-head">
+        <div class="tg-logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="#527da3"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg></div>
+        <div><div class="tg-name">安安 AnAn <span style="font-size:10px;background:rgba(255,255,255,.25);border-radius:4px;padding:1px 5px">bot</span></div>
+             <div class="tg-sub" data-i="band_family"></div></div>
+      </div>
+      <div class="tg-body" id="family"><div class="tg-note" data-i="family_hint"></div></div>
     </div>
-    <div class="panel" style="margin-top:12px">
+    <div class="panel" style="margin-top:12px; background:#171227; border-color:#2d2350">
       <span class="roleband role-internal" data-i="band_internal"></span>
       <div id="planline"><span data-i="plan_idle"></span></div>
       <div id="rack"></div>
@@ -223,10 +245,10 @@ const ACTS = [
   chips:['⚙ med_reminder','⚙ family_bulletin','✈️ telegram']},
  {sc:'insight',
   t:["Act 7 · 21:00 — it learns her, over time","第七幕 · 21:00 — 随时间更懂她"],
-  why:["The time dimension is the proof of learning: each night the agent distills one care observation from today's conversations into memory ('knee pain mentioned 3× this week'). It feeds tomorrow's greeting and the next bulletin.",
-       "时间维度是学习的物证: 每晚从当天对话提炼一条照护观察写入记忆 ('本周三次提到膝盖疼'), 反哺明早问候与下次播报。"],
-  watch:["Trace: care_insight receipt — 'insight #N written, day N knows more than day 1'.",
-         "日志: care_insight 回执 — 'insight #N written, day N knows more than day 1'。"],
+  why:["The time dimension is the proof of learning: each night the agent distills one care observation from TODAY'S conversations into memory. It feeds tomorrow's greeting and the next bulletin. <b>Do this first:</b> talk to her app (Talk tab — mention something like knee pain), and run the seed so past days exist to compare against.",
+       "时间维度是学习的物证: 每晚从<b>当天对话</b>提炼一条照护观察写入记忆, 反哺明早问候与下次播报。<b>先做:</b> 在手机 Talk 页跟安安聊几句 (比如提到膝盖疼), 并播种历史, 才有对比。"],
+  watch:["The planner line above the skill rack shows '🧬 memory += <the insight>'. Note: if you jump here from morning, the 20:00 med & bulletin fire honestly en route — the agent catches up on crons it crossed.",
+         "skill 架上方的 planner 行会显示 '🧬 memory += 洞察内容'。注意: 从早上直接跳来, 途经的 20:00 用药/播报也会如实触发 — agent 会补上跨过的定时任务。"],
   chips:['⚙ care_insight','🧬 memory']},
 ];
 function renderActs(){
@@ -325,6 +347,9 @@ function rackFromEvent(e){
     const how=det.how||''; const chosen=det.chosen||det.skill||'';
     if(chosen) $('planline').textContent=`planner @${e.at.slice(11)}: ${det.junction||'wake'} → ${chosen}${how?` (${how})`:''}`;
   }
+  if(e.kind==='receipt'&&e.source==='care_insight'&&det.insight){
+    $('planline').textContent=`🧬 memory += ${det.insight.slice(0,110)}`;
+  }
 }
 let rackSkills=[];
 function renderRack(firing){
@@ -332,11 +357,15 @@ function renderRack(firing){
     `<span class="skillchip${s.id===firing?' firing':''}">⚙ ${s.id}<span class="cnt">×${rackCounts[s.id]||0}</span></span>`).join('');
 }
 function addFamily(c){
-  const el=document.createElement('div'); el.className='card';
-  el.innerHTML=`<b>${c.at} · ${c.delivered||''}</b>`+c.text+
-    (c.buttons?`<br><span class="tgbtn">✅ 我已回电 Called back</span><span class="tgbtn">🏠 联系邻居 Neighbour</span>`:'');
-  const box=$('family'); box.prepend(el);
-  while(box.children.length>5) box.lastChild.remove();
+  const el=document.createElement('div'); el.className='tg-msg';
+  const ava = sprites['idle'] ? `style="background-image:url(${sprites['idle']})"` : '';
+  el.innerHTML=`<div class="tg-ava" ${ava}>${sprites['idle']?'':'🐤'}</div>
+    <div class="tg-bubble">${c.text}
+      ${c.buttons?`<div class="tg-kb"><span>✅ 我已回电 Called back</span><span>🏠 联系邻居 Contact neighbour</span></div>`:''}
+      <div class="tg-time">${c.at} · ${c.delivered||''}</div>
+    </div>`;
+  const box=$('family'); box.appendChild(el); box.scrollTop=box.scrollHeight;
+  while(box.children.length>7) box.firstChild.remove();
 }
 let lastState=null;
 const es=new EventSource('/events');

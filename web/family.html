@@ -42,6 +42,11 @@
   .again { background:#efe9dd; color:var(--ink); padding:12px 18px; font-size:16px; margin-top:10px; margin-left:8px; }
   audio { width:100%; margin-top:12px; }
   .lbl { font-size:12px; color:var(--muted); margin-top:12px; }
+  .fields { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .fields input, #pvtext { width:100%; min-width:0; padding:12px; font-size:16px;
+    border:2px solid #efe9dd; border-radius:10px; font-family:inherit; background:#fff; }
+  .fields input:focus, #pvtext:focus { outline:none; border-color:var(--blue); }
+  @media (max-width:520px){ .fields { grid-template-columns:1fr; } }
   .note { font-size:12px; color:var(--muted); margin-top:20px; line-height:1.6; }
   @media (prefers-reduced-motion: reduce){ .spin { animation-duration:2s; } }
 </style>
@@ -83,11 +88,11 @@
   <p class="why">警报和播报发给谁。ID 获取: 用您的 Telegram 给
     <b>@ananannananananananananbot</b> 发一句话, 它会回复您的 ID。<br>
     Who receives alerts &amp; bulletins. To get your ID: message the bot once — it replies with your ID.</p>
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px">
-    <input id="c-name" placeholder="称呼 Name (小芸)" style="padding:12px;font-size:16px;border:2px solid #efe9dd;border-radius:10px;font-family:inherit">
-    <input id="c-relation" placeholder="关系 Relation (女儿)" style="padding:12px;font-size:16px;border:2px solid #efe9dd;border-radius:10px;font-family:inherit">
-    <input id="c-telegram" placeholder="Telegram ID (98239...)" style="padding:12px;font-size:16px;border:2px solid #efe9dd;border-radius:10px;font-family:inherit">
-    <input id="c-phone" placeholder="电话 Phone (+65...)" style="padding:12px;font-size:16px;border:2px solid #efe9dd;border-radius:10px;font-family:inherit">
+  <div class="fields">
+    <input id="c-name" placeholder="称呼 Name">
+    <input id="c-relation" placeholder="关系 Relation">
+    <input id="c-telegram" placeholder="Telegram ID" inputmode="numeric">
+    <input id="c-phone" placeholder="电话 Phone" inputmode="tel">
   </div>
   <button id="c-save" style="margin-top:10px; padding:14px 22px; font-size:16px; color:#fff; background:var(--blue)">保存 Save</button>
   <span id="c-status" style="font-size:13px; color:var(--muted); margin-left:10px"></span>
@@ -97,8 +102,7 @@
   <b>试听 · Audition the voices</b>
   <p class="why">改这行字, 点任何声音, 听它读出来 — 包括您刚录的声音。
     Edit this exact line, tap any voice, hear it spoken — including your own clone.</p>
-  <input id="pvtext" style="width:100%; margin-top:10px; padding:14px; font-size:18px;
-    border:2px solid #efe9dd; border-radius:12px; font-family:inherit" value="">
+  <input id="pvtext" style="margin-top:10px" value="">
   <div id="chips" style="margin-top:12px; display:flex; flex-wrap:wrap; gap:8px"></div>
 </div>
 

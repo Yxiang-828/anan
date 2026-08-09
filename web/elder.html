@@ -257,9 +257,7 @@ function addCard(c){
 }
 /* reward beat: a due thing DONE deserves celebration (elders run on
    encouragement; a silent checkmark teaches nothing) */
-const PRAISE=[["做得好! 按时吃药, 身体棒棒!","Well done! Right on time — that's how we stay strong!"],
-              ["真乖, 药吃了, 女儿知道了也放心!","Wonderful! Your family will be so glad to hear it!"],
-              ["好样的! 今天也把自己照顾得很好!","Great job taking care of yourself today!"]];
+let PRAISE=[["做得好! 按时吃药!","Well done, right on time!"]];  // replaced by config via /state
 function celebrate(anchor){
   birdy('happy', 3000);
   if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -390,6 +388,7 @@ es.onmessage=m=>{
       $('agentname').textContent=s.agent_name||'安安';
       $('hello').childNodes[0].textContent=(s.profile?.name||'')+', 您好 ☁️';
       state.med=s?.med?.name||''; state.speak=s.voice_speak||'both';
+      if(s.praise && s.praise.length) PRAISE=s.praise;
       if(s.contact_tree) renderContacts(s.contact_tree); });
   }
   if(d.kind==='elder_card'){ addCard(d.card); beat(); }
