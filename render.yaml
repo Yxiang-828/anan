@@ -25,5 +25,9 @@ services:
         sync: false
       - key: DINOSAUR_ELEVEN_LABS_API_KEY
         sync: false          # hosted demo voice (ElevenLabs); qwen stays local
+      - key: MY_ELEVEN_LABS_API_KEY
+        sync: false          # key pool: no priority, sticky rotation on failure
+      - key: HOLO_ELEVEN_LABS_API_KEY
+        sync: false
       - key: PYTHONUNBUFFERED
         value: "1"

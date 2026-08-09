@@ -304,38 +304,55 @@ TTS_DIR.mkdir(exist_ok=True)
 _VOICE_GEN = ROOT / "skills" / "voice-gen" / "run.py"
 
 
+# Three equal keys, no priority. Sticky rotation (owner 2026-08-09): use the
+# current one until it FAILS, then rotate to whoever works and stay there.
+_ELEVEN_KEY_NAMES = ["DINOSAUR_ELEVEN_LABS_API_KEY", "MY_ELEVEN_LABS_API_KEY",
+                     "HOLO_ELEVEN_LABS_API_KEY"]
+_eleven_sticky = {"idx": 0}
+
+
 def _eleven_tts(text: str, lang: str) -> str | None:
     """ElevenLabs lane — the HOSTED demo voice (owner's two-tier doctrine:
-    qwen3-TTS is the phone app's voice, ElevenLabs voices the hosted demo).
-    Returns a served url or None; results cached by content hash."""
+    qwen3-TTS is the phone app's voice, ElevenLabs voices the hosted demo)."""
     import urllib.request as _rq
-    api_key = os.environ.get("DINOSAUR_ELEVEN_LABS_API_KEY", "")
+    pool = [(n, os.environ.get(n, "")) for n in _ELEVEN_KEY_NAMES]
+    pool = [(n, v) for n, v in pool if v]
     ev = CONFIG.get("voice", {}).get("eleven", {})
     voice_id = ev.get(lang) or ev.get("en", "")
-    if not api_key or not voice_id:
+    if not pool or not voice_id:
         return None
     key = hashlib.sha1(f"11:{lang}:{voice_id}:{text}".encode()).hexdigest()[:16]
     out = TTS_DIR / f"{key}.mp3"
     if out.is_file():
         return f"/tts/{key}.mp3"
-    req = _rq.Request(
-        f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
-        data=json.dumps({"text": text[:600],
-                         "model_id": ev.get("model", "eleven_multilingual_v2"),
-                         "voice_settings": {"stability": 0.5, "similarity_boost": 0.75}}).encode(),
-        headers={"xi-api-key": api_key, "Content-Type": "application/json"},
-        method="POST")
-    try:
-        with _rq.urlopen(req, timeout=30) as resp:
-            audio = resp.read(8 * 1024 * 1024)
-        if len(audio) < 500:
-            return None
-        out.write_bytes(audio)
-        return f"/tts/{key}.mp3"
-    except Exception as exc:  # noqa: BLE001
-        store.event(kernel.clock.now().strftime("%Y-%m-%d %H:%M:%S"), "error", "tts-eleven",
-                    {"why": str(exc)[:120]})
-        return None
+    body = json.dumps({"text": text[:600],
+                       "model_id": ev.get("model", "eleven_multilingual_v2"),
+                       "voice_settings": {"stability": 0.5, "similarity_boost": 0.75}}).encode()
+    start = _eleven_sticky["idx"] % len(pool)
+    for hop in range(len(pool)):
+        idx = (start + hop) % len(pool)
+        name, api_key = pool[idx]
+        req = _rq.Request(
+            f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
+            data=body, headers={"xi-api-key": api_key, "Content-Type": "application/json"},
+            method="POST")
+        try:
+            with _rq.urlopen(req, timeout=30) as resp:
+                audio = resp.read(8 * 1024 * 1024)
+            if len(audio) < 500:
+                raise ValueError("empty audio")
+            if idx != _eleven_sticky["idx"]:
+                store.event(kernel.clock.now().strftime("%Y-%m-%d %H:%M:%S"), "wake", "tts-eleven",
+                            {"event": "key_rotated", "to": name},
+                            effect=f"sticky key -> {name}")
+            _eleven_sticky["idx"] = idx
+            out.write_bytes(audio)
+            return f"/tts/{key}.mp3"
+        except Exception as exc:  # noqa: BLE001
+            store.event(kernel.clock.now().strftime("%Y-%m-%d %H:%M:%S"), "error", "tts-eleven",
+                        {"key": name, "why": str(exc)[:100]},
+                        effect="rotating to next key" if hop + 1 < len(pool) else "ALL keys failed")
+    return None
 
 
 @app.post("/tts")
