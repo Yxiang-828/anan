@@ -369,7 +369,7 @@ def demo_mp4():
 @app.get("/story")
 def story_page():
     from fastapi.responses import FileResponse
-    p = ROOT / "docs" / "story.html"
+    p = ROOT / "docs" / "index.html"
     return FileResponse(p, media_type="text/html") if p.is_file() else \
            JSONResponse({"error": "not bundled"}, status_code=404)
 

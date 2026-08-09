@@ -1,278 +1,444 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>AnAn — Team SyntaxError</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>安安 AnAn — Deck · Team SyntaxError</title>
 <style>
-  @page { size: 1280px 720px; margin: 0; }
-  * { box-sizing: border-box; margin: 0; }
-  body { font-family: system-ui, "PingFang SC", sans-serif; background:#000; }
-  .slide { width:1280px; height:720px; page-break-after:always; position:relative; overflow:hidden;
-           background:#10141f; color:#dfe6f3; padding:58px 72px; display:flex; flex-direction:column; }
-  .band { position:absolute; top:0; left:0; right:0; height:6px;
-          background:linear-gradient(90deg,#35c26e,#4f7cff,#f0a53c,#ef5350,#9b7ef0); }
-  .kicker { font-size:13px; letter-spacing:.22em; color:#f0a53c; text-transform:uppercase; margin-bottom:10px; }
-  h1 { font-size:56px; line-height:1.15; } h2 { font-size:38px; line-height:1.2; margin-bottom:10px; }
-  .zh { color:#7d8aa5; font-weight:400; }
-  p.lead { font-size:20px; color:#aeb9d0; line-height:1.55; }
-  .foot { position:absolute; bottom:26px; left:72px; right:72px; display:flex; justify-content:space-between;
-          font-size:12px; color:#5f6b85; }
-  .mono { font-family:ui-monospace,monospace; }
-  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:34px; flex:1; align-items:center; }
-  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:22px; flex:1; align-items:center; }
-  img.shot { width:100%; border-radius:12px; border:1px solid #2a3350; }
-  .stat { text-align:center; padding:26px 10px; border:1px solid #2a3350; border-radius:16px; background:#1a2030; }
-  .stat b { display:block; font-size:58px; color:#fff; }
-  .stat span { font-size:15px; color:#8fb4ff; } .stat i { display:block; font-style:normal; font-size:12px; color:#5f6b85; margin-top:8px; }
-  .pipe { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:22px 0; }
-  .ph { padding:12px 16px; border:1px solid #2a3350; border-radius:10px; font-size:17px; color:#8b98ac; font-family:ui-monospace,monospace; }
-  .ph.hot { border-color:#35c26e; color:#fff; background:#12331f; }
-  .arrow { color:#3a4568; }
-  table { border-collapse:collapse; width:100%; font-size:14.5px; }
-  th { text-align:left; color:#f0a53c; font-size:12px; text-transform:uppercase; letter-spacing:.1em;
-       padding:7px 10px; border-bottom:1px solid #2a3350; }
-  td { padding:6.5px 10px; border-bottom:1px solid #1f2740; color:#aeb9d0; vertical-align:top; }
-  td:first-child { color:#6fdc9a; font-family:ui-monospace,monospace; white-space:nowrap; }
-  .tag { display:inline-block; border-radius:7px; padding:3px 10px; font-size:12.5px; margin:0 6px 6px 0; }
-  .t-g { background:#12331f; color:#6fdc9a; } .t-b { background:#1b2a4a; color:#8fb4ff; }
-  .t-a { background:#3a2b12; color:#f0c56a; } .t-r { background:#3a1a16; color:#ff9c8e; }
-  .t-p { background:#241b3d; color:#b79df0; }
-  .cols { display:grid; grid-template-columns:1fr 1fr; gap:30px; flex:1; }
-  ul { list-style:none; } li { font-size:17px; color:#aeb9d0; line-height:1.5; padding:7px 0 7px 26px; position:relative; }
-  li::before { content:"▸"; position:absolute; left:0; color:#35c26e; }
-  .quote { font-size:26px; color:#fff; border-left:4px solid #35c26e; padding-left:22px; margin:18px 0; line-height:1.4; }
-  .receipt { font-family:ui-monospace,monospace; font-size:14px; background:#101820; border:1px solid #21262d;
-             border-radius:10px; padding:14px 18px; color:#9db4d0; line-height:1.7; }
-  .receipt b { color:#b79df0; } .receipt .g { color:#6fdc9a; } .receipt .r { color:#ff9c8e; }
+  :root{
+    --cream:#F4EFE6; --ink:#2D2A26; --green:#1D9E6B; --red:#E5484D;
+    --yellow:#FFD97D; --dark:#14161A; --dim:#8A8474; --card:#FFFDF7;
+    --line:#E3DCCB; --gold:#B8860B; --fog:#B9B4A6;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0c0d10;font-family:Calibri,"Segoe UI",system-ui,sans-serif;color:var(--ink);
+       display:flex;flex-direction:column;align-items:center;gap:28px;padding:28px 0}
+  .slide{position:relative;width:1280px;height:720px;overflow:hidden;flex:none;
+         background:var(--cream);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+  .slide.dark{background:var(--dark);color:#fff}
+  h1,h2,.serif{font-family:Georgia,"Times New Roman",serif}
+  .kicker{position:absolute;left:53px;top:40px;font-size:13px;font-weight:700;letter-spacing:3px;color:var(--green)}
+  .kicker.red{color:var(--red)} .kicker.yellow{color:var(--yellow)}
+  .title{position:absolute;left:53px;top:72px;width:1170px;font-size:33px;font-weight:700;line-height:1.16}
+  .title .en{display:block;font-size:18px;font-weight:400;font-family:Calibri,"Segoe UI",sans-serif;color:var(--dim);margin-top:5px}
+  .slide.dark .title .en{color:var(--fog)}
+  .footer{position:absolute;left:53px;bottom:14px;font-size:10px;color:var(--dim)}
+  .card{position:absolute;background:var(--card);border:1px solid var(--line);
+        box-shadow:0 3px 10px rgba(45,42,38,.10)}
+  .chip{display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700;text-align:center}
+  .num{font-family:Georgia,serif;font-weight:700}
+  img{object-fit:contain;display:block}
+  .shot{position:absolute;border:1px solid var(--line);background:#0f1117;
+        box-shadow:0 6px 22px rgba(45,42,38,.22);overflow:hidden}
+  .shot img{width:100%;height:100%}
+  .cap{position:absolute;font-size:10.5px;color:var(--dim);line-height:1.45}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;background:var(--card)}
+  th{background:var(--ink);color:#fff;text-align:left}
+  th,td{border:1px solid var(--line);padding:5px 8px;vertical-align:middle}
+  .mono{font-family:Consolas,Menlo,monospace}
+  .en-i{font-size:10.5px;color:var(--dim);font-style:normal}
+  @media print{
+    @page{size:1280px 720px;margin:0}
+    body{background:#fff;gap:0;padding:0;display:block}
+    .slide{box-shadow:none;break-after:page;page-break-after:always;margin:0}
+    .slide:last-child{break-after:auto;page-break-after:auto}
+  }
 </style>
 </head>
 <body>
 
-<!-- 1 · COVER -->
-<section class="slide"><div class="band"></div>
-  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; text-align:center">
-    <p class="kicker">Age Well · Social Good Challenge SG · AI Agent / Skills Track</p>
-    <h1 style="font-size:88px">安安 <span style="color:#35c26e">AnAn</span></h1>
-    <p style="font-size:30px; color:#8fb4ff; margin:14px 0 8px">Silence is an input.</p>
-    <p class="lead">A chatbot's input domain is {text}. AnAn's is <b style="color:#fff">{time, silence, state}</b> —<br>
-      an autonomous companion for seniors living alone.</p>
-    <p style="margin-top:26px; font-size:16px; color:#5f6b85" class="mono">live: anan-iax1.onrender.com · github.com/Yxiang-828/anan</p>
+<!-- ============ S1 封面 ============ -->
+<section class="slide dark">
+  <img src="deck-assets/hero_dawn.jpg" style="position:absolute;left:0;top:0;width:1280px;height:720px;object-fit:cover;opacity:.36">
+  <div style="position:absolute;inset:0;background:linear-gradient(100deg,#14161AF5 0%,#14161ADB 48%,#14161A66 100%)"></div>
+  <div style="position:absolute;left:994px;top:86px;width:211px;height:211px;border-radius:50%;background:var(--yellow);opacity:.9"></div>
+  <div style="position:absolute;left:1066px;top:60px;width:60px;height:38px;border-radius:50%;background:var(--green);transform:rotate(24deg)"></div>
+  <div style="position:absolute;left:86px;top:91px;font-size:13px;font-weight:700;letter-spacing:3px;color:var(--yellow)">AGE WELL · SOCIAL GOOD CHALLENGE SG · AI AGENT / SKILLS TRACK</div>
+  <div style="position:absolute;left:86px;top:163px;width:900px">
+    <div class="serif" style="font-size:66px;font-weight:700;line-height:1.1">安安 AnAn</div>
+    <div class="serif" style="font-size:29px;color:var(--yellow);margin-top:10px">一个会主动找她的 Agent</div>
+    <div style="font-size:17px;color:#E8E4DA;margin-top:9px">The agent that reaches out first — before anyone asks it to.</div>
   </div>
-  <div class="foot"><span>Team SyntaxError · Yao Xiang</span><span>安安 AnAn</span></div>
-</section>
-
-<!-- 2 · PROBLEM -->
-<section class="slide"><div class="band"></div>
-  <p class="kicker">The problem · 问题</p>
-  <h2>Living alone isn't the crisis. <span class="zh">无人知晓才是。</span></h2>
-  <div class="grid3">
-    <div class="stat"><b>88,400</b><span>seniors 65+ living alone in SG</span><i>doubled in 10 years · DOS/MOH 2024</i></div>
-    <div class="stat"><b>2×</b><span>depression risk when alone</span><i>Duke-NUS CARE 2018</i></div>
-    <div class="stat"><b>S$37k</b><span>avg. scam loss for 60+ victims</span><i>highest of all ages · SPF 2025</i></div>
+  <div style="position:absolute;left:86px;top:432px;width:1100px">
+    <div class="serif" style="font-size:22px;font-style:italic">Silence is an input.</div>
+    <div style="font-size:15px;color:var(--fog);margin-top:8px">A chatbot's input domain is {text}. AnAn's is {time, silence, state}.</div>
   </div>
-  <p class="lead">The dangerous moment is never a message. It's a morning where <b style="color:#fff">nothing happens.</b></p>
-  <div class="foot"><span>Team SyntaxError</span><span>2</span></div>
-</section>
-
-<!-- 3 · INSIGHT -->
-<section class="slide"><div class="band"></div>
-  <p class="kicker">The insight · 洞察</p>
-  <h2>Passive tools never meet her. <span class="zh">被动的工具, 等不到主动的她。</span></h2>
-  <div class="cols" style="align-items:center">
-    <div>
-      <ul>
-        <li>85.3% of 60+ are online — but only 34.7% have ever shopped online. <b style="color:#fff">Being online ≠ using apps.</b></li>
-        <li>Her health app's unread badge reads 99+.</li>
-        <li>A chatbot that waits for text simply does not exist for her.</li>
-      </ul>
-      <div class="quote">Chatbots read {text}.<br>AnAn reads {time, silence, state}.</div>
-    </div>
-    <div class="receipt">input domain — chatbot<br>&nbsp;&nbsp;{ text } <span class="r">← she never types. it never exists.</span><br><br>
-      input domain — 安安<br>&nbsp;&nbsp;{ <span class="g">time</span> } 07:30 came and went<br>
-      &nbsp;&nbsp;{ <span class="g">silence</span> } no touch for 61 minutes<br>
-      &nbsp;&nbsp;{ <span class="g">state</span> } meds unconfirmed · outside safe radius</div>
+  <div style="position:absolute;left:86px;top:588px;width:1107px;height:72px;background:#1D2026;border:1px solid #2C313A;display:flex;flex-direction:column;justify-content:center;padding:0 24px">
+    <div style="font-size:14.5px"><b style="color:var(--green);font-size:12.5px">LIVE NOW&nbsp;&nbsp;</b><b>anan-iax1.onrender.com</b><span style="color:var(--dim);font-size:12px">&nbsp;&nbsp;·&nbsp;&nbsp;the full story: yxiang-828.github.io/anan</span></div>
+    <div style="font-size:11.5px;color:var(--dim);margin-top:5px">Team SyntaxError · Yao Xiang · built by one human and a fleet of AI agents</div>
   </div>
-  <div class="foot"><span>Team SyntaxError</span><span>3</span></div>
 </section>
 
-<!-- 4 · ORIGIN -->
-<section class="slide"><div class="band"></div>
-  <p class="kicker">The origin · 起点</p>
-  <h2>Not a chat window — an autonomy research program.</h2>
-  <p class="lead">Eighteen research artifacts on what makes an agent more than an LLM plus a scheduler.
-     The core law: <b style="color:#fff">WAKE ≠ THINK ≠ ACT</b> — a trigger is only the opportunity to inspect;
-     cognition is a separate decision; action is another.</p>
-  <div class="pipe">
-    <span class="ph">WAKE</span><span class="arrow">→</span><span class="ph">THINK</span><span class="arrow">→</span>
-    <span class="ph hot">REVALIDATE</span><span class="arrow">→</span><span class="ph hot">GATE</span><span class="arrow">→</span>
-    <span class="ph">ACT</span><span class="arrow">→</span><span class="ph hot">RECEIPT</span><span class="arrow">→</span><span class="ph">COMMIT</span>
+<!-- ============ S2 问题 ============ -->
+<section class="slide">
+  <div class="kicker">THE PROBLEM · 问题</div>
+  <div class="title serif">独居不是问题，无人知晓才是<span class="en">Living alone isn't the problem. Nobody knowing is.</span></div>
+  <div class="card" style="left:53px;top:194px;width:379px;height:238px;border-left:9px solid var(--green);padding:20px 26px">
+    <div class="num" style="font-size:46px">88,400</div>
+    <div style="font-size:13.5px;font-weight:700;color:var(--green)">户 · 10 年翻倍</div>
+    <div class="en-i" style="margin-top:2px">seniors living alone — set to double within a decade</div>
+    <div style="font-size:12.5px;margin-top:9px">新加坡 65+ 独居老人</div>
+    <div style="font-size:9.5px;color:var(--dim);margin-top:6px">Singapore DOS / MOH, 2024</div>
   </div>
-  <p class="lead">Every action, seven phases — <b style="color:#6fdc9a">every phase writes a receipt</b> into the store,
-     streamed live to the judges' console. Claims are not the interface. Receipts are.</p>
-  <div class="foot"><span>Team SyntaxError</span><span>4</span></div>
-</section>
-
-<!-- 5 · SKELETON -->
-<section class="slide"><div class="band"></div>
-  <p class="kicker">The skeleton · 骨架</p>
-  <h2>A state machine for one question: <span class="zh">她没回应, 然后呢?</span></h2>
-  <div class="grid2">
-    <div>
-      <p class="mono" style="font-size:15px; color:#8fb4ff; line-height:2">
-        IDLE → CHECKIN_SENT <span style="color:#5f6b85">(07:30 greeting arms 60′)</span><br>
-        &nbsp;→ SILENCE_1 <span style="color:#5f6b85">(retry, another channel)</span><br>
-        &nbsp;→ SILENCE_2 → ESCALATED <span style="color:#5f6b85">(daughter → son → neighbour)</span><br>
-        &nbsp;→ RESOLVED <span style="color:#5f6b85">(a button callback — never a promise)</span></p>
-      <ul>
-        <li>The contact tree <b style="color:#fff">actually walks</b> — per-hop idempotent receipts.</li>
-        <li><b style="color:#fff">Every touch is a heartbeat</b>: a med tap, a word — the net dissolves.</li>
-        <li>All windows are family-configured data, not code.</li>
-      </ul>
-    </div>
-    <img class="shot" src="img/master.png" alt="live FSM cascade">
+  <div class="card" style="left:450px;top:194px;width:379px;height:238px;border-left:9px solid var(--red);padding:20px 26px">
+    <div class="num" style="font-size:46px">2×</div>
+    <div style="font-size:13.5px;font-weight:700;color:var(--red)">抑郁症状风险</div>
+    <div class="en-i" style="margin-top:2px">the risk of depressive symptoms</div>
+    <div style="font-size:12.5px;margin-top:9px">独居 vs 非独居老人</div>
+    <div style="font-size:9.5px;color:var(--dim);margin-top:6px">Duke-NUS CARE, 2018</div>
   </div>
-  <div class="foot"><span>Team SyntaxError</span><span>5</span></div>
-</section>
-
-<!-- 6 · EXPLORATION -->
-<section class="slide"><div class="band"></div>
-  <p class="kicker">The exploration · 设计过程</p>
-  <h2>93 needs, mapped without bias — then converged.</h2>
-  <div class="grid2">
-    <img class="shot" style="background:#fff" src="img/polygon.png" alt="93-word ternary scatter">
-    <div>
-      <ul>
-        <li>Three poles: the autonomous agent × the elderly × their needs. Position = semantic affinity.</li>
-        <li>Weighted convergence: impact · autonomy visibility · feasibility · demo drama.</li>
-        <li><b style="color:#fff">Deliberately not built:</b> fall detection (hardware), medication OCR (30 teams will), cognitive mini-games (scope).</li>
-      </ul>
-      <div class="quote">We picked the loop that saves lives — the silence loop.</div>
-    </div>
+  <div class="card" style="left:848px;top:194px;width:379px;height:238px;border-left:9px solid var(--gold);padding:20px 26px">
+    <div class="num" style="font-size:46px">S$37k</div>
+    <div style="font-size:13.5px;font-weight:700;color:var(--gold)">人均被骗损失 · 全龄最高</div>
+    <div class="en-i" style="margin-top:2px">highest average scam loss of any age group</div>
+    <div style="font-size:12.5px;margin-top:9px">60+ 诈骗受害者</div>
+    <div style="font-size:9.5px;color:var(--dim);margin-top:6px">SPF Annual Scams Brief, 2025</div>
   </div>
-  <div class="foot"><span>Team SyntaxError</span><span>6</span></div>
-</section>
-
-<!-- 7 · SOUL -->
-<section class="slide"><div class="band"></div>
-  <p class="kicker">The soul · 灵魂</p>
-  <h2>Autonomy you can't see is autonomy you can't trust.</h2>
-  <div class="grid2">
-    <img class="shot" src="img/birds.png" alt="10-state mascot statesheet">
-    <div>
-      <ul>
-        <li>Ten pixel states ↔ kernel states: dormant sleeps, thinking tilts, escalation <b style="color:#fff">flies to the daughter's phone</b>.</li>
-        <li>Drawn by a <b style="color:#fff">second AI agent</b> — which then formally <b style="color:#ff9c8e">blocked</b> our sprite renderer with a reproduced defect report.</li>
-        <li>Multi-agent build with review gates. Not decoration.</li>
-      </ul>
-    </div>
+  <div class="shot" style="left:53px;top:456px;width:596px;height:196px;border-radius:5px">
+    <img src="deck-assets/night_block.jpg" style="object-fit:cover;object-position:center 40%">
   </div>
-  <div class="foot"><span>Team SyntaxError</span><span>7</span></div>
-</section>
-
-<!-- 8 · FLESH -->
-<section class="slide"><div class="band"></div>
-  <p class="kicker">The flesh · 血肉</p>
-  <h2>Nine skills. One pipeline. All gated.</h2>
-  <table>
-    <tr><th>skill</th><th>trigger</th><th>what actually happens</th></tr>
-    <tr><td>greet_checkin</td><td>cron 07:30</td><td>bilingual greeting from yesterday's records — delivery arms the silence window</td></tr>
-    <tr><td>companion_chat / relay_family</td><td>her voice (model-routed)</td><td>chat, or her words truly delivered to family — confirmed by receipt, never promised</td></tr>
-    <tr><td>med_reminder</td><td>cron 08:00 / 20:00</td><td>confirmation = liveness heartbeat + celebration reward beat</td></tr>
-    <tr><td>escalate_tree</td><td>SILENCE_2</td><td>Telegram alert with idempotent buttons; the tree walks hop by hop</td></tr>
-    <tr><td>family_bulletin / care_insight</td><td>cron 20:05 / 21:00</td><td>nightly report + one distilled observation — day 7 knows her better than day 1</td></tr>
-    <tr><td>safe_range / health_scan</td><td>geofence / camera scores</td><td>wander alert with live map · on-device CV, anomaly fanout to guardian</td></tr>
-  </table>
-  <p class="lead" style="margin-top:14px">Registry law: name + one-line capability = <b style="color:#fff">97% correct selection at 8% of the tokens</b>.
-     Facts from code, words from the model — <b style="color:#6fdc9a">take the LLM away, the safety net still fires.</b></p>
-  <div class="foot"><span>Team SyntaxError</span><span>8</span></div>
-</section>
-
-<!-- 9 · VOICE -->
-<section class="slide"><div class="band"></div>
-  <p class="kicker">The voice · 声音</p>
-  <h2>We don't clone a voice. We clone presence. <span class="zh">她听到的不是 AI, 是女儿。</span></h2>
-  <div class="cols">
-    <div>
-      <ul>
-        <li>Family picks a language <b style="color:#fff">first</b>, reads a fixed 10-second script → that language's reference voice. Never reused across languages.</li>
-        <li>Hot-reloads instantly; an audition plays any exact line in any voice — including your own clone.</li>
-        <li>Consent-first · family-only · local-only.</li>
-      </ul>
-    </div>
-    <div>
-      <span class="tag t-g">phone app · qwen3-TTS local + cloning</span>
-      <span class="tag t-b">hosted demo · ElevenLabs, 3-key sticky rotation</span>
-      <span class="tag t-a">ears · Whisper local / scribe hosted</span>
-      <span class="tag t-p">every lane recorded in the receipt</span>
-      <div class="quote" style="margin-top:18px">The fallback ladder ends in honest silence —<br>silence beats garbled Chinese.</div>
-    </div>
+  <div style="position:absolute;left:684px;top:460px;width:543px">
+    <div class="serif" style="font-size:17.5px;font-style:italic;line-height:1.5">她一个人住。她出事的那个早晨，最先知道的人，本来可以不是没人。</div>
+    <div style="font-size:12.5px;color:var(--dim);margin-top:10px;line-height:1.55">She lives alone. On the morning something goes wrong, the first to know
+      shouldn't have to be nobody. Today the safety net is a nightly phone call — a fall at 9 AM is discovered at 9 PM.</div>
   </div>
-  <div class="foot"><span>Team SyntaxError</span><span>9</span></div>
+  <div class="footer">安安 AnAn · Team SyntaxError · Age Well SG — 2 / 13</div>
 </section>
 
-<!-- 10 · SURFACES -->
-<section class="slide"><div class="band"></div>
-  <p class="kicker">The surfaces · 五端</p>
-  <h2>Five surfaces, one mind.</h2>
-  <div class="grid3">
-    <div><img class="shot" src="img/wander.png" alt="wander map"><p style="font-size:13px;color:#5f6b85;margin-top:8px">/elder — 5 tabs, no input box; wander map with one blue button home</p></div>
-    <div><img class="shot" src="img/health.png" alt="health checks"><p style="font-size:13px;color:#5f6b85;margin-top:8px">/health-lab — heart rate · mobility · smile/FAST; frames never leave the device</p></div>
-    <div><img class="shot" src="img/telegram.png" alt="telegram + console"><p style="font-size:13px;color:#5f6b85;margin-top:8px">Telegram + the judges' console — nine acts, theatre with receipts</p></div>
+<!-- ============ S3 洞察 ============ -->
+<section class="slide">
+  <div class="kicker">THE INSIGHT · 洞察</div>
+  <div class="title serif">被动的工具，等不到主动的她<span class="en">A reactive tool waits forever for a user who never opens it.</span></div>
+  <div class="card" style="left:53px;top:184px;width:402px;height:412px;padding:22px 28px">
+    <div class="num" style="font-size:40px;color:var(--green)">85.3%</div>
+    <div style="font-size:13px;margin-bottom:3px">60+ 老人会上网</div>
+    <div class="en-i" style="margin-bottom:14px">of seniors use the internet</div>
+    <div class="num" style="font-size:40px;color:var(--red)">34.7%</div>
+    <div style="font-size:13px;margin-bottom:3px">60+ 老人会网购</div>
+    <div class="en-i" style="margin-bottom:16px">actually transact online</div>
+    <div style="font-size:12.5px;font-style:italic;line-height:1.5">会上网 ≠ 会用。健康 App 的未读角标在她手机上堆成 99+。</div>
+    <div class="en-i" style="margin-top:5px;line-height:1.5">Being online is not the same as opening the app. The health app's badge just climbs to 99+.</div>
   </div>
-  <div class="foot"><span>Team SyntaxError</span><span>10</span></div>
-</section>
-
-<!-- 11 · PROOF -->
-<section class="slide"><div class="band"></div>
-  <p class="kicker">The proof · 证据</p>
-  <h2>Our proudest moment is a decision that didn't happen.</h2>
-  <div class="grid2">
-    <div>
-      <div class="receipt">[08:32:03] <b>think</b> chooser junction=silence_1<br>
-        &nbsp;&nbsp;chose=retry:voice_call <span class="g">(model)</span><br>
-        [08:32:03] <b>revalidate</b> silence_1 → <span class="r">STALE</span><br>
-        &nbsp;&nbsp;heartbeat arrived after candidate creation<br>
-        &nbsp;&nbsp;→ <span class="g">candidate cancelled — no external action</span></div>
-      <ul style="margin-top:14px">
-        <li>Permission envelope: <span class="tag t-g">autonomous</span><span class="tag t-a">family-approval</span><span class="tag t-r">never: 995 · medical advice · money</span></li>
-        <li>False alarms never harass the family — revalidation kills stale decisions before they act.</li>
-      </ul>
-    </div>
-    <img class="shot" src="img/stale.png" alt="the STALE receipt, live">
+  <div class="shot" style="left:476px;top:184px;width:316px;height:412px;border-radius:6px">
+    <img src="deck-assets/grandma_phone.jpg" style="object-fit:cover;object-position:60% center">
   </div>
-  <div class="foot"><span>Team SyntaxError</span><span>11</span></div>
+  <div class="card" style="left:813px;top:184px;width:414px;height:412px;background:var(--dark);border:none;padding:26px 30px;color:#fff">
+    <div style="font-size:12.5px;font-weight:700;letter-spacing:2px;color:var(--yellow);margin-bottom:16px">输入域的鸿沟 · THE INPUT-DOMAIN GAP</div>
+    <div class="mono" style="font-size:15.5px;color:var(--fog)">chatbot 聊天机器人：{ text }</div>
+    <div style="font-size:11.5px;color:var(--dim);margin:5px 0 20px">她不输入，它就不存在<br>if she never types, it never exists</div>
+    <div class="mono" style="font-size:15.5px;font-weight:700">安安 AnAn：{ time, silence, state }</div>
+    <div style="font-size:11.5px;color:var(--yellow);margin-top:5px">她的沉默，就是我们的输入<br><span style="color:var(--fog)">her silence is our input</span></div>
+    <div style="height:1px;background:#2C313A;margin:22px 0"></div>
+    <div style="font-size:11.5px;color:var(--fog);line-height:1.6">So AnAn runs on a clock, not on a prompt. It wakes by itself,
+      inspects the world, and decides whether anything is worth doing — most of the time correctly deciding that nothing is.
+      Dormancy is a first-class behaviour, not a bug.</div>
+  </div>
+  <div class="footer">安安 AnAn · Team SyntaxError · Age Well SG — 3 / 13</div>
 </section>
 
-<!-- 12 · LINEAGE -->
-<section class="slide"><div class="band"></div>
-  <p class="kicker">The lineage · 它是怎么被建成的</p>
-  <h2>One human. A fleet of agents. Review gates between them.</h2>
-  <div class="cols">
-    <ul>
-      <li><b style="color:#fff">Autonomy research program</b> — 18 artifacts: the kernel organs and their epistemics.</li>
-      <li><b style="color:#fff">A production agent's measured laws</b> — the skill-menu context law, scheduler failure rules.</li>
-      <li><b style="color:#fff">Two hackathons transplanted whole</b> — the map from one, three clinical CV pages verbatim from another.</li>
-    </ul>
-    <ul>
-      <li><b style="color:#fff">WorkBuddy</b> planned and generated the build — 40+ commits in one day, each a shipped feature.</li>
-      <li>A <b style="color:#fff">second AI agent</b> drew the mascot and adversarially reviewed the code — its block report fixed our renderer.</li>
-      <li>Every claim in this deck is a receipt in the live event store.</li>
+<!-- ============ S4 起点 ============ -->
+<section class="slide">
+  <div class="kicker">THE ORIGIN · 我们从哪里开始</div>
+  <div class="title serif">不是聊天框，是一个自主有机体<span class="en">Not a chat box — an autonomous organism with organs.</span></div>
+  <div style="position:absolute;left:53px;top:150px;width:1170px;font-size:13px;line-height:1.5">安安的内核器官来自一个 18 篇文献的自主性研究计划——每一条设计法则都由一次真实失败换来。
+    <span style="color:var(--dim)">The kernel's organs come from an 18-paper autonomy research programme; every law below was paid for by a real failure.</span></div>
+  <div style="position:absolute;left:53px;top:206px;display:flex;align-items:center;gap:6px">
+    <div><div class="chip" style="width:250px;height:56px;background:var(--ink);font-size:17px">WAKE</div><div style="width:250px;text-align:center;font-size:11.5px;margin-top:7px">唤醒只是机会 ≠ 认知<div class="en-i">waking is only an opportunity</div></div></div>
+    <div class="serif" style="font-size:30px;font-weight:700;color:var(--red);padding:0 8px">≠</div>
+    <div><div class="chip" style="width:250px;height:56px;background:var(--ink);font-size:17px">THINK</div><div style="width:250px;text-align:center;font-size:11.5px;margin-top:7px">要不要想，是独立决定<div class="en-i">whether to think is its own call</div></div></div>
+    <div class="serif" style="font-size:30px;font-weight:700;color:var(--red);padding:0 8px">≠</div>
+    <div><div class="chip" style="width:250px;height:56px;background:var(--ink);font-size:17px">ACT</div><div style="width:250px;text-align:center;font-size:11.5px;margin-top:7px">做不做，又是一个决定<div class="en-i">and acting is a third</div></div></div>
+  </div>
+  <div style="position:absolute;left:53px;top:368px;font-size:13.5px;font-weight:700">每个动作的七相位流水线，每相位一条回执，可回放
+    <span style="font-weight:400;color:var(--dim);font-size:12px">— seven phases per action, one receipt each, fully replayable</span></div>
+  <div style="position:absolute;left:53px;top:404px;display:flex;align-items:center;gap:11px">
+    <div class="chip" style="width:154px;height:48px;background:var(--green);font-size:12px">WAKE</div><span style="color:var(--dim);font-weight:700">→</span>
+    <div class="chip" style="width:154px;height:48px;background:var(--green);font-size:12px">THINK</div><span style="color:var(--dim);font-weight:700">→</span>
+    <div class="chip" style="width:154px;height:48px;background:var(--red);font-size:12px">REVALIDATE</div><span style="color:var(--dim);font-weight:700">→</span>
+    <div class="chip" style="width:154px;height:48px;background:var(--green);font-size:12px">GATE</div><span style="color:var(--dim);font-weight:700">→</span>
+    <div class="chip" style="width:154px;height:48px;background:var(--green);font-size:12px">ACT</div><span style="color:var(--dim);font-weight:700">→</span>
+    <div class="chip" style="width:154px;height:48px;background:var(--green);font-size:12px">RECEIPT</div><span style="color:var(--dim);font-weight:700">→</span>
+    <div class="chip" style="width:154px;height:48px;background:var(--green);font-size:12px">COMMIT</div>
+  </div>
+  <div class="shot" style="left:53px;top:478px;width:1107px;height:146px;border-radius:4px">
+    <img src="deck-assets/fsm_strip.png" style="object-fit:cover;object-position:top">
+  </div>
+  <div class="cap" style="left:53px;top:632px;width:1107px">实测截屏：控制台的 skill 灯牌、状态机与决策线 &nbsp;·&nbsp; Real screenshot — the live skill rack, state machine and planner line. Everything below is an actual receipt row.</div>
+  <div class="mono" style="position:absolute;left:53px;top:664px;width:1170px;font-size:10px;color:var(--dim)">durable inbox · attention scheduler · prospective store · stale-decision revalidation · permission envelope · effect-scope receipts · practical-liveness watchdog</div>
+  <div class="footer">安安 AnAn · Team SyntaxError · Age Well SG — 4 / 13</div>
+</section>
+
+<!-- ============ S5 FSM ============ -->
+<section class="slide">
+  <div class="kicker">THE SKELETON · 骨架</div>
+  <div class="title serif">Hero Loop：为一个问题而生的状态机<span class="en">One state machine, built to answer exactly one question.</span></div>
+  <div class="serif" style="position:absolute;left:53px;top:146px;font-size:16px;font-style:italic">“她没有回应，接下来会发生什么？”
+    <span style="font-size:13px;color:var(--dim);font-style:normal">— “She hasn't answered. What happens next?”</span></div>
+  <div style="position:absolute;left:53px;top:192px;display:flex;align-items:center;gap:7px">
+    <div class="chip" style="width:166px;height:48px;background:var(--dim);font-size:11px">IDLE</div><span style="color:var(--dim);font-weight:700">→</span>
+    <div class="chip" style="width:166px;height:48px;background:var(--green);font-size:11px">CHECKIN_SENT</div><span style="color:var(--dim);font-weight:700">→</span>
+    <div class="chip" style="width:166px;height:48px;background:var(--gold);font-size:11px">SILENCE_1</div><span style="color:var(--dim);font-weight:700">→</span>
+    <div class="chip" style="width:166px;height:48px;background:var(--red);font-size:11px">SILENCE_2</div><span style="color:var(--dim);font-weight:700">→</span>
+    <div class="chip" style="width:166px;height:48px;background:var(--red);font-size:11px">ESCALATED</div><span style="color:var(--dim);font-weight:700">→</span>
+    <div class="chip" style="width:166px;height:48px;background:var(--green);font-size:11px">RESOLVED</div>
+  </div>
+  <div style="position:absolute;left:53px;top:272px;width:735px;font-size:12.5px;line-height:1.5">
+    <ul style="padding-left:20px;display:flex;flex-direction:column;gap:12px">
+      <li>07:30 主动晨候 → 无回应 → 换渠道重试 → 仍无回应 → 沿联系人树升级（女儿 → 儿子 → 邻居，每一跳独立回执）→ 家属一键回电 → 闭环写入记忆
+        <div class="en-i" style="margin-top:3px;line-height:1.5">07:30 greeting → no answer → retry on a second channel → still nothing → walk the contact tree, each hop its own idempotent receipt → one tap closes the loop.</div></li>
+      <li>每次触碰都是心跳：任何一次点按都会消解沉默网；<b>她自己的触碰连 ESCALATED 都能直接消解</b>——她的存活性高于一切规则
+        <div class="en-i" style="margin-top:3px;line-height:1.5">Every touch is a heartbeat. Her own touch resolves even an ESCALATED loop — her liveness outranks every rule in the machine.</div></li>
+      <li>联系人树真的会走：家属超时未回 → 自动走下一位；树走空 → 更长窗口从头再走
+        <div class="en-i" style="margin-top:3px;line-height:1.5">The tree really walks, and escalation never loses a firing route — <b>practical liveness</b>, watched by a watchdog that counts firing routes rather than states.</div></li>
     </ul>
   </div>
-  <div class="foot"><span>Team SyntaxError</span><span>12</span></div>
+  <div class="shot" style="left:812px;top:272px;width:415px;height:312px;border-radius:6px;background:#EDE7DA">
+    <img src="deck-assets/elder_phone.png" style="object-fit:cover;object-position:top center">
+  </div>
+  <div class="cap" style="left:812px;top:592px;width:415px">07:30 真机截屏：安安先开口，双语卡片背后同时布防 60 分钟聆听窗。<br>Real device at 07:30 — AnAn speaks first; the 60-minute listening window arms silently behind the card.</div>
+  <div class="footer">安安 AnAn · Team SyntaxError · Age Well SG — 5 / 13</div>
 </section>
 
-<!-- 13 · CLOSE -->
-<section class="slide"><div class="band"></div>
-  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; text-align:center">
-    <p class="kicker">The close · 收尾</p>
-    <h2 style="font-size:44px">88,400 seniors live alone.<br>
-      <span style="color:#8fb4ff">From "a nightly phone call to find out" — to "someone acts within 60 minutes of silence."</span></h2>
-    <p class="lead" style="margin-top:18px">Same name, same rhythm as Singapore's national plan — <b style="color:#fff">Age Well SG</b>.</p>
-    <p style="margin-top:30px; font-size:24px" class="mono">▶ <span style="color:#6fdc9a">anan-iax1.onrender.com</span> — alive right now</p>
-    <p style="font-size:28px; color:#fff; margin-top:26px"><b>Silence is an input.</b></p>
+<!-- ============ S6 散布图 ============ -->
+<section class="slide">
+  <div class="kicker">THE EXPLORATION · 设计过程</div>
+  <div class="title serif">93 个词的问题空间，无偏散布<span class="en">A 93-word problem space, mapped before a line was written.</span></div>
+  <img src="agewell_vocab_polygon.png" style="position:absolute;left:53px;top:166px;width:686px;height:486px;object-fit:contain">
+  <div style="position:absolute;left:768px;top:182px;width:459px;font-size:12.5px">
+    <div style="font-weight:700;font-size:14px;margin-bottom:4px">自主 Agent × 老人 × 需求 · 三极三元图</div>
+    <div class="en-i" style="margin-bottom:14px;line-height:1.5">A ternary map: autonomous-agent capability × elder reality × unmet need. Position is semantic affinity; colour is the three-pole blend. Spread first, converge second.</div>
+    <ul style="padding-left:20px;display:flex;flex-direction:column;gap:10px">
+      <li>加权收敛矩阵：影响力 / 自主性可见度 / 可行性 / 演示戏剧性
+        <div class="en-i" style="margin-top:2px">Converged on a weighted matrix — impact, visibility of autonomy, feasibility, demo drama.</div></li>
+      <li>刻意不做：跌倒检测（需硬件）· 药品 OCR（30 组都会做）· 认知小游戏（scope 爆炸）
+        <div class="en-i" style="margin-top:2px">Deliberately not built: fall-detection hardware, pill OCR, cognitive mini-games.</div></li>
+      <li>设计从词汇开始，不从代码开始：说不出名字的行为，就不实现
+        <div class="en-i" style="margin-top:2px">Design began with vocabulary, not code. If a behaviour couldn't be named inside the polygon, it wasn't built.</div></li>
+    </ul>
+    <div class="card" style="position:relative;margin-top:16px;padding:12px 16px;box-shadow:none;border-left:9px solid var(--green)">
+      <div class="serif" style="font-size:13.5px;font-style:italic;font-weight:700;color:var(--green)">评委看到的是一个被探索过的面，不是拍脑袋的点。</div>
+      <div class="en-i" style="margin-top:4px">You're looking at an explored surface, not a lucky guess.</div>
+    </div>
   </div>
-  <div class="foot"><span>Team SyntaxError · Yao Xiang</span><span>安安 AnAn · 13</span></div>
+  <div class="footer">安安 AnAn · Team SyntaxError · Age Well SG — 6 / 13</div>
+</section>
+
+<!-- ============ S7 吉祥物 ============ -->
+<section class="slide">
+  <div class="kicker">THE SOUL · 灵魂</div>
+  <div class="title serif">看不见的自主不可信——所以内核长了脸<span class="en">Invisible autonomy is untrustworthy. So the kernel grew a face.</span></div>
+  <div class="shot" style="left:53px;top:168px;width:710px;height:428px;border-radius:6px;background:#F7F3EA">
+    <img src="deck-assets/statesheet.png" style="object-fit:contain">
+  </div>
+  <div class="cap" style="left:53px;top:604px;width:710px">10 STATES · 40 FRAMES — 由第二个 AI agent 绘制的像素状态场，附每帧时序与锚点规范。<br>A pixel state-field drawn by a second AI agent, shipped with per-frame timings and anchor specs.</div>
+  <div style="position:absolute;left:792px;top:182px;width:435px;font-size:12.5px">
+    <div style="font-weight:700;font-size:14px">10 个像素状态 ↔ 内核状态一一对应</div>
+    <div class="en-i" style="margin-bottom:14px">Ten pixel states map one-to-one onto kernel states.</div>
+    <div style="margin-bottom:14px">dormant 睡觉 · think 歪头 · 升级时<b>飞出婆婆的手机、落进女儿的手机</b>
+      <div class="en-i" style="margin-top:3px;line-height:1.5">It sleeps when the system is dormant, tilts its head while the model thinks, and on escalation it flies out of grandma's phone toward her daughter's.</div></div>
+    <div style="margin-bottom:16px">评委不用读日志，看鸟就知道系统在干什么
+      <div class="en-i" style="margin-top:3px;line-height:1.5">Nobody needs to read a log to see what the agent is doing — the bird performs every receipt as it lands.</div></div>
+    <div class="card" style="position:relative;width:435px;padding:14px 18px;box-shadow:none;border-left:9px solid var(--red)">
+      <div style="font-weight:700;font-size:12.5px;color:var(--red);margin-bottom:5px">对抗性评审闸 · ADVERSARIAL REVIEW GATE</div>
+      <div style="font-size:11.5px;line-height:1.5">像素包由 codex 绘制——它还<b>对抗性 block 了我们的渲染器</b>，附可复现缺陷报告（帧位 133.333%、每帧时序）。修复跟在报告后面。</div>
+      <div class="en-i" style="margin-top:5px;line-height:1.5">The mascot agent formally blocked the builder's sprite renderer with a reproducible defect report. The fix followed the report — multi-agent construction with a real gate in between.</div>
+    </div>
+  </div>
+  <div class="footer">安安 AnAn · Team SyntaxError · Age Well SG — 7 / 13</div>
+</section>
+
+<!-- ============ S8 Skills ============ -->
+<section class="slide">
+  <div class="kicker">THE FLESH · 血肉</div>
+  <div class="title serif">9 个 Skill，同一条流水线，全部过闸<span class="en">Nine skills, one pipeline, every one of them gated.</span></div>
+  <div style="position:absolute;left:53px;top:156px;width:778px">
+    <table>
+      <tr><th style="width:20%">Skill</th><th style="width:21%">触发 Trigger</th><th>实际发生什么 · what actually happens</th></tr>
+      <tr><td>greet_checkin</td><td>cron 07:30</td><td>合成双语晨候；发出即布防确认窗 <span class="en-i">· bilingual greeting; arms the ack window</span></td></tr>
+      <tr><td>companion_chat</td><td>老人语音（路由）</td><td>基于事实作答；每次交流都是心跳 <span class="en-i">· grounded reply; each exchange is a heartbeat</span></td></tr>
+      <tr><td>relay_family</td><td>老人语音（路由）</td><td>她的话原样送达家属 <span class="en-i">· her words carried across, receipt-confirmed</span></td></tr>
+      <tr><td>med_reminder</td><td>cron 08:00 / 20:00</td><td>[我吃了] = 心跳；布防全天沉默网 <span class="en-i">· “taken” is a heartbeat; arms the all-day net</span></td></tr>
+      <tr><td>escalate_tree</td><td>SILENCE_2 / 走树超时</td><td>Telegram 警报卡，幂等按钮闭环 <span class="en-i">· alert card; idempotent buttons close the loop</span></td></tr>
+      <tr><td>family_bulletin</td><td>cron 20:05</td><td>当日报摘：用药 / 情绪 / 洞察 / 健康 <span class="en-i">· the evening digest, bilingual</span></td></tr>
+      <tr><td>care_insight</td><td>cron 21:00</td><td>每日提炼一条洞察 <span class="en-i">· memory that compounds — Day 7 knows her better than Day 1</span></td></tr>
+      <tr><td>safe_range</td><td>地理围栏事件</td><td>走失警报 + 实时地图 + 回圈报平安 <span class="en-i">· geofence alert, live map, automatic all-clear</span></td></tr>
+      <tr><td>health_scan</td><td>CV 评分事件</td><td>鼓励式回读；异常立刻通知监护人 <span class="en-i">· elder reflection, guardian fanout on anomaly</span></td></tr>
+    </table>
+  </div>
+  <div class="card" style="left:859px;top:156px;width:368px;height:208px;background:var(--dark);border:none;padding:18px 22px;color:#fff">
+    <div style="font-weight:700;color:var(--yellow);font-size:11.5px;letter-spacing:2px;margin-bottom:8px">REGISTRY LAW · 实测 MEASURED</div>
+    <div class="num" style="font-size:29px">97% 选对率</div>
+    <div class="num" style="font-size:18px;color:var(--green);margin:3px 0">仅 8% token 成本</div>
+    <div style="font-size:10.5px;color:var(--fog);line-height:1.5;margin-top:4px">目录只载 name + 一行能力；全契约随 skill 携带。<br>
+      The registry carries only a name and one capability line — full contracts travel with the skill. 97% correct selection at 8% of the token cost.</div>
+  </div>
+  <div class="card" style="left:859px;top:382px;width:368px;height:146px;padding:16px 22px">
+    <div style="font-weight:700;font-size:12.5px;color:var(--green);margin-bottom:6px">组合律 · WORDS COME FROM THE MODEL</div>
+    <div style="font-size:11.5px;line-height:1.5">skill 组装意图与事实；模型写每一个字。没有罐头台词；降级模式渲染带标签的数据。</div>
+    <div class="en-i" style="margin-top:5px;line-height:1.5">Skills assemble intent and facts; the model writes every word. Degraded mode renders labelled data instead of faking a sentence.</div>
+  </div>
+  <div class="card" style="left:859px;top:546px;width:368px;height:96px;padding:14px 22px;border-left:9px solid var(--red)">
+    <div style="font-size:11.5px;line-height:1.5"><b>刻意不做 · deliberately absent</b><br>跌倒检测硬件 · 医疗建议 · 代打 995</div>
+    <div class="en-i" style="margin-top:4px;line-height:1.5">No hardware fall claims, no medical advice, no emergency calls on the agent's own authority.</div>
+  </div>
+  <div class="footer">安安 AnAn · Team SyntaxError · Age Well SG — 8 / 13</div>
+</section>
+
+<!-- ============ S9 声音 ============ -->
+<section class="slide">
+  <div class="kicker">THE VOICE · 声音</div>
+  <div class="title serif">克隆的不是声音，是在场<span class="en">We don't clone a voice. We clone presence.</span></div>
+  <div style="position:absolute;left:53px;top:170px;width:600px;font-size:12.5px">
+    <ul style="padding-left:20px;display:flex;flex-direction:column;gap:13px">
+      <li>家属先选语言，再读一段 10 秒固定文本 → 该语言的参考声纹
+        <div class="en-i" style="margin-top:3px;line-height:1.5">Language first, then one fixed 10-second script. That (clip, script) pair becomes the reference voiceprint for that language.</div></li>
+      <li>声纹永不跨语言复用；热加载生效；试听即证
+        <div class="en-i" style="margin-top:3px;line-height:1.5">A print is never reused across languages. Hot-reloaded, and auditionable on the spot.</div></li>
+      <li>双层语音：本地 qwen3-TTS 克隆 · 云端 ElevenLabs 三键粘性轮换，每次轮换留回执
+        <div class="en-i" style="margin-top:3px;line-height:1.5">Two tiers — local qwen3-TTS cloning, or hosted ElevenLabs with a sticky three-key rotation. Every rotation leaves a receipt.</div></li>
+      <li>降级阶梯的终点是<b>诚实的静默</b>——沉默好过跑调的中文
+        <div class="en-i" style="margin-top:3px;line-height:1.5">The last rung of the ladder is honest silence. Silence beats mangled Mandarin.</div></li>
+    </ul>
+  </div>
+  <div class="card" style="left:53px;top:500px;width:600px;height:110px;background:var(--yellow);border:none;display:flex;flex-direction:column;justify-content:center;padding:0 28px">
+    <div class="serif" style="font-size:20px;font-style:italic">“她听到的不是 AI。是女儿。”</div>
+    <div style="font-size:12.5px;margin-top:6px">“What she hears isn't an AI. It's her daughter.”</div>
+  </div>
+  <div class="shot" style="left:684px;top:170px;width:288px;height:468px;border-radius:6px;background:#F7F3EA">
+    <img src="deck-assets/voice_setup.png" style="object-fit:cover;object-position:top center">
+  </div>
+  <div class="shot" style="left:988px;top:170px;width:239px;height:468px;border-radius:6px">
+    <img src="deck-assets/kopitiam.jpg" style="object-fit:cover;object-position:40% center">
+  </div>
+  <div class="cap" style="left:684px;top:646px;width:543px">左：/family 真实录音页——语言优先、固定脚本、同意声明就写在页面上。<br>Left: the real /family recording page — language first, fixed script, consent stated in place.</div>
+  <div class="footer">安安 AnAn · Team SyntaxError · Age Well SG — 9 / 13</div>
+</section>
+
+<!-- ============ S10 五端 ============ -->
+<section class="slide">
+  <div class="kicker">THE SURFACES · 五端</div>
+  <div class="title serif">五端齐活，一个心智<span class="en">Five surfaces, one mind — and the app runs inside the console.</span></div>
+  <div style="position:absolute;left:53px;top:162px;display:flex;flex-direction:column;gap:9px">
+    <div class="card" style="position:relative;width:662px;height:79px;border-left:9px solid var(--green);padding:9px 18px"><b style="font-size:12.5px">/elder 乐龄端</b><div style="font-size:10.5px;margin-top:3px">5 屏 2 操作 · 无输入框 · 透明日志把回执讲成人话<div class="en-i">Five screens, two gestures, no text box. The log speaks receipts in plain language.</div></div></div>
+    <div class="card" style="position:relative;width:662px;height:79px;border-left:9px solid var(--green);padding:9px 18px"><b style="font-size:12.5px">/health-lab</b><div style="font-size:10.5px;margin-top:3px">心率 rPPG · 活动度姿态 · 微笑对称（FAST 面瘫筛查）<div class="en-i">Camera CV runs entirely on-device; only the score ever leaves the browser.</div></div></div>
+    <div class="card" style="position:relative;width:662px;height:79px;border-left:9px solid var(--green);padding:9px 18px"><b style="font-size:12.5px">/family 家属端</b><div style="font-size:10.5px;margin-top:3px">联系人 / 声纹录制 / 实时地图；陌生 Telegram 用户自动收到自己的 ID<div class="en-i">Contacts, voice, live map. Unknown senders are auto-replied their own chat ID.</div></div></div>
+    <div class="card" style="position:relative;width:662px;height:79px;border-left:9px solid var(--gold);padding:9px 18px"><b style="font-size:12.5px">/ 控制台 · the console</b><div style="font-size:10.5px;margin-top:3px">解剖台而非 UI；<b>老人端以真实 iframe 嵌在里面</b><div class="en-i">An operating theatre, not a UI — the elder app is embedded live, so cause and effect sit on one screen.</div></div></div>
+    <div class="card" style="position:relative;width:662px;height:79px;border-left:9px solid var(--green);padding:9px 18px"><b style="font-size:12.5px">Telegram</b><div style="font-size:10.5px;margin-top:3px">是适配器不是产品：警报 / 播报 / 走失卡 / 健康异常<div class="en-i">An adapter, not a product — the family installs nothing at all.</div></div></div>
+  </div>
+  <div class="shot" style="left:739px;top:162px;width:488px;height:272px;border-radius:6px">
+    <img src="console_preview.png" style="object-fit:cover;object-position:top left">
+  </div>
+  <div class="shot" style="left:739px;top:446px;width:488px;height:186px;border-radius:6px">
+    <img src="deck-assets/log_stale.png" style="object-fit:cover;object-position:top">
+  </div>
+  <div class="cap" style="left:739px;top:640px;width:488px">上：控制台全景，老人端真实嵌入。下：同一屏的七相位决策日志。<br>Top: the console with the elder app embedded live. Bottom: the seven-phase decision log from the same screen.</div>
+  <div class="footer">安安 AnAn · Team SyntaxError · Age Well SG — 10 / 13</div>
+</section>
+
+<!-- ============ S11 反悔 + 证据 ============ -->
+<section class="slide">
+  <div class="kicker red">THE PROOF · 证据</div>
+  <div class="title serif">我们最骄傲的时刻，是一个没有发生的决定<span class="en">The moment we're proudest of is a decision that never happened.</span></div>
+  <div class="card" style="left:53px;top:168px;width:701px;height:166px;background:var(--dark);border:none;padding:18px 26px;color:#fff">
+    <div style="font-weight:700;color:var(--yellow);font-size:11.5px;letter-spacing:2px;margin-bottom:8px">REVALIDATE · 实测回放 · REPLAYED FROM RECEIPTS</div>
+    <div class="mono" style="font-size:13.5px;font-weight:700;color:var(--red);margin-bottom:8px">verdict: STALE — candidate cancelled, no external action</div>
+    <div style="font-size:11.5px;color:#E8E4DA;line-height:1.5">升级决策生成后、执行前，一条赛跑的心跳到达——候选作废。误报不会骚扰家人。
+      <div style="color:var(--fog);margin-top:4px">A heartbeat raced the decision between creation and execution. The candidate was cancelled before anything external happened — the family was never falsely alarmed.</div></div>
+  </div>
+  <div class="shot" style="left:53px;top:350px;width:701px;height:190px;border-radius:6px">
+    <img src="deck-assets/log_stale.png" style="object-fit:cover;object-position:bottom">
+  </div>
+  <div class="cap" style="left:53px;top:546px;width:701px">真实日志截屏，最后几行即 STALE 判定与取消 · the real log — the last lines are the STALE verdict and the cancellation.</div>
+  <div style="position:absolute;left:53px;top:588px;display:flex;gap:12px">
+    <div class="card" style="position:relative;width:225px;height:98px;padding:0">
+      <div class="chip" style="width:100%;height:32px;background:var(--green);font-size:11px">自主档 · AUTONOMOUS</div>
+      <div class="mono" style="text-align:center;font-size:9px;color:var(--dim);margin-top:10px;line-height:1.6">tts.speak · notify.elder<br>notify.family · memory.write</div>
+    </div>
+    <div class="card" style="position:relative;width:225px;height:98px;padding:0">
+      <div class="chip" style="width:100%;height:32px;background:var(--gold);font-size:11px">批准档 · FAMILY-APPROVAL</div>
+      <div class="mono" style="text-align:center;font-size:9px;color:var(--dim);margin-top:10px;line-height:1.6">联系邻居 / 改日程<br>Telegram 按钮就是批准闸</div>
+    </div>
+    <div class="card" style="position:relative;width:225px;height:98px;padding:0">
+      <div class="chip" style="width:100%;height:32px;background:var(--red);font-size:11px">永不档 · NEVER</div>
+      <div class="mono" style="text-align:center;font-size:9px;color:var(--dim);margin-top:10px;line-height:1.6">call.995 · medical.advice<br>finance.any — 大声拒绝</div>
+    </div>
+  </div>
+  <div class="card" style="left:782px;top:168px;width:445px;height:266px;padding:18px 22px;border-left:9px solid var(--green)">
+    <div style="font-weight:700;font-size:13px;margin-bottom:8px">安全从不依赖模型 · SAFETY NEVER DEPENDS ON THE MODEL</div>
+    <div style="font-size:11.5px;line-height:1.5">地理围栏 / 健康阈值 / 升级时序全是朴素代码。<b>拿走 LLM，安全网照样开火。</b></div>
+    <div class="en-i" style="margin-top:6px;line-height:1.55">Geofence, health thresholds and escalation timing are plain deterministic code. Take the LLM away and the safety net still fires.</div>
+    <div style="height:1px;background:var(--line);margin:14px 0"></div>
+    <div style="font-size:11.5px;line-height:1.5"><b>模型的自由在闸内</b>：每个路口给出选项信封与确定性下限，模型的选择与下限一并入账。</div>
+    <div class="en-i" style="margin-top:6px;line-height:1.55">At each junction the model gets an options envelope and a deterministic floor. Both its choice and that floor are written into the receipt — so the model picks words and bounded options, never whether someone gets help.</div>
+  </div>
+  <div class="shot" style="left:782px;top:446px;width:445px;height:190px;border-radius:6px">
+    <img src="deck-assets/fsm_strip.png" style="object-fit:cover;object-position:left top">
+  </div>
+  <div class="cap" style="left:782px;top:642px;width:445px">同一次运行的 skill 灯牌与状态机 · the same run's skill rack and state machine.</div>
+  <div class="footer">安安 AnAn · Team SyntaxError · Age Well SG — 11 / 13</div>
+</section>
+
+<!-- ============ S12 Lineage ============ -->
+<section class="slide">
+  <div class="kicker">THE LINEAGE · 它是怎么被建成的</div>
+  <div class="title serif">一个人，一支 agent 舰队，中间是评审闸<span class="en">One human, a fleet of agents, and review gates in between.</span></div>
+  <div style="position:absolute;left:53px;top:166px;display:flex;flex-direction:column;gap:12px;width:680px">
+    <div style="display:flex;gap:16px;align-items:flex-start"><div class="chip" style="width:42px;height:42px;border-radius:50%;background:var(--green);font-size:15px;flex:none">1</div><div><b style="font-size:13px">自主性研究计划 · the autonomy research programme</b><div class="en-i" style="margin-top:2px">18 篇文献 · 内核器官与认识论 — 18 papers behind the kernel's organs</div></div></div>
+    <div style="display:flex;gap:16px;align-items:flex-start"><div class="chip" style="width:42px;height:42px;border-radius:50%;background:var(--green);font-size:15px;flex:none">2</div><div><b style="font-size:13px">生产级 agent 实测法则 · measured laws from production agents</b><div class="en-i" style="margin-top:2px">skill 菜单上下文律 · 调度失败律 — context and scheduling-failure laws, measured rather than assumed</div></div></div>
+    <div style="display:flex;gap:16px;align-items:flex-start"><div class="chip" style="width:42px;height:42px;border-radius:50%;background:var(--green);font-size:15px;flex:none">3</div><div><b style="font-size:13px">两次黑客松整体移植 · two hackathons transplanted whole</b><div class="en-i" style="margin-top:2px">KampungKaki 地图 · Synapxe 三页 CV — the map and the camera-CV pages, ported verbatim</div></div></div>
+    <div style="display:flex;gap:16px;align-items:flex-start"><div class="chip" style="width:42px;height:42px;border-radius:50%;background:var(--green);font-size:15px;flex:none">4</div><div><b style="font-size:13px">多智能体建造 · multi-agent construction</b><div class="en-i" style="margin-top:2px">规划 × 像素吉祥物 × 对抗性代码评审——评审闸真的挡下过一次合并</div></div></div>
+  </div>
+  <div class="card" style="left:53px;top:414px;width:680px;height:104px;padding:14px 20px;background:var(--dark);border:none;color:#fff">
+    <div style="font-size:11.5px;line-height:1.5">技艺、法则与探针台账在 agent 之间以<b>文件</b>流转，不是靠感觉。每一次探针——包括失败——都留档。</div>
+    <div style="font-size:11px;color:var(--fog);margin-top:5px;line-height:1.55">Skills, doctrine and probe ledgers moved between agents as files, not vibes. Every probe is archived, failures included — because a document someone wrote is not evidence; a receipt is.</div>
+  </div>
+  <div class="shot" style="left:53px;top:534px;width:680px;height:118px;border-radius:4px">
+    <img src="deck-assets/commit_wall.png" style="object-fit:cover;object-position:top">
+  </div>
+  <div class="shot" style="left:758px;top:166px;width:469px;height:352px;border-radius:6px">
+    <img src="deck-assets/commit_wall.png" style="object-fit:cover;object-position:center">
+  </div>
+  <div class="cap" style="left:758px;top:526px;width:469px">真实提交史截屏——每条信息记录的是决定与理由，不是 “fix stuff”。<br>The real commit wall: every message records a decision and the reason for it.</div>
+  <div class="serif" style="position:absolute;left:758px;top:582px;width:469px;font-size:13.5px;font-style:italic;line-height:1.5">40% 评分项的证据不在这一页的字里，在整个仓库的提交史里。
+    <div class="en-i" style="font-style:normal;margin-top:5px;line-height:1.5">The evidence for the 40% “use of AI tools” criterion isn't in these words — it's in the repository's history.</div></div>
+  <div class="footer">安安 AnAn · Team SyntaxError · Age Well SG — 12 / 13</div>
+</section>
+
+<!-- ============ S13 收尾 ============ -->
+<section class="slide dark">
+  <img src="deck-assets/kopitiam.jpg" style="position:absolute;left:0;top:0;width:1280px;height:720px;object-fit:cover;opacity:.30">
+  <div style="position:absolute;inset:0;background:linear-gradient(95deg,#14161AF7 0%,#14161AE3 54%,#14161A85 100%)"></div>
+  <div class="kicker yellow" style="left:86px;top:58px">THE CLOSE · 收尾</div>
+  <div style="position:absolute;left:86px;top:128px;width:1010px">
+    <div class="serif" style="font-size:21px;line-height:1.5">88,400 位独居老人。从“每晚一通电话才知道”，到“沉默 60 分钟内有人到场”。</div>
+    <div style="font-size:14px;color:#E8E4DA;margin-top:9px;line-height:1.5">88,400 seniors living alone. From “a nightly phone call to find out” to “someone acts within 60 minutes of silence.”</div>
+    <div style="font-size:13.5px;color:var(--fog);margin-top:16px">与新加坡国家计划 Age Well SG 同名同频 · named for, and aligned with, the national programme.</div>
+  </div>
+  <div style="position:absolute;left:86px;top:296px;display:flex;gap:12px">
+    <div class="card" style="position:relative;width:243px;height:106px;background:#1D2026;border:1px solid #2C313A;padding:14px 18px;color:#fff">
+      <div style="font-size:10.5px;letter-spacing:2px;color:var(--green);font-weight:700">LIVE DEMO</div>
+      <div style="font-size:12.5px;font-weight:700;margin-top:7px">anan-iax1.onrender.com</div>
+      <div style="font-size:10.5px;color:var(--dim);margin-top:5px">the agent, running right now</div>
+    </div>
+    <div class="card" style="position:relative;width:243px;height:106px;background:#1D2026;border:1px solid #2C313A;padding:14px 18px;color:#fff">
+      <div style="font-size:10.5px;letter-spacing:2px;color:var(--yellow);font-weight:700">THE STORY</div>
+      <div style="font-size:12.5px;font-weight:700;margin-top:7px">yxiang-828.github.io/anan</div>
+      <div style="font-size:10.5px;color:var(--dim);margin-top:5px">how it was built, scroll by scroll</div>
+    </div>
+    <div class="card" style="position:relative;width:243px;height:106px;background:#1D2026;border:1px solid #2C313A;padding:14px 18px;color:#fff">
+      <div style="font-size:10.5px;letter-spacing:2px;color:#8fb4ff;font-weight:700">SOURCE</div>
+      <div style="font-size:12.5px;font-weight:700;margin-top:7px">github.com/Yxiang-828/anan</div>
+      <div style="font-size:10.5px;color:var(--dim);margin-top:5px">kernel · skills · receipts</div>
+    </div>
+    <div class="card" style="position:relative;width:243px;height:106px;background:#1D2026;border:1px solid #2C313A;padding:14px 18px;color:#fff">
+      <div style="font-size:10.5px;letter-spacing:2px;color:#f0c56a;font-weight:700">DEMO VIDEO</div>
+      <div style="font-size:12.5px;font-weight:700;margin-top:7px">AnAn-DemoVideo</div>
+      <div style="font-size:10.5px;color:var(--dim);margin-top:5px">the whole loop, end to end</div>
+    </div>
+  </div>
+  <div class="serif" style="position:absolute;left:86px;top:450px;font-size:34px;font-style:italic;font-weight:700;color:var(--yellow)">Silence is an input.</div>
+  <div style="position:absolute;left:86px;top:510px;width:1010px;font-size:13px;color:var(--fog);line-height:1.6">她的沉默会被听见——在她需要之前，而不是之后。<br>Her silence gets heard — before she needs it to be, not after.</div>
+  <div style="position:absolute;left:86px;top:608px;width:1107px;height:60px;background:#1D2026;border:1px solid #2C313A;display:flex;align-items:center;padding:0 24px;font-size:11px;color:var(--dim)">Team SyntaxError · Yao Xiang · 安安 AnAn · Age Well Social Good Challenge Singapore · AI Agent / Skills track</div>
 </section>
 
 </body>

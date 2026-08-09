@@ -44,8 +44,15 @@ export default function CameraGame() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
       if (videoRef.current) {
+        // React sets `muted` as a property only — the attribute never reaches the DOM,
+        // so mobile browsers refuse to autoplay and the preview stays black.
+        videoRef.current.muted = true;
+        videoRef.current.setAttribute("muted", "");
+        videoRef.current.setAttribute("playsinline", "");
         videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {});
         videoRef.current.onloadeddata = () => {
+          videoRef.current?.play().catch(() => {});
           setStatus("Smile as wide as you can!");
           speak("Smile as wide as you can!");
           isPlaying.current = true;

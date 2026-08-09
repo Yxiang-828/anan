@@ -106,8 +106,15 @@ export default function MobilityGame() {
         video: { width: 1280, height: 720, facingMode: "user" }
       });
       if (videoRef.current) {
+        // React sets `muted` as a property only — the attribute never reaches the DOM,
+        // so mobile browsers refuse to autoplay and the preview stays black.
+        videoRef.current.muted = true;
+        videoRef.current.setAttribute("muted", "");
+        videoRef.current.setAttribute("playsinline", "");
         videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {});
         videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play().catch(() => {});
           isPlaying.current = true;
           setStatus("Active");
           setFeedback(EXERCISES[0].feedback_idle);
