@@ -137,6 +137,11 @@
   <div class="panel">
     <span class="roleband role-demo" data-i="band_demo"></span>
     <div class="rail-note" data-i="redline"></div>
+    <div class="act open" id="storycard" style="background:#241f17;border-color:#4a3c22">
+      <div class="act-body" style="display:block;padding:12px">
+        <div class="act-why" id="storytext"></div>
+      </div>
+    </div>
     <div id="acts"></div>
     <details>
       <summary data-i="seeds"></summary>
@@ -176,6 +181,8 @@ const T = {
   band_demo:   ["Demo controls — NOT part of the product", "演示台 — 不属于产品"],
   redline:     ["Red line: these buttons inject <b>time</b> and ordinary inputs only — never behavior. Follow the numbers; each step says what you should see.",
                 "红线: 这些按钮只注入<b>时间</b>与普通输入, 从不操纵行为。按顺序点, 每步写着应看到什么。"],
+  story: ["<b>One day with 陈婆婆.</b> She is 78 and lives alone in a Toa Payoh flat — hypertension, a little forgetful, fiercely independent. Her daughter 小芸 works across the city and calls when she can. On the phone beside the kettle lives 安安 — an agent whose inputs are <b>time, silence, and state</b>.<br>What follows is one of her days, compressed. <b>Nobody will touch the agent.</b> Every act below sets the scene, then you press play and watch it happen for real — on the phone in the middle, on the daughter's Telegram, and in the agent's own receipts.",
+          "<b>陈婆婆的一天。</b>78 岁, 独居大巴窑组屋 — 高血压, 有点健忘, 但要强。女儿小芸在城市另一头上班, 有空才能打电话。水壶旁的手机里住着安安 — 一个以<b>时间、沉默、状态</b>为输入的 agent。<br>下面是她被压缩的一天。<b>全程没有人碰 agent。</b>每一幕先讲场景, 你按下播放, 然后看它真实发生 — 在中间的手机上、在女儿的 Telegram 里、在 agent 自己的回执里。"],
   run: ["▶ Run this act", "▶ 运行这一幕"],
   watch: ["What to watch:", "看什么:"],
   seeds:   ["Demo seeds (fictional data, labelled as such)", "演示种子 (虚构数据, 标明为演示)"],
@@ -202,63 +209,63 @@ const T = {
 /* The seven acts — each carries its design rationale (from the convergence
    docs), what the kernel does, and what to watch on which surface. */
 const ACTS = [
- {sc:'morning',
+ {sc:'morning', scene:['7:30 AM. Sunlight through the HDB window; the kettle is quiet. 婆婆 is slow to rise today.','早上 7:30。阳光照进组屋窗户, 水壶还没响。婆婆今天起得慢。'],
   t:["Act 1 · 07:30 — the agent speaks first","第一幕 · 07:30 — 安安先开口"],
   why:["Elders don't open apps — <b>the product is proactivity</b>. The 07:30 cron is the day's first liveness probe: a greeting that is also a question. The reply window (60 min, family-configured) arms silently.",
        "老人不会主动打开 App — <b>主动性就是产品</b>。07:30 的定时问候是全天第一个存活探测: 一句问候, 同时是一次提问。60 分钟回应窗口 (家属可配) 悄悄布下。"],
   watch:["~15s: the phone pops a bilingual card and speaks (live model compose). Trace: wake→think→gate→act→receipt, state → CHECKIN_SENT.",
          "约15秒: 手机弹出双语卡并朗读 (模型实时生成)。日志: wake→think→gate→act→receipt, 状态 → CHECKIN_SENT。"],
   chips:['⚙ greet_checkin','📱 phone','🧠 trace']},
- {sc:'silence_1',
+ {sc:'silence_1', scene:['8:31 AM. The greeting sits unanswered on the table. The flat is silent — and to AnAn, silence is not nothing.','8:31。问候卡在桌上没人应。屋里很静 — 对安安来说, 沉默不是空白。'],
   t:["Act 2 · +61 min — silence becomes data","第二幕 · +61分钟 — 沉默变成数据"],
   why:["<b>\"Silence is an input.\"</b> Chatbots' input domain is {text}; AnAn's is {time, silence, state}. The window expires and the agent reaches a JUNCTION: retry another channel, escalate now, or extend once. The model chooses inside a bounded envelope — the deterministic floor stands if it fails.",
        "<b>\"沉默是输入。\"</b> 聊天机器人的输入域是{文字}; 安安的是{时间、沉默、状态}。窗口到期, agent 走到决策节点: 换渠道重试 / 立即升级 / 再等一次。模型在受限选项内选择 — 模型失效时确定性兜底照常执行。"],
   watch:["Trace: junction receipt shows options + chosen + how (model/floor). State walks SILENCE_1 → retry on voice channel.",
          "日志: junction 回执显示选项/所选/方式 (model/floor)。状态走到 SILENCE_1 → 语音渠道重试。"],
   chips:['⚙ greet_checkin (retry)','🧠 trace']},
- {sc:'silence_2',
+ {sc:'silence_2', scene:['9:02 AM. Still nothing. Across the city, 小芸 is in a meeting, phone face-down.','9:02。还是没有回应。城市另一头, 小芸在开会, 手机扣在桌上。'],
   t:["Act 3 · +31 min — the escalation promise","第三幕 · +31分钟 — 升级承诺"],
   why:["Channels exhausted means <b>a person may be in trouble</b> — this is the moment the whole product exists for. The agent notifies the daughter's REAL Telegram with action buttons; the button callback, not a spoken promise, is what closes the loop.",
        "渠道用尽 = <b>人可能出事了</b> — 整个产品为这一刻而存在。agent 通知女儿的真实 Telegram, 带操作按钮; 闭环靠按钮回调, 不靠口头承诺。"],
   watch:["The mirror (and the real phone) gets the alert card. State: SILENCE_2 → ESCALATED, callback window armed. Mascot flies.",
          "右侧镜像 (和真手机) 收到警报卡。状态: SILENCE_2 → ESCALATED, 回电窗口布下。吉祥物起飞。"],
   chips:['⚙ escalate_tree','✈️ telegram','📱 phone','🧠 trace']},
- {sc:'escalation_timeout',
+ {sc:'escalation_timeout', scene:["9:13 AM. The alert glows unread on 小芸's phone. A tree that stops at one branch isn't a tree.",'9:13。警报在小芸手机上亮着, 没人看。只停在一根枝上的, 不叫树。'],
   t:["Act 4 · +11 min — the tree actually walks","第四幕 · +11分钟 — 联系人树真的会走"],
   why:["A contact 'tree' that stops at one person is a lie. No callback within the window → the NEXT contact is notified (daughter → son → neighbour), each hop with its own idempotent receipt — double-taps can never double-process.",
        "只停在第一个人的'树'是假的。窗口内无回电 → 通知下一位 (女儿→儿子→邻居), 每一跳有独立幂等回执 — 重复点按不会重复处理。"],
   watch:["Trace: escalation_timeout junction → next_contact receipt with a fresh esc-id. ESCALATED re-arms.",
          "日志: escalation_timeout 节点 → next_contact 回执, 新 esc-id。ESCALATED 重新布防。"],
   chips:['⚙ escalate_tree ×next','✈️ telegram','🧠 trace']},
- {sc:'recover',
+ {sc:'recover', scene:['Then — slippers shuffle at the door. 婆婆 was watering plants along the corridor the whole time.','然后 — 门口传来拖鞋声。婆婆一直在走廊浇花呢。'],
   t:["Act 5 · a single touch — the 反悔 beat","第五幕 · 碰一下屏幕 — 反悔镜头"],
   why:["<b>Every touch is a heartbeat</b> — med button, a word, any tap. It dissolves the entire silence net instantly. And if an escalation decision is mid-flight, REVALIDATE kills it before any external action: a decision born from an old snapshot must re-check the world (stale-decision revalidation).",
        "<b>每次触碰都是心跳</b> — 按用药键、说一句话、随手一点, 都会立即消解整张沉默网。若升级决策还在途中, REVALIDATE 会在任何外部动作前取消它: 旧快照生出的决策必须先重看世界 (陈旧决策再验证)。"],
   watch:["State snaps to ENGAGED (or RESOLVED if escalated). If a junction races: 'revalidate → STALE, candidate cancelled'.",
          "状态跳到 ENGAGED (升级中则 RESOLVED)。若与节点赛跑: 'revalidate → STALE, 候选取消'。"],
   chips:['⚙ kernel revalidate','📱 phone','🧠 trace']},
- {sc:'evening',
+ {sc:'evening', scene:["8:00 PM. Dinner cleared, TV murmuring. Across the city, 小芸's phone glows with the day's story.",'晚上 8:00。晚饭收好, 电视轻响。城市另一头, 小芸的手机亮起今天的故事。'],
   t:["Act 6 · 20:00 — the daily heartbeat to family","第六幕 · 20:00 — 给家人的每日心跳"],
   why:["Reassurance without asking: every evening the family gets meds / mood / today's observation, composed from the actual day's records — never a template pretending to care.",
        "不用问的安心: 每晚家人收到用药/心情/今日观察, 由当天真实记录生成 — 不是装作关心的模板。"],
   watch:["Telegram mirror gets the bilingual report ~20:05. Compare after seeding: Day 7 report visibly knows more than Day 1.",
          "镜像 ~20:05 收到双语播报。播种后对比: 第7天的播报明显比第1天懂她。"],
   chips:['⚙ med_reminder','⚙ family_bulletin','✈️ telegram']},
- {sc:'wander',
+ {sc:'wander', scene:['Another afternoon. 婆婆 went out for kaya toast — and the void deck turned into three wrong turns.','另一个下午。婆婆出门买咖椰吐司 — 组屋楼下拐了三个弯, 就认不得路了。'],
   t:["Act 8 · she wanders — the geofence relay","第八幕 · 走远了 — 地理围栏转达"],
   why:["Dementia wander-safety: the phone streams position; the KERNEL judges distance (deterministic — a safety net must not depend on a model's mood). Past the family-set radius, family gets the live position and a map link; AnAn gently asks her to rest. Return → all-clear, automatically.",
        "失智走失防护: 手机上报位置, 由<b>内核确定性判定</b>距离 (安全网不能依赖模型状态)。超出家属设定的半径, 家人收到实时位置和地图链接; 安安温和提醒她歇歇。回到范围 → 自动报平安。"],
   watch:["Telegram: wander alert with 📍 map link + [On my way] button. Trace: safe_range receipt with distance. Run 'come home' after: the all-clear sends itself.",
          "Telegram: 走失预警 + 📍地图链接 + [我去接TA] 按钮。日志: safe_range 回执含距离。之后点'回家了': 自动报平安。"],
   chips:['⚙ safe_range','🧭 geofence','✈️ telegram']},
- {sc:'come_home',
+ {sc:'come_home', scene:['The blue button walks her back, turn by turn. The door clicks. Home.','蓝色按钮一步步领她回来。门锁咔哒一声。到家了。'],
   t:["Act 8b · she comes home — all clear","第八幕b · 回家了 — 自动报平安"],
   why:["The other half of the loop: re-entering the radius clears the flag and tells family, unprompted. No one has to remember to un-worry.",
        "闭环的另一半: 回到半径内自动消除警报并告诉家人 — 不需要谁记得去'解除担心'。"],
   watch:["Telegram: the all-clear message. Trace: safe_range receipt 'back inside the safe radius'.",
          "Telegram: 报平安消息。日志: safe_range 回执 'back inside the safe radius'。"],
   chips:['⚙ safe_range','✈️ telegram']},
- {sc:'insight',
+ {sc:'insight', scene:['9:00 PM. The flat settles for the night. AnAn sits with the day: what did she say, what should tomorrow remember?','晚上 9:00。屋子安静下来。安安回想这一天: 她说了什么, 明天应该记得什么?'],
   t:["Act 7 · 21:00 — it learns her, over time","第七幕 · 21:00 — 随时间更懂她"],
   why:["The time dimension is the proof of learning: each night the agent distills one care observation from TODAY'S conversations into memory. It feeds tomorrow's greeting and the next bulletin. <b>Do this first:</b> talk to her app (Talk tab — mention something like knee pain), and run the seed so past days exist to compare against.",
        "时间维度是学习的物证: 每晚从<b>当天对话</b>提炼一条照护观察写入记忆, 反哺明早问候与下次播报。<b>先做:</b> 在手机 Talk 页跟安安聊几句 (比如提到膝盖疼), 并播种历史, 才有对比。"],
@@ -279,6 +286,7 @@ function renderActs(){
         <div class="act-caret">▶</div>
       </div>
       <div class="act-body">
+        ${a.scene?`<div class="act-why" style="font-style:italic;color:#d8c9a3;margin-bottom:6px">${a.scene[idx]}</div>`:''}
         <div class="act-why">${a.why[idx]}</div>
         <div class="act-watch"><b>${T.watch[idx]}</b> ${a.watch[idx]}</div>
         <div class="act-chips">${a.chips.map(c=>`<span class="chip">${c}</span>`).join('')}</div>
@@ -299,6 +307,7 @@ function applyLang(){
   $('langbtn').textContent = lang==='en' ? '中文' : 'EN';
   document.documentElement.lang = lang;
   renderActs();
+  const st=document.getElementById('storytext'); if(st) st.innerHTML=T.story[idx];
 }
 function toggleLang(){ lang = lang==='en'?'zh':'en'; localStorage.setItem('anan_lang', lang); applyLang(); refresh(lastState); }
 applyLang();
