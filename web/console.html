@@ -260,7 +260,9 @@ function setState(s){STATES.forEach(x=>$('st-'+x).classList.toggle('on',x===s));
 function sc(name){fetch('/inject/scenario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});}
 const M_EMOJI={idle:'🐤',sleep:'😴',alert:'🚨',think:'🤔',talk:'💬',work:'🛠️',fly:'🕊️',happy:'😊',listen:'👂',dizzy:'😵‍💫'};
 const sprites={};
-Object.keys(M_EMOJI).forEach(s=>{ const img=new Image(); img.onload=()=>sprites[s]=img.src; img.src=`/mascot/${s}-atlas.png`; });
+Object.keys(M_EMOJI).forEach(s=>{ const img=new Image();
+  img.onload=()=>{ sprites[s]=img.src; if(lastState) refresh(lastState); };  // re-render once loaded
+  img.src=`/mascot/${s}-atlas.png`; });
 let mhold=0;
 function mascot(s,holdMs=0){
   const now=Date.now();
