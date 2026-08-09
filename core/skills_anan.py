@@ -26,6 +26,8 @@ def _system(kernel: Kernel) -> str:
         f"称呼TA为{p.get('address_as', p.get('name', ''))}, "
         f"健康情况: {', '.join(p.get('conditions', [])) or '未知'}。",
         "你没有身体, 不能亲手做事; 你能做的是: 说话陪伴、提醒、联系家人。不要承诺物理动作。",
+        "绝不口头承诺'我会转告/我会联系家人'——真正给家人发消息是另一个技能干的, 有回执为证。"
+        "你只负责当下这句回应。",
         "输出契约: 先中文一到两行, 然后换行, 再英文一到两行。中文行里只有中文, "
         "英文行里只有英文, 两种语言绝不混在同一行。口语, 简短, 无列表符号无引号。",
     ]
@@ -107,6 +109,47 @@ def companion_chat(kernel: Kernel, text: str = "") -> dict:
     receipt = _elder(kernel, {"type": "chat", "text": reply, "speak": not offline})
     return {"reply": reply, "lane": lane, "mood": mood, "delivery": receipt,
             "effect": "conversation logged, mood tracked, heartbeat"}
+
+
+# --- relay_family ----------------------------------------------------------
+def relay_family(kernel: Kernel, text: str = "") -> dict:
+    """The elder asked for family to be told something. ACTUALLY send it and
+    confirm from the delivery receipt — never a spoken promise."""
+    kernel.loop.heartbeat("relay_request")
+    at = kernel.clock.now().strftime("%H:%M")
+    kernel.store.log("conversations", at=at, role="elder", text=text)
+    first = (kernel.config.get("contact_tree") or [{}])[0]
+    p = kernel.config.get("profile", {})
+    facts = {
+        "收信人": {"称呼": first.get("name"), "关系": first.get("relation")},
+        "被照顾者": p.get("name"),
+        "TA的原话": text[:200],
+        "时间": at,
+    }
+    msg, lane = _say(kernel,
+                     f"转达: 你现在是在给{first.get('name', '家人')}({first.get('relation', '')})发消息, "
+                     f"不是在跟被照顾者说话。以称呼{first.get('name', '')}开头, "
+                     f"忠实转达被照顾者的话和时间", facts,
+                     contract="两三行, 中英各有")
+    if msg is None:
+        msg = "📨 " + _fmt([("转达 Message from", p.get("name", "")),
+                            ("原话 Their words", text[:120]), ("时间 At", at)])
+    receipt = _family(kernel, msg, {"to": first.get("telegram", "")})
+    sent = bool(receipt.get("ok")) and receipt.get("surface") != "mirror"
+    mirror_only = receipt.get("surface") == "mirror"
+    if sent or mirror_only:
+        confirm_facts = {"已发送给": first.get("name"), "渠道": receipt.get("surface")}
+        confirm, _l = _say(kernel, "告诉TA消息真的已经发出去了, 一句安心的话", confirm_facts)
+        if confirm is None:
+            confirm = f"✓ 已发给{first.get('name', '家人')} Sent to {first.get('relation', 'family')}"
+    else:
+        confirm = _fmt([("没发出去 Could not send", receipt.get("error", "?")),
+                        ("会再试 Will retry", "是 yes")])
+    kernel.store.log("conversations", at=at, role="anan", text=confirm)
+    _elder(kernel, {"type": "chat", "text": confirm, "speak": True})
+    return {"message": msg, "lane": lane, "delivery": receipt,
+            "effect": (f"elder's words RELAYED to {first.get('name')} via {receipt.get('surface')}"
+                       if (sent or mirror_only) else "relay FAILED — elder told honestly")}
 
 
 # --- med_reminder ----------------------------------------------------------
@@ -223,6 +266,8 @@ def register_all(kernel: Kernel) -> None:
                               "schedule", effects=("notify.elder", "tts.speak")))
     kernel.registry.add(Skill("companion_chat", "陪伴对话, 内嵌情绪感知", "事件触发; 写入对话与心情日志", companion_chat,
                               "event", effects=("notify.elder", "tts.speak", "memory.write")))
+    kernel.registry.add(Skill("relay_family", "把老人的话真实转达给家人", "老人请求时; 发送有回执, 不口头承诺", relay_family,
+                              "event", effects=("notify.family", "notify.elder", "tts.speak")))
     kernel.registry.add(Skill("med_reminder", "用药提醒, 确认即心跳", "提示同时布下沉默网", med_reminder,
                               "schedule", effects=("notify.elder", "tts.speak")))
     kernel.registry.add(Skill("escalate_tree", "沿紧急联系人树通知家人", "SILENCE_2 触发; 回调闭环; 走树", escalate_tree,

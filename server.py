@@ -158,11 +158,30 @@ try:
     if _token and _family_ids:
         _tg = TelegramTransport(token=_token, owner_ids=_family_ids,
                                 allowed_chat_ids=set(), offset_path=RUNTIME / "tg-offset.json")
-        _tg.on_refused = lambda ib: store.event(
-            clock.now().strftime("%Y-%m-%d %H:%M:%S"), "telegram_refused", "family_adapter",
-            {"actor_id": ib.actor_id, "name": ib.actor_name, "handle": ib.actor_handle,
-             "text": ib.text[:80]},
-            effect=f"UNKNOWN SENDER id={ib.actor_id} — add to config family_extra_ids to adopt")
+        _refused_replied: set = set()
+
+        def _on_refused(ib) -> None:
+            store.event(clock.now().strftime("%Y-%m-%d %H:%M:%S"), "telegram_refused",
+                        "family_adapter",
+                        {"actor_id": ib.actor_id, "name": ib.actor_name,
+                         "handle": ib.actor_handle, "text": ib.text[:80]},
+                        effect=f"UNKNOWN SENDER id={ib.actor_id} — reply sent with setup instructions")
+            # onboarding: tell the stranger their own id ONCE, so "what's my
+            # telegram id" never needs a third-party bot
+            if ib.room_kind == "private" and ib.room_id not in _refused_replied:
+                _refused_replied.add(ib.room_id)
+                try:
+                    _tg.send(ib.room_id,
+                             f"您好, 我是安安, 但我还不认识您。\n"
+                             f"您的 Telegram ID: `{ib.actor_id}`\n"
+                             f"请家人把这个 ID 填进设置页 (/family), 我就能为您服务了。\n"
+                             f"Hi, I'm AnAn — I don't know you yet. Your Telegram ID is "
+                             f"`{ib.actor_id}`. Enter it on the family setup page and "
+                             f"I'll be able to talk to you.")
+                except Exception:
+                    pass
+
+        _tg.on_refused = _on_refused
         _tg.connect()
 except Exception as exc:  # noqa: BLE001
     _tg, _tg_error = None, str(exc)
@@ -489,6 +508,34 @@ def family_page() -> str:
 @app.get("/voice/scripts")
 def voice_scripts() -> dict:
     return CONFIG.get("voice", {}).get("scripts", {})
+
+
+@app.get("/config/contact")
+def get_contact() -> dict:
+    c = (CONFIG.get("contact_tree") or [{}])[0]
+    return {"name": c.get("name", ""), "relation": c.get("relation", ""),
+            "telegram": c.get("telegram", ""), "phone": c.get("phone", "")}
+
+
+@app.post("/config/contact")
+async def set_contact(request: Request) -> dict:
+    """Family setup: the primary contact is DATA the family enters — never a
+    developer's env archaeology. Hot-reloads the Telegram allowlist."""
+    b = await request.json()
+    tree = CONFIG.setdefault("contact_tree", [{}])
+    if not tree:
+        tree.append({})
+    for k in ("name", "relation", "telegram", "phone"):
+        if b.get(k) is not None:
+            tree[0][k] = str(b[k]).strip()
+    _cfg_file.write_text(json.dumps(CONFIG, ensure_ascii=False, indent=2))
+    if _tg is not None and tree[0].get("telegram"):
+        _tg.owner_ids.add(str(tree[0]["telegram"]))
+    store.event(kernel.clock.now().strftime("%Y-%m-%d %H:%M:%S"), "receipt", "config",
+                {"contact": {k: tree[0].get(k, "") for k in ("name", "relation")},
+                 "telegram_set": bool(tree[0].get("telegram"))},
+                effect="primary family contact updated + telegram allowlist hot-reloaded")
+    return {"ok": True}
 
 
 @app.get("/voice/options")

@@ -213,9 +213,25 @@ class Kernel:
             if event["detail"].get("med"):
                 self.store.log("med_log", at=at, med=event["detail"]["med"], status="taken")
         elif kind == "user_text":
-            self._pipeline("companion_chat", reason="elder spoke",
-                           candidate_wall=event["created_wall"],
-                           text=event["detail"].get("text", ""))
+            # SKILL ROUTING — the planner chooses: just talk, or actually act?
+            # (autonomous tool selection; floor = companion_chat)
+            text = event["detail"].get("text", "")
+            skill_id, how = "companion_chat", "floor"
+            if self.chooser:
+                try:
+                    picked = self.chooser(
+                        "elder_request", ["companion_chat", "relay_family"],
+                        {"TA刚说": text[:200],
+                         "规则": "TA想让家人知道某件事/带话/求助家人 -> relay_family; 普通聊天 -> companion_chat"})
+                    if picked in ("companion_chat", "relay_family"):
+                        skill_id, how = picked, "model"
+                except Exception as exc:
+                    how = f"floor (chooser failed: {str(exc)[:50]})"
+            self.store.event(at, "think", "router",
+                             {"junction": "elder_request", "chosen": skill_id, "how": how,
+                              "options": ["companion_chat", "relay_family"]})
+            self._pipeline(skill_id, reason=f"elder spoke ({how})",
+                           candidate_wall=event["created_wall"], text=text)
         elif kind == "family_callback":
             who = event["detail"].get("who", "family")
             self.store.log("escalation_log", at=at, step="callback", contact=who, outcome="confirmed")

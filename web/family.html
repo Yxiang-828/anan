@@ -79,6 +79,21 @@
 </div>
 
 <div class="card">
+  <b>家人联络设置 · Family contact setup</b>
+  <p class="why">警报和播报发给谁。ID 获取: 用您的 Telegram 给
+    <b>@ananannananananananananbot</b> 发一句话, 它会回复您的 ID。<br>
+    Who receives alerts &amp; bulletins. To get your ID: message the bot once — it replies with your ID.</p>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px">
+    <input id="c-name" placeholder="称呼 Name (小芸)" style="padding:12px;font-size:16px;border:2px solid #efe9dd;border-radius:10px;font-family:inherit">
+    <input id="c-relation" placeholder="关系 Relation (女儿)" style="padding:12px;font-size:16px;border:2px solid #efe9dd;border-radius:10px;font-family:inherit">
+    <input id="c-telegram" placeholder="Telegram ID (98239...)" style="padding:12px;font-size:16px;border:2px solid #efe9dd;border-radius:10px;font-family:inherit">
+    <input id="c-phone" placeholder="电话 Phone (+65...)" style="padding:12px;font-size:16px;border:2px solid #efe9dd;border-radius:10px;font-family:inherit">
+  </div>
+  <button id="c-save" style="margin-top:10px; padding:14px 22px; font-size:16px; color:#fff; background:var(--blue)">保存 Save</button>
+  <span id="c-status" style="font-size:13px; color:var(--muted); margin-left:10px"></span>
+</div>
+
+<div class="card">
   <b>试听 · Audition the voices</b>
   <p class="why">改这行字, 点任何声音, 听它读出来 — 包括您刚录的声音。
     Edit this exact line, tap any voice, hear it spoken — including your own clone.</p>
@@ -210,6 +225,22 @@ function loadOptions(){
 loadOptions();
 const _origPick = pick;
 pick = function(l){ _origPick(l); loadOptions(); };
+
+/* ---- family contact setup ---- */
+fetch('/config/contact').then(r=>r.json()).then(c=>{
+  $('c-name').value=c.name||''; $('c-relation').value=c.relation||'';
+  $('c-telegram').value=c.telegram||''; $('c-phone').value=c.phone||'';
+});
+$('c-save').onclick=async ()=>{
+  $('c-status').textContent='保存中… Saving…';
+  try{
+    const r=await fetch('/config/contact',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:$('c-name').value, relation:$('c-relation').value,
+                           telegram:$('c-telegram').value, phone:$('c-phone').value})});
+    const d=await r.json();
+    $('c-status').textContent = d.ok ? '✅ 已保存并生效 Saved & live' : '保存失败 Failed';
+  }catch(e){ $('c-status').textContent='保存失败 Failed'; }
+};
 </script>
 </body>
 </html>
