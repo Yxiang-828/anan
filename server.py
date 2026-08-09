@@ -348,21 +348,32 @@ def state() -> dict:
             "telegram": bool(_tg), "telegram_error": _tg_error}
 
 
+def _deliverable(name: str):
+    """Deliverables ship in two places (deliverables/ and docs/, the Pages root).
+    Serve whichever the image actually has — one missing COPY must not 404 a
+    judge's link."""
+    for base in ("deliverables", "docs"):
+        p = ROOT / base / name
+        if p.is_file():
+            return p
+    return None
+
+
 @app.get("/deck.pdf")
 def deck_pdf():
     from fastapi.responses import FileResponse
-    p = ROOT / "deliverables" / "AnAn-Deck-SyntaxError.pdf"
+    p = _deliverable("AnAn-Deck-SyntaxError.pdf")
     return FileResponse(p, media_type="application/pdf",
-                        filename="AnAn-Deck-SyntaxError.pdf") if p.is_file() else \
+                        filename="AnAn-Deck-SyntaxError.pdf") if p else \
            JSONResponse({"error": "not bundled"}, status_code=404)
 
 
 @app.get("/demo.mp4")
 def demo_mp4():
     from fastapi.responses import FileResponse
-    p = ROOT / "deliverables" / "AnAn-DemoVideo-SyntaxError.mp4"
+    p = _deliverable("AnAn-DemoVideo-SyntaxError.mp4")
     return FileResponse(p, media_type="video/mp4",
-                        filename="AnAn-DemoVideo-SyntaxError.mp4") if p.is_file() else \
+                        filename="AnAn-DemoVideo-SyntaxError.mp4") if p else \
            JSONResponse({"error": "not bundled"}, status_code=404)
 
 
