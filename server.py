@@ -86,7 +86,17 @@ else:
         # shipped DEFAULTS (editable data, not agent hardcode): pack voices
         # used until a family voice clone exists, per-language only
         "voice": {"defaults": {"zh": "chinese/12_confident_woman_chinese",
-                               "en": "english/15_soothing_woman"}},
+                               "en": "english/15_soothing_woman"},
+                  "speak": "both",  # zh | en | both — what cards read aloud
+                  "asr_language": "zh", "asr_model": "base",
+                  # hosted demo voice (owner doctrine: qwen = phone app,
+                  # ElevenLabs = hosted demo). Sarah primary; alts listed.
+                  "eleven": {"model": "eleven_multilingual_v2",
+                             "en": "EXAVITQu4vr4xnSDxMaL",
+                             "zh": "EXAVITQu4vr4xnSDxMaL",
+                             "alts_en": {"matilda": "XrExE9yKIg1WjnnlVkGX",
+                                         "bill": "pqHfZKP75CvOlQylNhV4",
+                                         "bella": "hpp4J3VqNfWAUOO0d1Us"}}},
     }
     _cfg_file.write_text(json.dumps(CONFIG, ensure_ascii=False, indent=2))
 
@@ -262,6 +272,7 @@ def state() -> dict:
     return {**kernel.snapshot(), "elder_feed": elder_feed[-10:], "profile": CONFIG["profile"],
             "agent_name": CONFIG.get("agent_name", ""),
             "med": CONFIG.get("med", {}),
+            "voice_speak": CONFIG.get("voice", {}).get("speak", "both"),
             # elder surface needs names/relations only — chat ids stay server-side
             "contact_tree": [{"name": c.get("name", ""), "relation": c.get("relation", ""),
                               "phone": c.get("phone", "")}
@@ -293,21 +304,55 @@ TTS_DIR.mkdir(exist_ok=True)
 _VOICE_GEN = ROOT / "skills" / "voice-gen" / "run.py"
 
 
+def _eleven_tts(text: str, lang: str) -> str | None:
+    """ElevenLabs lane — the HOSTED demo voice (owner's two-tier doctrine:
+    qwen3-TTS is the phone app's voice, ElevenLabs voices the hosted demo).
+    Returns a served url or None; results cached by content hash."""
+    import urllib.request as _rq
+    api_key = os.environ.get("DINOSAUR_ELEVEN_LABS_API_KEY", "")
+    ev = CONFIG.get("voice", {}).get("eleven", {})
+    voice_id = ev.get(lang) or ev.get("en", "")
+    if not api_key or not voice_id:
+        return None
+    key = hashlib.sha1(f"11:{lang}:{voice_id}:{text}".encode()).hexdigest()[:16]
+    out = TTS_DIR / f"{key}.mp3"
+    if out.is_file():
+        return f"/tts/{key}.mp3"
+    req = _rq.Request(
+        f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
+        data=json.dumps({"text": text[:600],
+                         "model_id": ev.get("model", "eleven_multilingual_v2"),
+                         "voice_settings": {"stability": 0.5, "similarity_boost": 0.75}}).encode(),
+        headers={"xi-api-key": api_key, "Content-Type": "application/json"},
+        method="POST")
+    try:
+        with _rq.urlopen(req, timeout=30) as resp:
+            audio = resp.read(8 * 1024 * 1024)
+        if len(audio) < 500:
+            return None
+        out.write_bytes(audio)
+        return f"/tts/{key}.mp3"
+    except Exception as exc:  # noqa: BLE001
+        store.event(kernel.clock.now().strftime("%Y-%m-%d %H:%M:%S"), "error", "tts-eleven",
+                    {"why": str(exc)[:120]})
+        return None
+
+
 @app.post("/tts")
 async def tts(request: Request) -> dict:
-    """Server-side qwen3-TTS (local GPU, voice-gen skill). Renders the zh or en
-    line with the per-language reference from config (family clone when it
-    exists, pack default otherwise). Returns {url:null} when the rig is absent
-    (cloud) — the client then stays SILENT rather than garbling."""
+    """Voice lanes, in doctrine order: qwen3-TTS (phone app / local GPU) →
+    ElevenLabs (hosted demo) → null (client falls to browser voice/silence)."""
     body = await request.json()
     text = (body.get("text") or "").strip()
     lang = "zh" if body.get("lang", "zh") == "zh" else "en"
-    if not text or not _VOICE_GEN.is_file():
+    if not text:
         return {"url": None}
+    if not _VOICE_GEN.is_file():
+        return {"url": _eleven_tts(text, lang), "lane": "elevenlabs"}
     voice = (CONFIG.get("voice", {}).get("clone", {}).get(lang)
              or CONFIG.get("voice", {}).get("defaults", {}).get(lang, ""))
     if not voice:
-        return {"url": None}
+        return {"url": _eleven_tts(text, lang), "lane": "elevenlabs"}
     key = hashlib.sha1(f"{lang}:{voice}:{text}".encode()).hexdigest()[:16]
     out = TTS_DIR / f"{key}.wav"
     if not out.is_file():
@@ -322,10 +367,10 @@ async def tts(request: Request) -> dict:
             if not out.is_file():
                 store.event(kernel.clock.now().strftime("%Y-%m-%d %H:%M:%S"), "error", "tts",
                             {"why": (r.stdout or r.stderr)[-200:]})
-                return {"url": None}
+                return {"url": _eleven_tts(text, lang), "lane": "elevenlabs-fallback"}
         except Exception as exc:  # noqa: BLE001
-            return {"url": None, "error": str(exc)[:100]}
-    return {"url": f"/tts/{key}.wav"}
+            return {"url": _eleven_tts(text, lang), "lane": "elevenlabs-fallback", "error": str(exc)[:100]}
+    return {"url": f"/tts/{key}.wav", "lane": "qwen3-tts"}
 
 
 @app.get("/tts/{name}")
@@ -334,7 +379,7 @@ def tts_file(name: str):
     path = TTS_DIR / name
     if not path.is_file() or "/" in name or ".." in name:
         return JSONResponse({"error": "not found"}, status_code=404)
-    return FileResponse(path, media_type="audio/wav")
+    return FileResponse(path, media_type="audio/mpeg" if name.endswith(".mp3") else "audio/wav")
 
 
 ASR_DIR = RUNTIME / "asr"

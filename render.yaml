@@ -23,5 +23,7 @@ services:
         sync: false
       - key: OWNER_TELEGRAM_ID
         sync: false
+      - key: DINOSAUR_ELEVEN_LABS_API_KEY
+        sync: false          # hosted demo voice (ElevenLabs); qwen stays local
       - key: PYTHONUNBUFFERED
         value: "1"

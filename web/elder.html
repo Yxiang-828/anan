@@ -157,6 +157,24 @@ function splitBilingual(text){
   return { zh: zh||text, en };
 }
 /* voice: server-side qwen3-TTS first; browser only with a REAL zh voice; else silent */
+/* voice.speak setting from config: 'zh' | 'en' | 'both' — what gets read aloud */
+async function speakCard(zh, en){
+  const mode = state.speak || 'both';
+  const queue = mode==='zh' ? [['zh',zh]] : mode==='en' ? [['en',en||zh]] : [['zh',zh],['en',en]];
+  for(const [lg,line] of queue){ if(line) await speakOne(line, lg, lg==='zh'?en:''); }
+}
+async function speakOne(text, lg, enFallback){
+  try{
+    const r=await fetch('/tts',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text, lang:lg})});
+    const d=await r.json();
+    if(d.url){ if(audioEl){audioEl.pause();}
+      audioEl=new Audio(d.url);
+      await new Promise(res=>{ audioEl.onended=res; audioEl.onerror=res; audioEl.play().catch(res); });
+      return; }
+  }catch(e){}
+  speak(text, enFallback);
+}
 let audioEl=null;
 async function speak(text, enLine=''){
   if(!text) return;
@@ -197,7 +215,7 @@ function addCard(c){
      <p class="zh">${zh}</p>${en?`<p class="en">${en}</p>`:''}${actions}`;
   const feed=$('feed'); feed.prepend(el);
   while(feed.children.length>5) feed.lastChild.remove();
-  if(c.speak){ const utter = state.lang==='en'&&en ? en : zh; speak(utter, en); }
+  if(c.speak) speakCard(zh, en);
 }
 function med(btn){ btn.textContent='✓ 已记录 Recorded'; btn.disabled=true; beat();
   fetch('/elder/heartbeat',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -302,7 +320,8 @@ es.onmessage=m=>{
     fetch('/state').then(r=>r.json()).then(s=>{ renderContacts(s.contact_tree||s.profile?null:null);
       $('agentname').textContent=s.agent_name||'安安';
       $('hello').childNodes[0].textContent=(s.profile?.name||'')+', 您好 ☁️';
-      state.med=s?.med?.name||''; if(s.contact_tree) renderContacts(s.contact_tree); });
+      state.med=s?.med?.name||''; state.speak=s.voice_speak||'both';
+      if(s.contact_tree) renderContacts(s.contact_tree); });
   }
   if(d.kind==='elder_card'){ addCard(d.card); beat(); }
   if(d.kind==='event'){ addLog(d.event); if(d.state) refresh(d.state);
