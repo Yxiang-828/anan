@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>安安 · Health Lab</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script type="importmap">
+{ "imports": {
+  "react": "https://esm.sh/react@19",
+  "react-dom/client": "https://esm.sh/react-dom@19/client",
+  "react/jsx-runtime": "https://esm.sh/react@19/jsx-runtime",
+  "@mediapipe/tasks-vision": "https://esm.sh/@mediapipe/tasks-vision@0.10.32",
+  "useVoice-shim": "/health-lab/useVoice.js"
+} }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+<style>
+  body { background:#0b0f17; margin:0; }
+  #topbar { font-family:system-ui,sans-serif; color:#9aa6b8; font-size:13px; padding:10px 16px;
+            display:flex; gap:16px; align-items:center; }
+  #topbar a { color:#7fa3ff; text-decoration:none; }
+  #root { min-height:calc(100vh - 40px); }
+  #loading { color:#9aa6b8; font-family:system-ui; padding:40px; text-align:center; }
+</style>
+</head>
+<body>
+<div id="topbar">
+  <a href="/elder?s=health">← 安安 AnAn</a>
+  <span>Health Lab — Synapxe CV pages, transplanted as-is · camera stays on this device</span>
+  <a href="?game=heart-rate">❤️ Heart rate</a>
+  <a href="?game=mobility">🪑 Mobility</a>
+  <a href="?game=camera">😊 Smile</a>
+</div>
+<div id="root"><div id="loading">Loading the check…</div></div>
+<script type="module">
+const GAMES = { 'heart-rate':'/health-lab/heart-rate.tsx',
+                'mobility':'/health-lab/mobility.tsx',
+                'camera':'/health-lab/camera.tsx' };
+const game = new URLSearchParams(location.search).get('game') || 'heart-rate';
+const src = GAMES[game] || GAMES['heart-rate'];
+try {
+  const tsx = await (await fetch(src)).text();
+  const js = Babel.transform(tsx.replace(/^['"]use client['"];?\s*/, ''), {
+    filename: src,
+    presets: [["typescript", {isTSX:true, allExtensions:true}],
+              ["react", {runtime:"automatic"}]],
+  }).code;
+  const blob = new Blob([js], {type:'text/javascript'});
+  const mod = await import(URL.createObjectURL(blob));
+  const React = await import('react');
+  const { createRoot } = await import('react-dom/client');
+  const Page = mod.default;
+  createRoot(document.getElementById('root')).render(React.createElement(Page));
+} catch (e) {
+  document.getElementById('root').innerHTML =
+    `<div id="loading">This check could not load: ${String(e).slice(0,200)}<br>
+     Needs internet for React/MediaPipe CDN, and HTTPS/localhost for the camera.</div>`;
+  console.error(e);
+}
+</script>
+</body>
+</html>

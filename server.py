@@ -825,6 +825,39 @@ async def health_score(request: Request) -> dict:
     return {"ok": True}
 
 
+@app.get("/health-lab", response_class=HTMLResponse)
+def health_lab() -> str:
+    """Synapxe's finished CV pages, served near-verbatim (owner order: copy
+    and open a separate page, don't rebuild weaker versions)."""
+    return (ROOT / "web" / "health-lab" / "index.html").read_text()
+
+
+@app.get("/health-lab/{name}")
+def health_lab_asset(name: str):
+    from fastapi.responses import FileResponse
+    path = ROOT / "web" / "health-lab" / name
+    if not path.is_file() or "/" in name or ".." in name:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    media = "text/javascript" if name.endswith(".js") else "text/plain"
+    return FileResponse(path, media_type=media)
+
+
+@app.post("/api/score")
+async def api_score(request: Request) -> dict:
+    """The transplanted pages POST their original shape here — their UI now
+    drives AnAn's full agent loop (reflect to elder, fanout to guardian)."""
+    b = await request.json()
+    gmap = {"heart_rate": "heart_rate", "face_symmetry_score": "face_symmetry",
+            "mobility_score": "fitness"}
+    kind = gmap.get(b.get("game_type", ""))
+    if not kind:
+        return {"status": "ignored"}
+    kernel.submit("health_score", "health_lab",
+                  {"kind": kind, "score": float(b.get("score", 0)),
+                   "metrics": b.get("metrics", {})})
+    return {"status": "ok"}
+
+
 @app.post("/elder/location")
 async def elder_location(request: Request) -> dict:
     """The elder phone streams position (browser geolocation, HTTPS only).
