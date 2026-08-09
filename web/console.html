@@ -3,104 +3,144 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>安安 · 演示台</title>
+<title>安安 AnAn · Demo</title>
 <style>
   :root { --bg:#10141f; --panel:#1a2030; --ink:#dfe6f3; --dim:#7d8aa5; --line:#2a3350;
           --blue:#4f7cff; --green:#35c26e; --amber:#f0a53c; --red:#ef5350; --purple:#9b7ef0;
           --ease-out:cubic-bezier(0.23,1,0.32,1); }
   * { box-sizing:border-box; margin:0; }
   body { background:var(--bg); color:var(--ink); font-family:"JetBrains Mono","PingFang SC",monospace;
-         padding:16px; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
-  header { display:flex; align-items:baseline; gap:14px; margin-bottom:12px; flex-wrap:wrap; }
+         min-height:100vh; display:flex; flex-direction:column; padding:14px 16px; }
+  header { display:flex; align-items:center; gap:14px; margin-bottom:12px; flex-wrap:wrap; }
   header h1 { font-size:17px; }
-  .clock { font-size:26px; font-weight:700; color:#fff; background:#000; border-radius:8px; padding:2px 12px; }
+  .clock { font-size:24px; font-weight:700; color:#fff; background:#000; border-radius:8px; padding:2px 12px; }
   .badge { font-size:12px; color:var(--dim); }
-  .redline { font-size:11px; color:var(--dim); margin-left:auto; max-width:420px; text-align:right; }
-  .grid { flex:1; display:grid; grid-template-columns:240px 1fr 320px 290px; gap:12px; min-height:0; }
-  @media (max-width:1280px) { .grid { grid-template-columns:240px 1fr 300px; } #elderpanel { display:none; } }
-  #phone { flex:1; border:8px solid #000; border-radius:28px; overflow:hidden; background:#faf6ef; min-height:0; }
-  #phone iframe { width:100%; height:100%; border:0; }
-  .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px;
-           display:flex; flex-direction:column; min-height:0; }
-  .panel h2 { font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:.12em; margin-bottom:8px; }
-  button { background:#232c44; color:var(--ink); border:1px solid var(--line); border-radius:8px;
-           padding:8px 10px; margin:0 5px 7px 0; font:inherit; font-size:12px; cursor:pointer;
-           transition:transform 120ms var(--ease-out), border-color 120ms; }
-  button:hover { border-color:var(--blue); } button:active { transform:scale(0.96); }
-
-  /* mascot stage — codex sprite contract: web/mascot/<state>-atlas.png, 4x 256px cells */
-  #stage { display:flex; flex-direction:column; align-items:center; gap:8px; padding:12px 0 6px; }
-  #mascot { width:160px; height:160px; image-rendering:auto; background-repeat:no-repeat;
-            background-size:400% 100%; display:flex; align-items:center; justify-content:center;
-            font-size:84px; filter:drop-shadow(0 6px 14px rgba(0,0,0,.4)); }
+  #mascothead { display:flex; align-items:center; gap:6px; margin-left:auto; }
+  #mascot { width:52px; height:52px; background-repeat:no-repeat; background-size:400% 100%;
+            display:flex; align-items:center; justify-content:center; font-size:34px; }
   #mascot.sprite { animation:cycle .9s steps(4) infinite; font-size:0; }
   @keyframes cycle { to { background-position:-400% 0; } }
-  #mstate { font-size:12px; color:var(--dim); }
-  .fsm { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; }
-  .state { padding:5px 9px; border-radius:8px; border:1px solid var(--line); font-size:11px; color:var(--dim); }
+  #mstate { font-size:11px; color:var(--dim); }
+
+  .main { flex:1; display:grid; grid-template-columns:300px minmax(360px, 440px) 1fr; gap:14px;
+          align-items:start; justify-content:center; }
+  @media (max-width:1100px) { .main { grid-template-columns:1fr; } }
+
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; }
+  .roleband { font-size:10px; letter-spacing:.14em; text-transform:uppercase; border-radius:6px;
+              padding:4px 8px; margin-bottom:10px; display:inline-block; }
+  .role-demo { background:#3a2b12; color:var(--amber); }
+  .role-product { background:#12331f; color:var(--green); }
+  .role-mirror { background:#1b2a4a; color:#9db4e8; }
+  .role-internal { background:#241b3d; color:var(--purple); }
+
+  /* left rail: demo controls with expected outputs */
+  .step { display:block; width:100%; text-align:left; background:#232c44; color:var(--ink);
+          border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:8px;
+          font:inherit; font-size:12.5px; cursor:pointer;
+          transition:transform 120ms var(--ease-out), border-color 120ms; }
+  .step:hover { border-color:var(--blue); } .step:active { transform:scale(0.98); }
+  .step b { display:block; font-size:13px; }
+  .step small { color:var(--dim); font-size:11px; line-height:1.5; display:block; margin-top:2px; }
+  .rail-note { font-size:11px; color:var(--dim); line-height:1.6; margin:8px 2px 2px; }
+
+  /* hero: the actual app */
+  #hero { display:flex; flex-direction:column; align-items:center; }
+  #phone { width:100%; max-width:400px; height:min(78vh, 800px); border:10px solid #000;
+           border-radius:38px; overflow:hidden; background:#faf6ef;
+           box-shadow:0 18px 60px rgba(0,0,0,.45); }
+  #phone iframe { width:100%; height:100%; border:0; }
+  #hero .sub { font-size:11px; color:var(--dim); margin-top:8px; }
+  #hero .sub a { color:var(--blue); }
+
+  /* right column: family mirror + expandables */
+  .mirror .card { background:#212b45; border-radius:10px; padding:10px; margin-bottom:8px;
+                  font-size:12px; white-space:pre-wrap; }
+  .mirror .card b { color:var(--amber); display:block; margin-bottom:4px; }
+  .tgbtn { display:inline-block; background:#2b3a5e; border-radius:6px; padding:4px 10px;
+           margin:6px 6px 0 0; font-size:11px; color:#9db4e8; }
+  details { margin-top:12px; }
+  details summary { cursor:pointer; font-size:12px; color:var(--dim); padding:8px 4px;
+                    border-top:1px solid var(--line); list-style:none; }
+  details summary::before { content:"▸ "; } details[open] summary::before { content:"▾ "; }
+  .fsm { display:flex; flex-wrap:wrap; gap:5px; margin:8px 0; }
+  .state { padding:4px 8px; border-radius:7px; border:1px solid var(--line); font-size:10.5px; color:var(--dim); }
   .state.on { color:#fff; border-color:transparent; }
   .state.on.IDLE,.state.on.ENGAGED,.state.on.RESOLVED { background:var(--green); }
   .state.on.CHECKIN_SENT { background:var(--blue); }
   .state.on.SILENCE_1 { background:var(--amber); }
   .state.on.SILENCE_2,.state.on.ESCALATED { background:var(--red); }
-
-  #log { flex:1; overflow-y:auto; font-size:11.5px; line-height:1.75; min-height:0; }
+  #log { max-height:44vh; overflow-y:auto; font-size:11.5px; line-height:1.75; }
   #log div { border-bottom:1px solid #1f2740; padding:2px 0; }
   .p-wake{color:var(--dim)} .p-think{color:var(--blue)} .p-revalidate{color:var(--purple)}
   .p-gate{color:var(--amber)} .p-act{color:#fff} .p-receipt{color:var(--green)}
   .p-commit{color:var(--dim)} .p-transition{color:var(--amber)} .p-inject{color:var(--purple)}
-  .p-error{color:var(--red)} .p-liveness{color:var(--red)} .p-heartbeat{color:var(--green)}
-  .p-telegram_refused{color:var(--red)}
+  .p-error{color:var(--red)} .p-liveness{color:var(--red)} .p-telegram_refused{color:var(--red)}
   .eff { color:#5f6b85; }
-  .mirror { flex:1; overflow-y:auto; min-height:0; }
-  .mirror .card { background:#212b45; border-radius:10px; padding:10px; margin-bottom:8px;
-                  font-size:12px; white-space:pre-wrap; opacity:1; transition:opacity 250ms var(--ease-out); }
-  @starting-style { .mirror .card { opacity:0; } }
-  .mirror .card b { color:var(--amber); display:block; margin-bottom:4px; }
-  .tgbtn { display:inline-block; background:#2b3a5e; border-radius:6px; padding:4px 10px;
-           margin:6px 6px 0 0; font-size:11px; color:#9db4e8; }
-  .skills { font-size:11px; color:var(--dim); line-height:1.7; overflow-y:auto; }
-  @media (prefers-reduced-motion: reduce) { #mascot.sprite { animation:none; } button { transition:none; } }
+  .skills { font-size:11px; color:var(--dim); line-height:1.7; padding:6px 2px; }
+  @media (prefers-reduced-motion: reduce) { #mascot.sprite { animation:none; } .step { transition:none; } }
 </style>
 </head>
 <body>
 <header>
-  <h1>安安 · 演示台</h1>
+  <h1>安安 AnAn</h1>
   <span class="clock" id="clock">--:--</span>
   <span class="badge" id="uptime">已自主运行 —</span>
   <span class="badge" id="conn">connecting…</span>
-  <span class="redline">红线: 只注入时间与场景, 不操纵行为。<br>"We inject time, never behavior."</span>
+  <div id="mascothead"><div id="mascot">🐤</div><div id="mstate">idle</div></div>
 </header>
-<div class="grid">
+<div class="main">
+
   <div class="panel">
-    <h2>Agent</h2>
-    <div id="stage"><div id="mascot">🐤</div><div id="mstate">idle</div></div>
-    <h2 style="margin-top:10px">⏱ 时间与场景注入</h2>
-    <div>
-      <button onclick="sc('morning')">跳到 07:30 晨候</button>
-      <button onclick="sc('silence_1')">+61min 无回应</button>
-      <button onclick="sc('silence_2')">+31min 仍无回应</button>
-      <button onclick="sc('escalation_timeout')">+11min 家人未回</button>
-      <button onclick="sc('recover')">婆婆回应了</button>
-      <button onclick="sc('evening')">跳到 20:00 播报</button>
-      <button onclick="sc('insight')">跳到 21:00 洞察</button>
-      <button onclick="fetch('/seed',{method:'POST'})">播种 6 天历史</button>
-    </div>
-    <h2 style="margin-top:8px">🧩 Skills (menu = name + capability)</h2>
-    <div class="skills" id="skills"></div>
+    <span class="roleband role-demo">演示台 DEMO CONTROLS — 不属于产品</span>
+    <div class="rail-note">红线: 这些按钮只注入<b>时间</b>与普通输入, 从不操纵 agent 的行为。<br>
+      Red line: we inject time, never behavior. 按顺序点, 每步下方写着应该看到什么。</div>
+    <button class="step" onclick="sc('morning')"><b>① 跳到 07:30 晨间问候</b>
+      <small>→ 约 15 秒后, 右侧手机弹出双语问候卡并朗读。没有人碰过 agent。</small></button>
+    <button class="step" onclick="sc('silence_1')"><b>② +61 分钟 · 婆婆没回应</b>
+      <small>→ SILENCE_1: agent 在选项中决策 (换渠道/立即升级/再等一次), 内核日志可见。</small></button>
+    <button class="step" onclick="sc('silence_2')"><b>③ +31 分钟 · 仍无回应</b>
+      <small>→ SILENCE_2 → 升级: 女儿的真实 Telegram 收到警报卡 (右侧镜像同步)。</small></button>
+    <button class="step" onclick="sc('escalation_timeout')"><b>④ +11 分钟 · 家人没回</b>
+      <small>→ 联系人树走到下一位 (儿子→邻居), 每一跳有独立回执。</small></button>
+    <button class="step" onclick="sc('recover')"><b>⑤ 婆婆碰了一下屏幕</b>
+      <small>→ 心跳信号: 任何升级立即消解; 若决策在途, 会被 REVALIDATE 取消 (反悔镜头)。</small></button>
+    <button class="step" onclick="sc('evening')"><b>⑥ 跳到 20:00 家庭播报</b>
+      <small>→ 女儿 Telegram 收到当日双语报告: 用药/心情/观察。</small></button>
+    <button class="step" onclick="sc('insight')"><b>⑦ 跳到 21:00 照护洞察</b>
+      <small>→ agent 从今天的对话提炼一条观察写入记忆 — 第 7 天比第 1 天更懂她。</small></button>
+    <details>
+      <summary>演示种子 Demo seeds (虚构数据, 标明为演示)</summary>
+      <button class="step" onclick="fetch('/seed',{method:'POST'})"><b>播种 6 天历史</b>
+        <small>→ 写入 6 天虚构的用药/心情/观察记录, 让"第 7 天"的播报有据可讲。仅演示用。</small></button>
+    </details>
   </div>
-  <div class="panel">
-    <h2>WAKE → THINK → REVALIDATE → GATE → ACT → RECEIPT → COMMIT</h2>
-    <div class="fsm" id="fsm"></div>
-    <div id="log"></div>
-  </div>
-  <div class="panel" id="elderpanel">
-    <h2>👵 婆婆的手机 (乐龄端 · 实时) <a href="/elder" target="_blank" style="color:#4f7cff;font-size:10px">↗ 全屏</a></h2>
+
+  <div id="hero">
+    <span class="roleband role-product">产品 THE ACTUAL APP — 婆婆手机上安装的东西</span>
     <div id="phone"><iframe src="/elder" title="elder app live"></iframe></div>
+    <div class="sub">这是真实运行的应用, 不是录像 — 可直接操作。
+      手机安装: <a href="/elder" target="_blank">/elder ↗</a> (HTTPS 下可加到主屏幕)</div>
   </div>
-  <div class="panel">
-    <h2>📱 女儿的手机 (Telegram 镜像)</h2>
-    <div class="mirror" id="family"></div>
+
+  <div>
+    <div class="panel">
+      <span class="roleband role-mirror">家属端 FAMILY SIDE — 女儿的 Telegram (真实消息镜像)</span>
+      <div class="mirror" id="family"><div style="color:var(--dim);font-size:11px">
+        升级警报和每晚播报会出现在这里 — 同时发到真实 Telegram。</div></div>
+    </div>
+    <div class="panel" style="margin-top:12px">
+      <span class="roleband role-internal">内核透视 AGENT INTERNALS — 评委证据, 老人永远看不到</span>
+      <div class="fsm" id="fsm"></div>
+      <details open>
+        <summary>决策日志 — 每个动作: WAKE→THINK→REVALIDATE→GATE→ACT→RECEIPT→COMMIT</summary>
+        <div id="log"></div>
+      </details>
+      <details>
+        <summary>Skill 目录 (name + capability — 上下文法则: 菜单先行)</summary>
+        <div class="skills" id="skills"></div>
+      </details>
+    </div>
   </div>
 </div>
 <script>
@@ -110,20 +150,14 @@ const fsmEl=$('fsm');
 STATES.forEach(s=>{const d=document.createElement('div');d.className='state '+s;d.id='st-'+s;d.textContent=s;fsmEl.appendChild(d);});
 function setState(s){STATES.forEach(x=>$('st-'+x).classList.toggle('on',x===s));}
 function sc(name){fetch('/inject/scenario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});}
-
-/* ---- mascot: sprite if codex atlas exists, emoji until then ---- */
 const M_EMOJI={idle:'🐤',sleep:'😴',alert:'🚨',think:'🤔',talk:'💬',work:'🛠️',fly:'🕊️',happy:'😊',listen:'👂',dizzy:'😵‍💫'};
 const sprites={};
-Object.keys(M_EMOJI).forEach(s=>{
-  const img=new Image();
-  img.onload=()=>sprites[s]=img.src;
-  img.src=`/mascot/${s}-atlas.png`;
-});
-let mstate='idle', mhold=0;
+Object.keys(M_EMOJI).forEach(s=>{ const img=new Image(); img.onload=()=>sprites[s]=img.src; img.src=`/mascot/${s}-atlas.png`; });
+let mhold=0;
 function mascot(s,holdMs=0){
   const now=Date.now();
-  if(now<mhold && s!=='alert' && s!=='fly') return;   // don't stomp a held beat
-  mstate=s; mhold=holdMs?now+holdMs:0;
+  if(now<mhold && s!=='alert' && s!=='fly') return;
+  mhold=holdMs?now+holdMs:0;
   const el=$('mascot');
   if(sprites[s]){ el.classList.add('sprite'); el.style.backgroundImage=`url(${sprites[s]})`; el.textContent=''; }
   else { el.classList.remove('sprite'); el.style.backgroundImage=''; el.textContent=M_EMOJI[s]||'🐤'; }
@@ -134,20 +168,18 @@ function mascotFromEvent(ev){
   if(ev.kind==='error') return mascot('dizzy',2500);
   if(ev.kind==='think') return mascot('think',1200);
   if(ev.kind==='act') return mascot('work',1500);
-  if(ev.kind==='heartbeat'||ev.kind==='wake'&&ev.detail?.event==='heartbeat') return mascot('happy',1500);
 }
-
-/* ---- trace ---- */
 const log=$('log');
 function addEvent(e){
   const d=document.createElement('div'); d.className='p-'+e.kind;
-  const bits=[];
-  const det=e.detail||{};
+  const det=e.detail||{}; const bits=[];
   if(e.kind==='think'&&det.junction) bits.push(`junction=${det.junction} chose=${det.chosen} (${det.how||''})`);
   else if(e.kind==='think') bits.push(`skill=${det.skill||''} ${det.reason||''}`);
   else if(e.kind==='revalidate') bits.push(`${det.junction||det.skill||''} → ${det.verdict}${det.why?' · '+det.why:''}`);
   else if(e.kind==='gate') bits.push(`${det.skill} [${(det.effects||[]).join(',')}] → ${det.verdict}`);
   else if(e.kind==='receipt') bits.push(`${(det.text||det.insight||det.reply||'').slice(0,70)}${det.lane?' · '+det.lane:''}`);
+  else if(e.kind==='wake'&&det.crons) bits.push(`boot: ${det.crons.length} stale crons → rolled forward`);
+  else if(e.kind==='wake'&&det.event) bits.push(`${det.event}${det.skill?' · '+det.skill:''}${det.text?' · '+String(det.text).slice(0,50):''}`);
   else bits.push(JSON.stringify(det).slice(0,90));
   d.innerHTML=`[${e.at.slice(11)}] <b>${e.kind}</b> ${e.source} ${bits.join(' ')}`+(e.effect?` <span class="eff">⇒ ${e.effect}</span>`:'');
   log.appendChild(d); log.scrollTop=log.scrollHeight;
@@ -159,7 +191,7 @@ function addFamily(c){
   el.innerHTML=`<b>${c.at} · ${c.delivered||''}</b>`+c.text+
     (c.buttons?`<br><span class="tgbtn">✅ 我已回电 Called back</span><span class="tgbtn">🏠 联系邻居</span>`:'');
   const box=$('family'); box.prepend(el);
-  while(box.children.length>6) box.lastChild.remove();
+  while(box.children.length>5) box.lastChild.remove();
 }
 const es=new EventSource('/events');
 es.onopen=()=>$('conn').textContent='● live';
@@ -176,8 +208,7 @@ function refresh(s){
   $('uptime').textContent=`已自主运行 ${s.uptime_h}h`;
   setState(s.fsm.state);
   const hour=parseInt(s.time.slice(11,13),10);
-  const base=FSM_M[s.fsm.state]||'idle';
-  mascot(s.fsm.state==='IDLE'&&(hour>=22||hour<7)?'sleep':base);
+  mascot(s.fsm.state==='IDLE'&&(hour>=22||hour<7)?'sleep':(FSM_M[s.fsm.state]||'idle'));
   $('skills').innerHTML=s.skills.map(x=>`- <b>${x.id}</b>: ${x.capability}`).join('<br>');
 }
 </script>

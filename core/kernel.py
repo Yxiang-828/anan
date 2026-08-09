@@ -157,6 +157,7 @@ class Kernel:
 
     def _tick(self) -> None:
         now = self.clock.now()
+        rolled = []
         for c in self._crons:
             due = now.replace(hour=c["hh"], minute=c["mm"], second=0, microsecond=0)
             if now < due or c["last_day"] == now.date().isoformat():
@@ -164,11 +165,13 @@ class Kernel:
             overdue_min = (now - due).total_seconds() / 60
             c["last_day"] = now.date().isoformat()
             if self._booted_at and due < self._booted_at and overdue_min > BOOT_OVERDUE_GRACE_MIN:
-                self.store.event(self._at(), "wake", "scheduler",
-                                 {"cron": f"{c['hh']:02d}:{c['mm']:02d}", "skill": c["skill"],
-                                  "decision": "rolled_forward", "overdue_min": int(overdue_min)})
+                rolled.append(f"{c['hh']:02d}:{c['mm']:02d} {c['skill']}")
                 continue
             self.submit("cron_due", "scheduler", {"skill": c["skill"]})
+        if rolled:  # one summary receipt, not one line per cron (demo-log hygiene)
+            self.store.event(self._at(), "wake", "scheduler",
+                             {"decision": "rolled_forward", "crons": rolled},
+                             effect=f"boot guard: {len(rolled)} stale cron(s) rolled forward, none replayed")
         junction = self.loop.tick()
         if junction:
             self.submit("junction", "fsm", junction)

@@ -209,15 +209,44 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>show
 const deep=new URLSearchParams(location.search).get('s');
 if(deep) show(deep);
 
-/* hold-to-talk */
-let rec=null;
-try{ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(SR){ rec=new SR(); rec.lang='zh-CN'; rec.onresult=e=>say(e.results[0][0].transcript); } }catch(e){}
+/* hold-to-talk: record → server Whisper ASR. Typed prompt only when no mic. */
+let mediaStream=null, recorder=null, chunks=[];
 const hold=$('holdbtn');
-hold.addEventListener('pointerdown',()=>{ hold.classList.add('listening'); beat();
-  if(rec){ try{rec.start()}catch(e){} } });
-hold.addEventListener('pointerup',()=>{ hold.classList.remove('listening');
-  if(rec){ try{rec.stop()}catch(e){} } else { const t=prompt('说点什么? Say something:'); say(t); } });
+async function micStream(){
+  if(mediaStream) return mediaStream;
+  mediaStream = await navigator.mediaDevices.getUserMedia({audio:true});
+  return mediaStream;
+}
+hold.addEventListener('pointerdown', async ()=>{
+  hold.classList.add('listening'); beat();
+  try{
+    const s = await micStream();
+    chunks=[]; recorder = new MediaRecorder(s);
+    recorder.ondataavailable = e=>chunks.push(e.data);
+    recorder.start();
+    $('cap-zh').textContent='我听着呢…'; $('cap-en').textContent='Listening…';
+  }catch(e){ recorder=null; }
+});
+hold.addEventListener('pointerup', async ()=>{
+  hold.classList.remove('listening');
+  if(recorder && recorder.state==='recording'){
+    const done = new Promise(res=>recorder.onstop=res);
+    recorder.stop(); await done;
+    const blob = new Blob(chunks, {type: recorder.mimeType||'audio/webm'});
+    if(blob.size<200){ $('cap-zh').textContent='没听清, 再试一次?'; $('cap-en').textContent='Did not catch that — try again?'; return; }
+    $('cap-zh').textContent='正在听懂…'; $('cap-en').textContent='Understanding…';
+    try{
+      const r = await fetch('/asr',{method:'POST', body:blob,
+        headers:{'Content-Type': blob.type}});
+      const d = await r.json();
+      if(d.text){ say(d.text); return; }
+      $('cap-zh').textContent='没听清, 再试一次?'; $('cap-en').textContent=d.error||'Try again?';
+    }catch(e){ $('cap-zh').textContent='网络不太好, 再试一次?'; $('cap-en').textContent='Network hiccup — try again?'; }
+  } else {
+    // no mic at all (permission denied / insecure origin): honest last resort
+    const t=prompt('这个浏览器用不了麦克风, 打字代替? No mic here — type instead:'); say(t);
+  }
+});
 function say(text){ if(!text) return; beat();
   $('cap-zh').textContent='您: '+text; $('cap-en').textContent='';
   fetch('/elder/say',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})}); }

@@ -337,6 +337,42 @@ def tts_file(name: str):
     return FileResponse(path, media_type="audio/wav")
 
 
+ASR_DIR = RUNTIME / "asr"
+ASR_DIR.mkdir(exist_ok=True)
+
+
+@app.post("/asr")
+async def asr(request: Request) -> dict:
+    """Hold-to-talk audio → Whisper (aiko's transcribe contract) → text.
+    Browser records webm/ogg; whisper's own ffmpeg handles the container."""
+    import shutil as _shutil
+    blob = await request.body()
+    if not blob or len(blob) < 200:
+        return {"text": "", "error": "empty audio"}
+    whisper_bin = os.environ.get("AIKO_WHISPER_BIN") or _shutil.which("whisper")
+    if not whisper_bin:
+        return {"text": "", "error": "no ASR on this host"}
+    stamp = hashlib.sha1(blob).hexdigest()[:12]
+    src = ASR_DIR / f"{stamp}.webm"
+    src.write_bytes(blob)
+    lang = CONFIG.get("voice", {}).get("asr_language", "auto")
+    model = CONFIG.get("voice", {}).get("asr_model", "base")
+    lang_args = ["--language", lang] if lang != "auto" else []
+    try:
+        r = _sp.run([whisper_bin, str(src), "--model", model, "--output_format", "txt",
+                     "--output_dir", str(ASR_DIR), *lang_args],
+                    capture_output=True, text=True, timeout=120)
+    except Exception as exc:  # noqa: BLE001
+        return {"text": "", "error": str(exc)[:100]}
+    txt = ASR_DIR / f"{stamp}.txt"
+    if r.returncode != 0 or not txt.is_file():
+        return {"text": "", "error": (r.stderr or "no transcript")[:120]}
+    text = txt.read_text().strip()
+    store.event(kernel.clock.now().strftime("%Y-%m-%d %H:%M:%S"), "wake", "asr",
+                {"event": "voice_transcribed", "chars": len(text)}, effect=f"heard: {text[:60]}")
+    return {"text": text}
+
+
 @app.get("/mascot/{name}")
 def mascot_asset(name: str):
     """Codex sprite contract: web/mascot/<state>-atlas.png, 4 frames, 256px
