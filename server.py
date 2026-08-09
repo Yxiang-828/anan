@@ -378,6 +378,11 @@ async def tts(request: Request) -> dict:
                "KEEL_INPUT_LANG": "chinese" if lang == "zh" else "english",
                "KEEL_INPUT_VERIFY": "off", "KEEL_INPUT_OUT": str(out),
                "KEEL_JOB_DIR": str(TTS_DIR)}
+        # cloned refs live outside the pack: pass their transcript explicitly
+        # (ICL cloning conditions on the (clip, text) pair)
+        sidecar = Path(voice).with_suffix(".txt") if voice.startswith("/") else None
+        if sidecar and sidecar.is_file():
+            env["KEEL_INPUT_REF_TEXT"] = sidecar.read_text().strip()
         try:
             r = _sp.run(["python3", str(_VOICE_GEN)], env=env, cwd=_VOICE_GEN.parent,
                         capture_output=True, text=True, timeout=90)
@@ -470,6 +475,61 @@ async def asr(request: Request) -> dict:
     store.event(kernel.clock.now().strftime("%Y-%m-%d %H:%M:%S"), "wake", "asr",
                 {"event": "voice_transcribed", "chars": len(text)}, effect=f"heard: {text[:60]}")
     return {"text": text}
+
+
+CLONE_DIR = RUNTIME / "voices"
+CLONE_DIR.mkdir(exist_ok=True)
+
+
+@app.get("/family", response_class=HTMLResponse)
+def family_page() -> str:
+    return (ROOT / "web" / "family.html").read_text()
+
+
+@app.get("/voice/scripts")
+def voice_scripts() -> dict:
+    return CONFIG.get("voice", {}).get("scripts", {})
+
+
+@app.post("/voice/clone")
+async def voice_clone(request: Request, lang: str = "zh") -> dict:
+    """The daughter reads the fixed script ONCE, in ONE language. The pair
+    (recording, known script) becomes the qwen reference for that language
+    only — never used cross-language (owner law). Hot-reloads into config."""
+    lang = "zh" if lang == "zh" else "en"
+    script = CONFIG.get("voice", {}).get("scripts", {}).get(lang, "")
+    blob = await request.body()
+    if not script or not blob or len(blob) < 3000:
+        return {"ok": False, "error": "no script or recording too short"}
+    raw = CLONE_DIR / f"{lang}.webm"
+    wav = CLONE_DIR / f"{lang}.wav"
+    raw.write_bytes(blob)
+    conv = _sp.run(["ffmpeg", "-y", "-i", str(raw), "-ar", "24000", "-ac", "1", str(wav)],
+                   capture_output=True, text=True, timeout=60)
+    if conv.returncode != 0 or not wav.is_file():
+        return {"ok": False, "error": "audio conversion failed"}
+    (CLONE_DIR / f"{lang}.txt").write_text(script)
+    CONFIG.setdefault("voice", {}).setdefault("clone", {})[lang] = str(wav)
+    _cfg_file.write_text(json.dumps(CONFIG, ensure_ascii=False, indent=2))
+    store.event(kernel.clock.now().strftime("%Y-%m-%d %H:%M:%S"), "receipt", "voice_clone",
+                {"lang": lang, "ref": str(wav), "bytes": len(blob)},
+                effect=f"family voice becomes the {lang} voice — hot-reloaded")
+    # instant proof: the agent's next words, in the family's voice
+    sample_line = CONFIG.get("voice", {}).get("sample_lines", {}).get(
+        lang, script)
+    key = hashlib.sha1(f"clone:{lang}:{sample_line}".encode()).hexdigest()[:16]
+    out = TTS_DIR / f"{key}.wav"
+    env = {**os.environ, "KEEL_INPUT_TEXT": sample_line, "KEEL_INPUT_VOICE": str(wav),
+           "KEEL_INPUT_REF_TEXT": script,
+           "KEEL_INPUT_LANG": "chinese" if lang == "zh" else "english",
+           "KEEL_INPUT_VERIFY": "off", "KEEL_INPUT_OUT": str(out),
+           "KEEL_JOB_DIR": str(TTS_DIR)}
+    try:
+        _sp.run(["python3", str(_VOICE_GEN)], env=env, cwd=_VOICE_GEN.parent,
+                capture_output=True, text=True, timeout=120)
+    except Exception:  # noqa: BLE001
+        pass
+    return {"ok": True, "sample": f"/tts/{key}.wav" if out.is_file() else None}
 
 
 @app.get("/mascot/{name}")
