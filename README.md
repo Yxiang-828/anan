@@ -1,29 +1,81 @@
 # 安安 AnAn — the agent that hears silence
 
-An autonomous care companion for seniors living alone. Chatbots take text;
-AnAn's inputs are **time, silence, and state**. Built for the Tencent Cloud
-"Age Well" Social Good Challenge Singapore (AI Agent/Skills track).
+**Team SyntaxError** · Yao Xiang · "Age Well" Social Good Challenge Singapore · AI Agent/Skills Track
 
-**Claim:** it watches over a senior all day and escalates to family — with
-nobody touching it. Every decision passes WAKE → THINK → REVALIDATE → GATE →
-ACT → RECEIPT → COMMIT, visible live on the demo console.
+> A chatbot's input domain is {text}. AnAn's is **{time, silence, state}**.
+> An autonomous care companion for seniors living alone — it speaks first, watches the
+> silence, walks the family contact tree, tracks wandering, screens health with the camera,
+> and writes a receipt for every decision it makes.
 
-## Try it (90 seconds)
-1. Open `/` (demo console) and `/elder` (the senior's phone app) side by side.
-2. Console → **跳到 07:30**: AnAn greets, bilingual, spoken. Nobody typed anything.
-3. **+61 min** then **+31 min**: watch SILENCE_1 → retry → SILENCE_2 → ESCALATED —
-   the family's Telegram gets a real alert card with buttons.
-4. Tap **✅ 我已回电**: the loop closes, ESCALATED → RESOLVED.
-5. Red line: the console injects **time and scenarios only** — never behavior.
+## ▶ Live demo — one link
 
-## Run
+**https://anan-iax1.onrender.com**
+
+Open it and follow the numbered acts on the left — each sets the scene, then you press play
+and watch it happen for real: on 婆婆's phone (center, live), on the daughter's Telegram
+(right), and in the agent's own decision log. Red line: the demo injects **time and ordinary
+inputs only — never behavior**.
+
+- `/elder` — the senior's app (installable PWA; on a phone: Add to Home Screen)
+- `/family` — family setup: contacts, voice recording, audition, live map
+- `/health-lab` — the camera health checks (heart rate · mobility · smile/FAST screen)
+
+## What it is (60 seconds)
+
+Every action runs one pipeline, each phase a stored receipt:
+
 ```
-pip install -r requirements.txt && python server.py   # http://localhost:8801
+WAKE → THINK → REVALIDATE → GATE → ACT → RECEIPT → COMMIT
 ```
-Docker/Render: `Dockerfile` + `render.yaml` (free tier). Env: `NVIDIA_API_KEY`
-(cloud model lane), `ANAN_BOT_TOKEN` + `OWNER_TELEGRAM_ID` (family Telegram).
 
-## Known limits
-Cloud runs the NVIDIA model lane (local dev uses a Gemini CLI) and browser-silent
-voice (local uses qwen3-TTS voice cloning). Demo persona is seed config —
-swap `config.json` and AnAn cares for someone else.
+- **THINK**: at junctions the model chooses inside a bounded envelope (retry / escalate /
+  wait once; chat vs relay) — the deterministic floor stands if it fails. Choice is logged
+  `chosen vs floor`.
+- **REVALIDATE**: a decision born from an old snapshot re-checks the world — a heartbeat
+  that raced it cancels the escalation before any external action.
+- **GATE**: a three-tier permission envelope (autonomous / family-approval / **never**:
+  no emergency calls, no medical advice, no money).
+- **Safety floors are code, not model**: silence windows, geofence math, health thresholds,
+  idempotent escalation — take the LLM away and the safety net still fires.
+
+**Nine skills** through that pipeline: `greet_checkin` · `companion_chat` · `relay_family` ·
+`med_reminder` · `escalate_tree` (a contact tree that actually walks) · `family_bulletin` ·
+`care_insight` (day 7 knows her better than day 1) · `safe_range` (dementia wander safety
+with live map + take-me-home) · `health_scan` (on-device CV → reflect to elder, fan out to
+guardian on anomaly).
+
+Full inventory & design: **[ARCHITECTURE.md](ARCHITECTURE.md)**
+
+## Capability matrix (stated, not discovered)
+
+| | Local (GPU workstation) | Hosted (this Render link) |
+|---|---|---|
+| Brain | Gemini 3.6 Flash (CLI) → Nemotron fallback | Nemotron Ultra → Super |
+| Voice out | qwen3-TTS + per-language family **voice cloning** | ElevenLabs (3-key sticky rotation) |
+| Ears | Whisper (medium, zh) | ElevenLabs scribe |
+| Camera CV | in the browser, both — frames never leave the device | same |
+| Telegram | one poller per token — the hosted instance owns the bot | owns the bot |
+
+Every instance prints a **capability receipt** at boot (`/healthz`) — differences are
+declared, not discovered.
+
+## Run locally
+
+```
+pip install -r requirements.txt && python server.py    # http://localhost:8801
+```
+
+Deploy: `Dockerfile` + `render.yaml` (free tier). Env: `NVIDIA_API_KEY`,
+`ANAN_BOT_TOKEN`, `OWNER_TELEGRAM_ID`, `*_ELEVEN_LABS_API_KEY`.
+Config ships complete in `config.default.json` — the demo persona (陈婆婆) is seed data;
+swap it and AnAn cares for someone else.
+
+## Lineage
+
+Built on an in-house autonomy research program (receipts over narration, stale-decision
+revalidation, practical liveness), a production agent's measured context laws, transplanted
+map UI (MapLibre + OneMap, zero keys) and clinical CV pages (rPPG / pose / face-symmetry,
+reused verbatim), a sprite mascot drawn by a second AI agent — which also adversarially
+blocked and corrected this agent's renderer in review.
+
+Submission naming: `AnAn-<Deliverable>-SyntaxError`.
