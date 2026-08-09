@@ -17,21 +17,35 @@
 <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
 <style>
   body { background:#0b0f17; margin:0; }
-  #topbar { font-family:system-ui,sans-serif; color:#9aa6b8; font-size:13px; padding:10px 16px;
-            display:flex; gap:16px; align-items:center; }
-  #topbar a { color:#7fa3ff; text-decoration:none; }
+  #topbar { font-family:system-ui,sans-serif; display:flex; align-items:center; gap:8px;
+            padding:10px 12px; position:sticky; top:0; background:rgba(11,15,23,.92);
+            backdrop-filter:blur(8px); z-index:50; }
+  #topbar .back { color:#e8edf5; text-decoration:none; font-size:14px; padding:8px 12px;
+                  background:#1c2536; border-radius:10px; white-space:nowrap; }
+  #topbar .tabs { display:flex; gap:6px; margin-left:auto; }
+  #topbar .tabs a { color:#9aa6b8; text-decoration:none; font-size:13px; padding:8px 12px;
+                    border-radius:10px; white-space:nowrap; }
+  #topbar .tabs a.on { background:#26324a; color:#fff; }
+  #privacy { font-family:system-ui; font-size:11px; color:#5d6a7d; text-align:center; padding:6px; }
   #root { min-height:calc(100vh - 40px); }
   #loading { color:#9aa6b8; font-family:system-ui; padding:40px; text-align:center; }
 </style>
 </head>
 <body>
 <div id="topbar">
-  <a href="/elder?s=health">← 安安 AnAn</a>
-  <span>Health Lab — Synapxe CV pages, transplanted as-is · camera stays on this device</span>
-  <a href="?game=heart-rate">❤️ Heart rate</a>
-  <a href="?game=mobility">🪑 Mobility</a>
-  <a href="?game=camera">😊 Smile</a>
+  <a class="back" href="/elder?s=health">← 安安</a>
+  <div class="tabs">
+    <a href="?game=heart-rate" data-g="heart-rate">❤️ Heart</a>
+    <a href="?game=mobility" data-g="mobility">🪑 Mobility</a>
+    <a href="?game=camera" data-g="camera">😊 Smile</a>
+  </div>
 </div>
+<div id="privacy">Camera stays on this device — only the score leaves. 画面不离开设备, 只上传分数。</div>
+<script>
+  const _g = new URLSearchParams(location.search).get('game') || 'heart-rate';
+  document.querySelectorAll('#topbar .tabs a').forEach(a =>
+    a.classList.toggle('on', a.dataset.g === _g));
+</script>
 <div id="root"><div id="loading">Loading the check…</div></div>
 <script>
 /* Desktop repair: pages request the REAR camera (facingMode:'environment'),
@@ -45,6 +59,12 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       if (c && c.video && (e.name === 'NotFoundError' || e.name === 'OverconstrainedError')) {
         console.warn('requested camera not found — falling back to any camera');
         return await orig({ video: true, audio: c.audio || false });
+      }
+      if (e.name === 'NotReadableError' || e.name === 'AbortError') {
+        // camera busy (another tab/app holds it): give the OS a beat, retry once
+        console.warn('camera busy — retrying in 1.2s');
+        await new Promise(r => setTimeout(r, 1200));
+        return await orig({ video: true, audio: c && c.audio || false });
       }
       throw e;
     }
