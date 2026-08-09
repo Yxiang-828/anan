@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>安安 AnAn · Demo</title>
+<title>AnAn 安安 · Demo</title>
 <style>
   :root { --bg:#10141f; --panel:#1a2030; --ink:#dfe6f3; --dim:#7d8aa5; --line:#2a3350;
           --blue:#4f7cff; --green:#35c26e; --amber:#f0a53c; --red:#ef5350; --purple:#9b7ef0;
@@ -15,26 +15,25 @@
   header h1 { font-size:17px; }
   .clock { font-size:24px; font-weight:700; color:#fff; background:#000; border-radius:8px; padding:2px 12px; }
   .badge { font-size:12px; color:var(--dim); }
+  #langbtn { background:#232c44; color:var(--ink); border:1px solid var(--line); border-radius:8px;
+             padding:5px 12px; font:inherit; font-size:12px; cursor:pointer; }
+  #langbtn:hover { border-color:var(--blue); }
   #mascothead { display:flex; align-items:center; gap:6px; margin-left:auto; }
   #mascot { width:52px; height:52px; background-repeat:no-repeat; background-size:400% 100%;
             display:flex; align-items:center; justify-content:center; font-size:34px; }
   #mascot.sprite { animation:cycle .9s steps(4) infinite; font-size:0; }
   @keyframes cycle { to { background-position:-400% 0; } }
   #mstate { font-size:11px; color:var(--dim); }
-
-  .main { flex:1; display:grid; grid-template-columns:300px minmax(360px, 440px) 1fr; gap:14px;
+  .main { flex:1; display:grid; grid-template-columns:310px minmax(360px, 440px) 1fr; gap:14px;
           align-items:start; justify-content:center; }
   @media (max-width:1100px) { .main { grid-template-columns:1fr; } }
-
   .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; }
-  .roleband { font-size:10px; letter-spacing:.14em; text-transform:uppercase; border-radius:6px;
+  .roleband { font-size:10px; letter-spacing:.1em; text-transform:uppercase; border-radius:6px;
               padding:4px 8px; margin-bottom:10px; display:inline-block; }
   .role-demo { background:#3a2b12; color:var(--amber); }
   .role-product { background:#12331f; color:var(--green); }
   .role-mirror { background:#1b2a4a; color:#9db4e8; }
   .role-internal { background:#241b3d; color:var(--purple); }
-
-  /* left rail: demo controls with expected outputs */
   .step { display:block; width:100%; text-align:left; background:#232c44; color:var(--ink);
           border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:8px;
           font:inherit; font-size:12.5px; cursor:pointer;
@@ -42,24 +41,20 @@
   .step:hover { border-color:var(--blue); } .step:active { transform:scale(0.98); }
   .step b { display:block; font-size:13px; }
   .step small { color:var(--dim); font-size:11px; line-height:1.5; display:block; margin-top:2px; }
-  .rail-note { font-size:11px; color:var(--dim); line-height:1.6; margin:8px 2px 2px; }
-
-  /* hero: the actual app */
+  .rail-note { font-size:11px; color:var(--dim); line-height:1.6; margin:8px 2px 10px; }
   #hero { display:flex; flex-direction:column; align-items:center; }
   #phone { width:100%; max-width:400px; height:min(78vh, 800px); border:10px solid #000;
            border-radius:38px; overflow:hidden; background:#faf6ef;
            box-shadow:0 18px 60px rgba(0,0,0,.45); }
   #phone iframe { width:100%; height:100%; border:0; }
-  #hero .sub { font-size:11px; color:var(--dim); margin-top:8px; }
+  #hero .sub { font-size:11px; color:var(--dim); margin-top:8px; text-align:center; }
   #hero .sub a { color:var(--blue); }
-
-  /* right column: family mirror + expandables */
   .mirror .card { background:#212b45; border-radius:10px; padding:10px; margin-bottom:8px;
                   font-size:12px; white-space:pre-wrap; }
   .mirror .card b { color:var(--amber); display:block; margin-bottom:4px; }
   .tgbtn { display:inline-block; background:#2b3a5e; border-radius:6px; padding:4px 10px;
            margin:6px 6px 0 0; font-size:11px; color:#9db4e8; }
-  details { margin-top:12px; }
+  details { margin-top:10px; }
   details summary { cursor:pointer; font-size:12px; color:var(--dim); padding:8px 4px;
                     border-top:1px solid var(--line); list-style:none; }
   details summary::before { content:"▸ "; } details[open] summary::before { content:"▾ "; }
@@ -83,68 +78,102 @@
 </head>
 <body>
 <header>
-  <h1>安安 AnAn</h1>
+  <h1>AnAn 安安</h1>
   <span class="clock" id="clock">--:--</span>
-  <span class="badge" id="uptime">已自主运行 —</span>
+  <span class="badge" id="uptime">—</span>
   <span class="badge" id="conn">connecting…</span>
+  <button id="langbtn" onclick="toggleLang()">中文</button>
   <div id="mascothead"><div id="mascot">🐤</div><div id="mstate">idle</div></div>
 </header>
 <div class="main">
-
   <div class="panel">
-    <span class="roleband role-demo">演示台 DEMO CONTROLS — 不属于产品</span>
-    <div class="rail-note">红线: 这些按钮只注入<b>时间</b>与普通输入, 从不操纵 agent 的行为。<br>
-      Red line: we inject time, never behavior. 按顺序点, 每步下方写着应该看到什么。</div>
-    <button class="step" onclick="sc('morning')"><b>① 跳到 07:30 晨间问候</b>
-      <small>→ 约 15 秒后, 右侧手机弹出双语问候卡并朗读。没有人碰过 agent。</small></button>
-    <button class="step" onclick="sc('silence_1')"><b>② +61 分钟 · 婆婆没回应</b>
-      <small>→ SILENCE_1: agent 在选项中决策 (换渠道/立即升级/再等一次), 内核日志可见。</small></button>
-    <button class="step" onclick="sc('silence_2')"><b>③ +31 分钟 · 仍无回应</b>
-      <small>→ SILENCE_2 → 升级: 女儿的真实 Telegram 收到警报卡 (右侧镜像同步)。</small></button>
-    <button class="step" onclick="sc('escalation_timeout')"><b>④ +11 分钟 · 家人没回</b>
-      <small>→ 联系人树走到下一位 (儿子→邻居), 每一跳有独立回执。</small></button>
-    <button class="step" onclick="sc('recover')"><b>⑤ 婆婆碰了一下屏幕</b>
-      <small>→ 心跳信号: 任何升级立即消解; 若决策在途, 会被 REVALIDATE 取消 (反悔镜头)。</small></button>
-    <button class="step" onclick="sc('evening')"><b>⑥ 跳到 20:00 家庭播报</b>
-      <small>→ 女儿 Telegram 收到当日双语报告: 用药/心情/观察。</small></button>
-    <button class="step" onclick="sc('insight')"><b>⑦ 跳到 21:00 照护洞察</b>
-      <small>→ agent 从今天的对话提炼一条观察写入记忆 — 第 7 天比第 1 天更懂她。</small></button>
+    <span class="roleband role-demo" data-i="band_demo"></span>
+    <div class="rail-note" data-i="redline"></div>
+    <button class="step" onclick="sc('morning')"><b data-i="s1"></b><small data-i="s1x"></small></button>
+    <button class="step" onclick="sc('silence_1')"><b data-i="s2"></b><small data-i="s2x"></small></button>
+    <button class="step" onclick="sc('silence_2')"><b data-i="s3"></b><small data-i="s3x"></small></button>
+    <button class="step" onclick="sc('escalation_timeout')"><b data-i="s4"></b><small data-i="s4x"></small></button>
+    <button class="step" onclick="sc('recover')"><b data-i="s5"></b><small data-i="s5x"></small></button>
+    <button class="step" onclick="sc('evening')"><b data-i="s6"></b><small data-i="s6x"></small></button>
+    <button class="step" onclick="sc('insight')"><b data-i="s7"></b><small data-i="s7x"></small></button>
     <details>
-      <summary>演示种子 Demo seeds (虚构数据, 标明为演示)</summary>
-      <button class="step" onclick="fetch('/seed',{method:'POST'})"><b>播种 6 天历史</b>
-        <small>→ 写入 6 天虚构的用药/心情/观察记录, 让"第 7 天"的播报有据可讲。仅演示用。</small></button>
+      <summary data-i="seeds"></summary>
+      <button class="step" onclick="fetch('/seed',{method:'POST'})"><b data-i="seedbtn"></b><small data-i="seedx"></small></button>
     </details>
   </div>
-
   <div id="hero">
-    <span class="roleband role-product">产品 THE ACTUAL APP — 婆婆手机上安装的东西</span>
+    <span class="roleband role-product" data-i="band_product"></span>
     <div id="phone"><iframe src="/elder" title="elder app live"></iframe></div>
-    <div class="sub">这是真实运行的应用, 不是录像 — 可直接操作。
-      手机安装: <a href="/elder" target="_blank">/elder ↗</a> (HTTPS 下可加到主屏幕)</div>
+    <div class="sub"><span data-i="hero_sub"></span> <a href="/elder" target="_blank">/elder ↗</a></div>
   </div>
-
   <div>
     <div class="panel">
-      <span class="roleband role-mirror">家属端 FAMILY SIDE — 女儿的 Telegram (真实消息镜像)</span>
-      <div class="mirror" id="family"><div style="color:var(--dim);font-size:11px">
-        升级警报和每晚播报会出现在这里 — 同时发到真实 Telegram。</div></div>
+      <span class="roleband role-mirror" data-i="band_family"></span>
+      <div class="mirror" id="family"><div style="color:var(--dim);font-size:11px" data-i="family_hint"></div></div>
     </div>
     <div class="panel" style="margin-top:12px">
-      <span class="roleband role-internal">内核透视 AGENT INTERNALS — 评委证据, 老人永远看不到</span>
+      <span class="roleband role-internal" data-i="band_internal"></span>
       <div class="fsm" id="fsm"></div>
-      <details open>
-        <summary>决策日志 — 每个动作: WAKE→THINK→REVALIDATE→GATE→ACT→RECEIPT→COMMIT</summary>
-        <div id="log"></div>
-      </details>
-      <details>
-        <summary>Skill 目录 (name + capability — 上下文法则: 菜单先行)</summary>
-        <div class="skills" id="skills"></div>
-      </details>
+      <details open><summary data-i="log_sum"></summary><div id="log"></div></details>
+      <details><summary data-i="skills_sum"></summary><div class="skills" id="skills"></div></details>
     </div>
   </div>
 </div>
 <script>
 const $=id=>document.getElementById(id);
+/* ---- i18n: English first for judges; one button flips everything ---- */
+const T = {
+  band_demo:   ["Demo controls — NOT part of the product", "演示台 — 不属于产品"],
+  redline:     ["Red line: these buttons inject <b>time</b> and ordinary inputs only — never behavior. Follow the numbers; each step says what you should see.",
+                "红线: 这些按钮只注入<b>时间</b>与普通输入, 从不操纵行为。按顺序点, 每步写着应看到什么。"],
+  s1:  ["① Jump to 07:30 — morning check-in", "① 跳到 07:30 晨间问候"],
+  s1x: ["→ ~15s later the phone pops a bilingual greeting and speaks it. Nobody touched the agent.",
+        "→ 约15秒后, 手机弹出双语问候卡并朗读。没有人碰过 agent。"],
+  s2:  ["② +61 min — no response", "② +61分钟 · 婆婆没回应"],
+  s2x: ["→ SILENCE_1: the agent chooses among options (switch channel / escalate / wait once) — see the decision log.",
+        "→ SILENCE_1: agent 在选项中决策 (换渠道/立即升级/再等一次), 见决策日志。"],
+  s3:  ["③ +31 min — still silent", "③ +31分钟 · 仍无回应"],
+  s3x: ["→ SILENCE_2 → escalation: the daughter's real Telegram gets an alert card (mirrored on the right).",
+        "→ SILENCE_2 → 升级: 女儿的真实 Telegram 收到警报卡 (右侧镜像同步)。"],
+  s4:  ["④ +11 min — family hasn't replied", "④ +11分钟 · 家人没回"],
+  s4x: ["→ The contact tree WALKS to the next person (son → neighbour), each hop with its own receipt.",
+        "→ 联系人树走到下一位 (儿子→邻居), 每一跳有独立回执。"],
+  s5:  ["⑤ Grandma touches the screen", "⑤ 婆婆碰了一下屏幕"],
+  s5x: ["→ Heartbeat: any escalation dissolves; a decision in flight gets CANCELLED by revalidation.",
+        "→ 心跳信号: 升级立即消解; 在途决策会被 REVALIDATE 取消 (反悔镜头)。"],
+  s6:  ["⑥ Jump to 20:00 — family bulletin", "⑥ 跳到 20:00 家庭播报"],
+  s6x: ["→ The daughter's Telegram receives the bilingual daily report: meds / mood / observations.",
+        "→ 女儿 Telegram 收到当日双语报告: 用药/心情/观察。"],
+  s7:  ["⑦ Jump to 21:00 — care insight", "⑦ 跳到 21:00 照护洞察"],
+  s7x: ["→ The agent distills one observation from today's conversations into memory — day 7 knows her better than day 1.",
+        "→ agent 从今天的对话提炼一条观察写入记忆 — 第7天比第1天更懂她。"],
+  seeds:   ["Demo seeds (fictional data, labelled as such)", "演示种子 (虚构数据, 标明为演示)"],
+  seedbtn: ["Seed 6 days of history", "播种 6 天历史"],
+  seedx:   ["→ Writes 6 fictional days of meds/mood/insights so the 'day 7' bulletin has a story. Demo only.",
+            "→ 写入6天虚构记录, 让'第7天'的播报有据可讲。仅演示用。"],
+  band_product: ["The actual app — what's installed on Grandma's phone", "产品 — 婆婆手机上安装的东西"],
+  hero_sub: ["This is the live application, not a recording — interact with it directly. Install on a phone:",
+             "这是真实运行的应用, 不是录像 — 可直接操作。手机安装:"],
+  band_family: ["Family side — the daughter's Telegram (real messages, mirrored)", "家属端 — 女儿的 Telegram (真实消息镜像)"],
+  family_hint: ["Escalation alerts and nightly bulletins appear here — sent to real Telegram at the same time.",
+                "升级警报和每晚播报会出现在这里 — 同时发到真实 Telegram。"],
+  band_internal: ["Agent internals — judges' evidence; the elder never sees this", "内核透视 — 评委证据, 老人永远看不到"],
+  log_sum: ["Decision log — every action: WAKE→THINK→REVALIDATE→GATE→ACT→RECEIPT→COMMIT",
+            "决策日志 — 每个动作: WAKE→THINK→REVALIDATE→GATE→ACT→RECEIPT→COMMIT"],
+  skills_sum: ["Skill catalogue (name + capability — the menu-first context law)",
+               "Skill 目录 (name + capability — 菜单先行的上下文法则)"],
+  uptime: ["autonomous for", "已自主运行"],
+};
+let lang = localStorage.getItem('anan_lang') || 'en';
+function applyLang(){
+  const idx = lang==='en' ? 0 : 1;
+  document.querySelectorAll('[data-i]').forEach(el=>{ el.innerHTML = T[el.dataset.i][idx]; });
+  $('langbtn').textContent = lang==='en' ? '中文' : 'EN';
+  document.documentElement.lang = lang;
+}
+function toggleLang(){ lang = lang==='en'?'zh':'en'; localStorage.setItem('anan_lang', lang); applyLang(); refresh(lastState); }
+applyLang();
+
 const STATES=['IDLE','CHECKIN_SENT','ENGAGED','SILENCE_1','SILENCE_2','ESCALATED','RESOLVED'];
 const fsmEl=$('fsm');
 STATES.forEach(s=>{const d=document.createElement('div');d.className='state '+s;d.id='st-'+s;d.textContent=s;fsmEl.appendChild(d);});
@@ -178,7 +207,7 @@ function addEvent(e){
   else if(e.kind==='revalidate') bits.push(`${det.junction||det.skill||''} → ${det.verdict}${det.why?' · '+det.why:''}`);
   else if(e.kind==='gate') bits.push(`${det.skill} [${(det.effects||[]).join(',')}] → ${det.verdict}`);
   else if(e.kind==='receipt') bits.push(`${(det.text||det.insight||det.reply||'').slice(0,70)}${det.lane?' · '+det.lane:''}`);
-  else if(e.kind==='wake'&&det.crons) bits.push(`boot: ${det.crons.length} stale crons → rolled forward`);
+  else if(e.kind==='wake'&&det.crons) bits.push(`boot: ${det.crons.length} stale crons → rolled forward, none replayed`);
   else if(e.kind==='wake'&&det.event) bits.push(`${det.event}${det.skill?' · '+det.skill:''}${det.text?' · '+String(det.text).slice(0,50):''}`);
   else bits.push(JSON.stringify(det).slice(0,90));
   d.innerHTML=`[${e.at.slice(11)}] <b>${e.kind}</b> ${e.source} ${bits.join(' ')}`+(e.effect?` <span class="eff">⇒ ${e.effect}</span>`:'');
@@ -189,10 +218,11 @@ function addEvent(e){
 function addFamily(c){
   const el=document.createElement('div'); el.className='card';
   el.innerHTML=`<b>${c.at} · ${c.delivered||''}</b>`+c.text+
-    (c.buttons?`<br><span class="tgbtn">✅ 我已回电 Called back</span><span class="tgbtn">🏠 联系邻居</span>`:'');
+    (c.buttons?`<br><span class="tgbtn">✅ 我已回电 Called back</span><span class="tgbtn">🏠 联系邻居 Neighbour</span>`:'');
   const box=$('family'); box.prepend(el);
   while(box.children.length>5) box.lastChild.remove();
 }
+let lastState=null;
 const es=new EventSource('/events');
 es.onopen=()=>$('conn').textContent='● live';
 es.onerror=()=>$('conn').textContent='○ reconnecting…';
@@ -203,9 +233,9 @@ es.onmessage=m=>{
   if(d.kind==='family_card') addFamily(d);
 };
 function refresh(s){
-  if(!s) return;
+  if(!s) return; lastState=s;
   $('clock').textContent=s.time.slice(11,16);
-  $('uptime').textContent=`已自主运行 ${s.uptime_h}h`;
+  $('uptime').textContent=`${T.uptime[lang==='en'?0:1]} ${s.uptime_h}h`;
   setState(s.fsm.state);
   const hour=parseInt(s.time.slice(11,13),10);
   mascot(s.fsm.state==='IDLE'&&(hour>=22||hour<7)?'sleep':(FSM_M[s.fsm.state]||'idle'));
