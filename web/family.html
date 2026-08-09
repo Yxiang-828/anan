@@ -6,80 +6,159 @@
 <title>安安 · 家人录音 Family Voice</title>
 <style>
   :root { --warm:#faf6ef; --ink:#2b2620; --muted:#8a8175; --card:#fff; --green:#2e9e5b;
-          --blue:#3b6fe0; --red:#e04a3b; --ease-out:cubic-bezier(0.23,1,0.32,1); }
+          --blue:#3b6fe0; --red:#e04a3b; --amber:#e8a13c; --ease-out:cubic-bezier(0.23,1,0.32,1); }
   * { box-sizing:border-box; margin:0; }
   body { background:var(--warm); color:var(--ink); font-family:"PingFang SC","Noto Sans SC",sans-serif;
-         max-width:520px; margin:0 auto; padding:28px 20px; }
+         max-width:520px; margin:0 auto; padding:28px 20px 60px; }
   h1 { font-size:24px; } h1 small { display:block; font-size:14px; color:var(--muted); font-weight:400; margin-top:4px; }
   .card { background:var(--card); border-radius:20px; padding:22px; margin-top:16px;
           box-shadow:0 2px 12px rgba(60,40,10,.08); }
   .why { font-size:14px; color:var(--muted); line-height:1.6; margin-top:10px; }
   button { font-family:inherit; border:0; cursor:pointer; border-radius:14px;
-           transition:transform 140ms var(--ease-out); }
+           transition:transform 140ms var(--ease-out), background 200ms; }
   button:active { transform:scale(0.97); }
   .langbtn { width:49%; padding:18px 6px; font-size:20px; background:#efe9dd; }
   .langbtn.on { background:var(--blue); color:#fff; }
   .script { font-size:22px; line-height:1.7; padding:14px 4px; }
   #recbtn { width:100%; padding:18px; font-size:20px; color:#fff; background:var(--green); margin-top:12px; }
   #recbtn.rec { background:var(--red); }
-  #status { font-size:14px; color:var(--muted); margin-top:12px; line-height:1.6; min-height:40px; }
-  audio { width:100%; margin-top:10px; }
+  #recbtn:disabled { background:#cfc6b8; }
+  /* live meter */
+  #meterwrap { display:none; margin-top:14px; align-items:center; gap:12px; }
+  #meterwrap.on { display:flex; }
+  #wave { flex:1; height:56px; background:#f4efe6; border-radius:10px; }
+  #timer { font-size:22px; font-variant-numeric:tabular-nums; color:var(--red); min-width:64px; text-align:right; }
+  /* stages */
+  .stage { display:none; margin-top:14px; padding:14px; border-radius:14px; font-size:15px; line-height:1.6; }
+  .stage.on { display:block; }
+  #st-processing { background:#fdf6e7; color:#8a6d1f; }
+  #st-done { background:#e9f7ee; color:#1d6b3d; }
+  #st-error { background:#fdeceb; color:#a3352a; }
+  .spin { display:inline-block; width:14px; height:14px; border:2px solid #8a6d1f44;
+          border-top-color:#8a6d1f; border-radius:50%; animation:spin .8s linear infinite;
+          vertical-align:-2px; margin-right:8px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .replay { background:var(--green); color:#fff; padding:12px 18px; font-size:16px; margin-top:10px; }
+  .again { background:#efe9dd; color:var(--ink); padding:12px 18px; font-size:16px; margin-top:10px; margin-left:8px; }
+  audio { width:100%; margin-top:12px; }
+  .lbl { font-size:12px; color:var(--muted); margin-top:12px; }
   .note { font-size:12px; color:var(--muted); margin-top:20px; line-height:1.6; }
+  @media (prefers-reduced-motion: reduce){ .spin { animation-duration:2s; } }
 </style>
 </head>
 <body>
 <h1>用您的声音陪伴 TA<small>Give AnAn your voice — 10 seconds, once</small></h1>
+
 <div class="card">
-  <b>第一步 · 选语言 Step 1 · Choose the language FIRST</b>
-  <p class="why">录音的语言决定这个声音只说这种语言 — 不跨语言使用, 不然会很怪。
-    The recording's language is the ONLY language this voice will speak.</p>
+  <b>第一步 · 选语言 Step 1 · Language FIRST</b>
+  <p class="why">这个声音只会说录音时用的语言, 绝不跨语言。
+    This voice will ONLY ever speak the language you record in.</p>
   <div style="margin-top:12px; display:flex; gap:2%">
     <button class="langbtn on" id="lz" onclick="pick('zh')">中文</button>
     <button class="langbtn" id="le" onclick="pick('en')">English</button>
   </div>
 </div>
+
 <div class="card">
-  <b>第二步 · 朗读这段话 Step 2 · Read this aloud</b>
+  <b>第二步 · 朗读 Step 2 · Read this aloud</b>
   <p class="script" id="script">…</p>
   <button id="recbtn">🎙️ 按住录音 Hold to record</button>
-  <div id="status">安静环境, 自然语气, 一口气读完 (~10 秒)。Quiet room, natural tone, one take.</div>
+  <div id="meterwrap"><canvas id="wave"></canvas><div id="timer">0.0s</div></div>
+
+  <div class="stage" id="st-processing"><span class="spin"></span><span id="ptext">上传中… Uploading…</span></div>
+  <div class="stage" id="st-done">✅ <b>生效了! Your voice is live.</b><br>
+    婆婆的手机现在用您的声音说话。这是它用您的声音说的第一句:<br>
+    <span style="color:#4a7d5e">The app now speaks with YOUR voice — here are its first words in it:</span><br>
+    <button class="replay" id="playsample">▶ 再听一次 Play sample</button>
+    <button class="again" onclick="reset()">重录 Re-record</button></div>
+  <div class="stage" id="st-error">⚠️ <span id="etext"></span><br>
+    <button class="again" onclick="reset()">再试一次 Try again</button></div>
+
+  <div class="lbl" id="prevlbl" style="display:none">您的录音 Your recording:</div>
   <audio id="preview" controls style="display:none"></audio>
 </div>
+
 <div class="note">录音只保存在这台电脑上, 只用于关怀语音, 家属随时可删除或换回默认声。
   Consent-first, family-only, local-only.</div>
+
 <script>
 const $=id=>document.getElementById(id);
-let lang='zh', scripts={};
+let lang='zh', scripts={}, sampleUrl=null;
 fetch('/voice/scripts').then(r=>r.json()).then(s=>{scripts=s; $('script').textContent=s[lang];});
 function pick(l){ lang=l; $('lz').classList.toggle('on',l==='zh'); $('le').classList.toggle('on',l==='en');
-  $('script').textContent=scripts[l]||'…'; }
-let stream=null, rec=null, chunks=[];
-const btn=$('recbtn');
+  $('script').textContent=scripts[l]||'…'; reset(); }
+function stage(name){ ['st-processing','st-done','st-error'].forEach(s=>$(s).classList.toggle('on', s==='st-'+name)); }
+function reset(){ stage('none'); $('preview').style.display='none'; $('prevlbl').style.display='none';
+  $('recbtn').disabled=false; }
+
+let stream=null, rec=null, chunks=[], audioCtx=null, analyser=null, rafId=null, t0=0;
+const btn=$('recbtn'), wave=$('wave'), tEl=$('timer');
+const wctx = wave.getContext('2d');
+
+function drawWave(){
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteTimeDomainData(data);
+  const W = wave.width = wave.clientWidth * devicePixelRatio;
+  const H = wave.height = wave.clientHeight * devicePixelRatio;
+  wctx.clearRect(0,0,W,H);
+  // level bars: honest signal — flat line means the mic hears nothing
+  const bars = 48, step = Math.floor(data.length/bars);
+  let peak = 0;
+  for(let i=0;i<bars;i++){
+    let max=0;
+    for(let j=0;j<step;j++){ const v=Math.abs(data[i*step+j]-128); if(v>max) max=v; }
+    peak = Math.max(peak, max);
+    const h = Math.max(2, (max/128)*H*0.9);
+    wctx.fillStyle = '#2e9e5b';
+    wctx.fillRect(i*(W/bars)+1, (H-h)/2, (W/bars)-2, h);
+  }
+  tEl.textContent = ((Date.now()-t0)/1000).toFixed(1)+'s';
+  if(peak < 3 && Date.now()-t0 > 1500) tEl.style.color='#e8a13c'; else tEl.style.color='#e04a3b';
+  rafId = requestAnimationFrame(drawWave);
+}
+
 btn.addEventListener('pointerdown', async ()=>{
+  reset();
   try{ stream = stream || await navigator.mediaDevices.getUserMedia({audio:true}); }
-  catch(e){ $('status').textContent='需要麦克风权限 Mic permission needed (HTTPS or localhost only).'; return; }
+  catch(e){ stage('error'); $('etext').textContent='需要麦克风权限 (仅限 HTTPS 或本机)。Mic permission needed (HTTPS or localhost).'; return; }
+  audioCtx = audioCtx || new AudioContext();
+  const src = audioCtx.createMediaStreamSource(stream);
+  analyser = audioCtx.createAnalyser(); analyser.fftSize = 2048; src.connect(analyser);
   chunks=[]; rec=new MediaRecorder(stream); rec.ondataavailable=e=>chunks.push(e.data); rec.start();
-  btn.classList.add('rec'); btn.textContent='● 录音中… 松开结束 Recording… release to finish';
+  t0 = Date.now();
+  btn.classList.add('rec'); btn.textContent='● 录音中… 松开结束 · release to finish';
+  $('meterwrap').classList.add('on'); drawWave();
 });
-btn.addEventListener('pointerup', async ()=>{
+
+async function stopRec(){
   if(!rec || rec.state!=='recording') return;
+  cancelAnimationFrame(rafId); $('meterwrap').classList.remove('on');
   btn.classList.remove('rec'); btn.textContent='🎙️ 按住录音 Hold to record';
+  const secs = (Date.now()-t0)/1000;
   const done=new Promise(res=>rec.onstop=res); rec.stop(); await done;
   const blob=new Blob(chunks,{type:rec.mimeType||'audio/webm'});
-  if(blob.size<3000){ $('status').textContent='太短了, 请读完整段。Too short — please read the whole line.'; return; }
-  $('preview').src=URL.createObjectURL(blob); $('preview').style.display='block';
-  $('status').textContent='上传中, 正在生成声音… Creating the voice (~10s)…';
+  $('preview').src=URL.createObjectURL(blob); $('preview').style.display='block'; $('prevlbl').style.display='block';
+  if(secs < 4 || blob.size<3000){
+    stage('error'); $('etext').textContent=`只录到 ${secs.toFixed(1)} 秒 — 请一口气读完整段 (约10秒)。Only ${secs.toFixed(1)}s — please read the whole line (~10s).`;
+    return;
+  }
+  btn.disabled=true; stage('processing'); $('ptext').textContent='上传中… Uploading…';
   try{
-    const r=await fetch('/voice/clone?lang='+lang,{method:'POST',body:blob,
-      headers:{'Content-Type':blob.type}});
+    const timer = setTimeout(()=>{ $('ptext').textContent='正在生成声音 (约10秒)… Creating the voice (~10s)…'; }, 1200);
+    const r=await fetch('/voice/clone?lang='+lang,{method:'POST',body:blob,headers:{'Content-Type':blob.type}});
+    clearTimeout(timer);
     const d=await r.json();
     if(d.ok){
-      $('status').innerHTML='✅ 生效了! 婆婆的手机现在用您的声音说话。下面是它用您的声音说的第一句:<br>'+
-        'Done — the app now speaks with YOUR voice. First words in it:';
-      if(d.sample){ const a=new Audio(d.sample); a.play(); }
-    } else { $('status').textContent='没成功: '+(d.error||'?')+' — 再录一次? Try once more?'; }
-  }catch(e){ $('status').textContent='上传失败, 再试一次? Upload failed — try again?'; }
-});
+      stage('done'); sampleUrl=d.sample;
+      if(sampleUrl){ new Audio(sampleUrl).play().catch(()=>{}); }
+      else { $('playsample').style.display='none'; }
+    } else { stage('error'); $('etext').textContent=(d.error||'没成功, 再录一次? Failed — try again?'); btn.disabled=false; }
+  }catch(e){ stage('error'); $('etext').textContent='上传失败 — 网络或服务问题。Upload failed — network or server.'; btn.disabled=false; }
+}
+btn.addEventListener('pointerup', stopRec);
+btn.addEventListener('pointercancel', stopRec);
+btn.addEventListener('pointerleave', ()=>{ if(rec&&rec.state==='recording') stopRec(); });
+$('playsample').addEventListener('click', ()=>{ if(sampleUrl) new Audio(sampleUrl).play(); });
 </script>
 </body>
 </html>
