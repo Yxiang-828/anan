@@ -71,6 +71,16 @@
   window.addEventListener('unhandledrejection', e => __labError(e.reason && (e.reason.message || e.reason)));
   const _ce = console.error.bind(console);
   console.error = (...a) => { __labError(a.map(x => x && (x.message || x)).join(' ')); _ce(...a); };
+  /* BROWSER LAW: camera exists only on HTTPS or localhost. On plain HTTP there
+     is NO prompt, ever — say so up front with the working link. */
+  if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    __labStage('camera', 'fail', 'HTTP page — browser forbids camera here');
+    errBox.style.display = 'block';
+    errBox.innerHTML = '⚠️ 这个地址用不了摄像头 (浏览器规定: 只有 HTTPS 或本机可以)。不会弹出任何权限询问。<br>'
+      + 'This address cannot use a camera — browsers only allow it on HTTPS or localhost. No prompt will ever appear here.<br>'
+      + '👉 <a style="color:#ffd9d3;font-weight:700" href="https://anan-iax1.onrender.com'
+      + location.pathname + location.search + '">打开 HTTPS 版本 Open the HTTPS version</a>';
+  }
 </script>
 <div id="devtoast" style="display:none; font-family:system-ui; margin:8px 12px; padding:12px 14px;
      border-radius:12px; background:#26324a; color:#dfe6f3; font-size:13.5px; line-height:1.5;
