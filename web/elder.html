@@ -450,8 +450,15 @@ function camFail(){  // say WHY, not just "needed"
     return '此地址无法用摄像头 — 请用 HTTPS 或本机打开 · Camera unavailable on this address — open via HTTPS or localhost';
   return '请在弹窗中允许摄像头 (若无弹窗: 点地址栏 🔒 手动允许) · Please allow the camera (no popup? tap the 🔒 in the address bar)';
 }
-async function hcam(facing){ return navigator.mediaDevices.getUserMedia(
-  {video:{facingMode:facing, width:{ideal:1280}, height:{ideal:720}}}); }
+async function hcam(facing){
+  try{ return await navigator.mediaDevices.getUserMedia(
+    {video:{facingMode:facing, width:{ideal:1280}, height:{ideal:720}}}); }
+  catch(e){
+    if(e.name==='NotFoundError'||e.name==='OverconstrainedError')
+      return navigator.mediaDevices.getUserMedia({video:true});  // desktop: any camera
+    throw e;
+  }
+}
 function hpost(kind, score, metrics){
   fetch('/health/score',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({kind, score, metrics})}); beat(); }

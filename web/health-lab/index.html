@@ -33,6 +33,24 @@
   <a href="?game=camera">😊 Smile</a>
 </div>
 <div id="root"><div id="loading">Loading the check…</div></div>
+<script>
+/* Desktop repair: pages request the REAR camera (facingMode:'environment'),
+   which desktops don't have → NotFoundError with no prompt. Retry any camera.
+   (On a desktop webcam, fingertip PPG has no torch — phone is the real venue.) */
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  const orig = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+  navigator.mediaDevices.getUserMedia = async (c) => {
+    try { return await orig(c); }
+    catch (e) {
+      if (c && c.video && (e.name === 'NotFoundError' || e.name === 'OverconstrainedError')) {
+        console.warn('requested camera not found — falling back to any camera');
+        return await orig({ video: true, audio: c.audio || false });
+      }
+      throw e;
+    }
+  };
+}
+</script>
 <script type="module">
 const GAMES = { 'heart-rate':'/health-lab/heart-rate.tsx',
                 'mobility':'/health-lab/mobility.tsx',
