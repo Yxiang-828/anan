@@ -99,6 +99,14 @@
 </div>
 
 <div class="card">
+  <b>TA在哪 · Where is she</b>
+  <p class="why">家的位置和安全范围 (超出即通知您)。蓝点 = TA 的手机实时位置。
+    Home + safe radius (you're alerted the moment she's outside it). Blue dot = her phone, live.</p>
+  <div id="map" style="height:260px; border-radius:14px; margin-top:12px; background:#eef0f3"></div>
+  <div id="mapinfo" style="font-size:13px; color:var(--muted); margin-top:8px"></div>
+</div>
+
+<div class="card">
   <b>试听 · Audition the voices</b>
   <p class="why">改这行字, 点任何声音, 听它读出来 — 包括您刚录的声音。
     Edit this exact line, tap any voice, hear it spoken — including your own clone.</p>
@@ -109,8 +117,71 @@
 <div class="note">录音只保存在这台电脑上, 只用于关怀语音, 家属随时可删除或换回默认声。
   Consent-first, family-only, local-only.</div>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
+<style>
+  /* KampungKaki transplant: pulsing person dot */
+  @keyframes kkpulse { 0%{transform:scale(.9);opacity:.7} 70%{transform:scale(1.8);opacity:0} 100%{opacity:0} }
+  .kk-dot { position:relative; width:18px; height:18px; }
+  .kk-dot .halo { position:absolute; inset:0; border-radius:50%; background:#3b6fe0; animation:kkpulse 1.8s ease-out infinite; }
+  .kk-dot .core { position:absolute; inset:3px; border-radius:50%; background:#3b6fe0; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.3); }
+  .kk-home { font-size:22px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.3)); }
+  @media (prefers-reduced-motion: reduce){ .kk-dot .halo { animation:none; opacity:.25; } }
+</style>
 <script>
 const $=id=>document.getElementById(id);
+
+/* ---- map (KampungKaki mechanism: MapLibre + OneMap SG tiles, zero keys) ---- */
+function circlePolygon(lng, lat, radiusKm, points=64){
+  const ring=[];
+  for(let i=0;i<=points;i++){
+    const a=(i/points)*Math.PI*2;
+    ring.push([lng + (radiusKm/(111.32*Math.cos(lat*Math.PI/180)))*Math.cos(a),
+               lat + (radiusKm/110.574)*Math.sin(a)]);
+  }
+  return {type:'Polygon', coordinates:[ring]};
+}
+let map=null, elderMarker=null;
+function initMap(home){
+  if(map || !home || !home.lat || !window.maplibregl) return;
+  map = new maplibregl.Map({
+    container:'map',
+    style:{version:8,
+      glyphs:'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+      sources:{onemap:{type:'raster',
+        tiles:['https://www.onemap.gov.sg/maps/tiles/Grey/{z}/{x}/{y}.png'],
+        tileSize:256, attribution:'© OneMap Singapore'}},
+      layers:[{id:'base',type:'raster',source:'onemap'}]},
+    center:[home.lng, home.lat], zoom:15, attributionControl:{compact:true}});
+  map.on('load', ()=>{
+    map.addSource('safe',{type:'geojson',
+      data:{type:'Feature', geometry:circlePolygon(home.lng, home.lat, (home.radius_m||300)/1000)}});
+    map.addLayer({id:'safe-fill',type:'fill',source:'safe',paint:{'fill-color':'#2e9e5b','fill-opacity':0.07}});
+    map.addLayer({id:'safe-line',type:'line',source:'safe',
+      paint:{'line-color':'#2e9e5b','line-width':2,'line-dasharray':[2,2]}});
+    const homeEl=document.createElement('div'); homeEl.className='kk-home'; homeEl.textContent='🏠';
+    new maplibregl.Marker({element:homeEl}).setLngLat([home.lng, home.lat]).addTo(map);
+  });
+}
+function placeElder(loc){
+  if(!map || !loc) return;
+  if(!elderMarker){
+    const el=document.createElement('div'); el.className='kk-dot';
+    el.innerHTML='<span class="halo"></span><span class="core"></span>';
+    elderMarker=new maplibregl.Marker({element:el, anchor:'center'});
+    elderMarker.setLngLat([loc.lng, loc.lat]).addTo(map);
+  } else elderMarker.setLngLat([loc.lng, loc.lat]);
+  $('mapinfo').textContent = `距家 ${loc.dist_m}m · ${loc.at ? loc.at.slice(11,16) : ''} `
+    + (loc.dist_m > (window._radius||300) ? '· ⚠️ 超出安全范围 OUTSIDE safe range' : '· ✅ 在安全范围内 inside safe range');
+}
+function pollLocation(){
+  fetch('/state').then(r=>r.json()).then(s=>{
+    window._radius = s.home?.radius_m || 300;
+    initMap(s.home);
+    if(s.last_location) placeElder(s.last_location);
+  }).catch(()=>{});
+}
+pollLocation(); setInterval(pollLocation, 10000);
 let lang='zh', scripts={}, sampleUrl=null;
 fetch('/voice/scripts').then(r=>r.json()).then(s=>{scripts=s; $('script').textContent=s[lang];});
 function pick(l){ lang=l; $('lz').classList.toggle('on',l==='zh'); $('le').classList.toggle('on',l==='en');

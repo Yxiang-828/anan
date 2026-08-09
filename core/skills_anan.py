@@ -152,6 +152,96 @@ def relay_family(kernel: Kernel, text: str = "") -> dict:
                        if (sent or mirror_only) else "relay FAILED — elder told honestly")}
 
 
+# --- safe_range ------------------------------------------------------------
+def safe_range(kernel: Kernel, lat: float = 0, lng: float = 0, dist_m: int = 0,
+               returned: bool = False) -> dict:
+    """Wander safety relay (dementia care): geofence breach → family gets the
+    live position + map link; return → all-clear. Detection is kernel-owned
+    and deterministic; this skill only communicates, with receipts."""
+    at = kernel.clock.now().strftime("%H:%M")
+    p = kernel.config.get("profile", {})
+    home = kernel.config.get("home", {})
+    first = (kernel.config.get("contact_tree") or [{}])[0]
+    map_link = f"https://maps.google.com/?q={lat},{lng}"
+    if returned:
+        facts = {"收信人": first.get("name"), "被照顾者": p.get("name"),
+                 "情况": f"已回到家 {home.get('radius_m')}米 安全范围内", "时间": at}
+        text, lane = _say(kernel, "报平安: TA回到安全范围了, 告诉家人不用担心了", facts)
+        if text is None:
+            text = _fmt([("✅ 已回到安全范围 Back in safe range", p.get("name", "")),
+                         ("时间 At", at)])
+        receipt = _family(kernel, text, {"to": first.get("telegram", "")})
+        return {"lane": lane, "delivery": receipt,
+                "effect": "all-clear sent — back inside the safe radius"}
+    facts = {"收信人": {"称呼": first.get("name"), "关系": first.get("relation")},
+             "被照顾者": p.get("name"),
+             "情况": {"离家距离": f"{dist_m}米", "安全半径": f"{home.get('radius_m')}米",
+                      "时间": at, "健康备注": ", ".join(p.get("conditions", []))}}
+    text, lane = _say(kernel,
+                      f"走失预警: 你在给{first.get('name', '家人')}发消息 — TA离开了安全范围, "
+                      f"请家人查看位置并联系TA", facts, contract="三行内, 中英各有, 语气急但不吓人")
+    if text is None:
+        text = "🧭 " + _fmt([("走失预警 Wander alert", p.get("name", "")),
+                             ("距离 Distance", f"{dist_m}m (radius {home.get('radius_m')}m)"),
+                             ("时间 At", at)])
+    text += f"\n📍 {map_link}"
+    buttons = [[{"text": "🧭 查看位置 View location", "url": map_link}],
+               [{"text": "✅ 我去接TA On my way", "callback_data": "anan:called:wander"}]]
+    receipt = _family(kernel, text, {"buttons": buttons, "to": first.get("telegram", "")})
+    _elder(kernel, {"type": "chat", "speak": True,
+                    "text": (f"{p.get('address_as', '')}, 走远了点呢, 要不要歇一歇? "
+                             f"已经告诉{first.get('name', '家人')}了。\n"
+                             f"You've wandered a little far — take a rest, "
+                             f"{first.get('name', 'family')} knows where you are.")})
+    kernel.store.log("escalation_log", at=at, step="wander_alert",
+                     contact=first.get("name", ""), outcome="sent" if receipt.get("ok") else "failed")
+    return {"dist_m": dist_m, "map": map_link, "lane": lane, "delivery": receipt,
+            "effect": f"wander alert relayed to {first.get('name')} with live position"}
+
+
+# --- health_scan -----------------------------------------------------------
+_HEALTH_NAMES = {"heart_rate": ("心率", "Heart rate", "bpm"),
+                 "face_symmetry": ("面部对称", "Face symmetry", "/100"),
+                 "fitness": ("活动力", "Mobility", "reps")}
+
+
+def health_scan(kernel: Kernel, kind: str = "", score: float = 0,
+                alert: bool = False, metrics: dict | None = None) -> dict:
+    """Camera health-check results: encourage the elder always; alert family
+    ONLY on deterministic anomaly (low face symmetry = FAST droop screen;
+    out-of-range heart rate). CV ran on-device; only the score exists here."""
+    at = kernel.clock.now().strftime("%H:%M")
+    p = kernel.config.get("profile", {})
+    zh_name, en_name, unit = _HEALTH_NAMES.get(kind, (kind, kind, ""))
+    facts = {"检查": zh_name, "结果": f"{score:g}{unit}", "时间": at,
+             "TA": p.get("address_as", "")}
+    text, lane = _say(kernel, "健康小检查做完了, 鼓励TA一句并报结果", facts)
+    if text is None:
+        text = _fmt([(f"{zh_name} {en_name}", f"{score:g}{unit}"), ("时间 At", at)])
+    _elder(kernel, {"type": "chat", "text": text, "speak": True})
+    delivery = {"ok": True, "surface": "elder_only"}
+    if alert:
+        first = (kernel.config.get("contact_tree") or [{}])[0]
+        afacts = {"收信人": {"称呼": first.get("name"), "关系": first.get("relation")},
+                  "被照顾者": p.get("name"),
+                  "异常": {"检查": zh_name, "结果": f"{score:g}{unit}", "时间": at},
+                  "建议": "面部不对称可能提示中风征兆(FAST), 请尽快联系确认" if kind == "face_symmetry"
+                          else "心率超出正常范围, 请联系确认"}
+        amsg, _l = _say(kernel,
+                        f"健康异常通知: 你在给{first.get('name', '家人')}发消息, 如实告知检查异常并建议行动",
+                        afacts, contract="三行内, 中英各有, 严肃但不制造恐慌")
+        if amsg is None:
+            amsg = "⚠️ " + _fmt([("健康异常 Health anomaly", f"{zh_name} {en_name}: {score:g}{unit}"),
+                                 ("时间 At", at), ("请联系 Please call", p.get("name", ""))])
+        delivery = _family(kernel, amsg, {"to": first.get("telegram", "")})
+        kernel.store.log("escalation_log", at=at, step=f"health_alert:{kind}",
+                         contact=first.get("name", ""),
+                         outcome="sent" if delivery.get("ok") else "failed")
+    return {"kind": kind, "score": score, "alert": alert, "lane": lane, "delivery": delivery,
+            "effect": (f"{kind} anomaly relayed to family" if alert
+                       else f"{kind} logged + elder encouraged (CV stayed on-device)")}
+
+
 # --- med_reminder ----------------------------------------------------------
 def med_reminder(kernel: Kernel) -> dict:
     at = kernel.clock.now()
@@ -222,12 +312,15 @@ def family_bulletin(kernel: Kernel) -> dict:
     insights = kernel.store.rows(
         "SELECT text FROM insights WHERE day=? ORDER BY id DESC LIMIT 2", (day,))
     first = (kernel.config.get("contact_tree") or [{}])[0]
+    health = kernel.store.rows(
+        "SELECT kind, score FROM health_log ORDER BY id DESC LIMIT 4")
     facts = {
         "第几天": day,
         "收信人": {"称呼": first.get("name"), "关系": first.get("relation")},
         "用药记录": [{"药": m, "状态": s} for m, s in meds],
         "近期心情": [m for (m,) in moods],
         "今日观察": [t for (t,) in insights],
+        "健康检查": [{"项目": k, "结果": s} for k, s in health] or "今日未做",
     }
     text, lane = _say(kernel, "每晚家庭播报: 向收信人报当天平安, 包含用药/心情/观察", facts,
                       contract="三行左右, 每个意思中英都有")
@@ -268,6 +361,10 @@ def register_all(kernel: Kernel) -> None:
                               "event", effects=("notify.elder", "tts.speak", "memory.write")))
     kernel.registry.add(Skill("relay_family", "把老人的话真实转达给家人", "老人请求时; 发送有回执, 不口头承诺", relay_family,
                               "event", effects=("notify.family", "notify.elder", "tts.speak")))
+    kernel.registry.add(Skill("safe_range", "走失预警: 超出安全半径即通知家人", "地理围栏由内核判定(确定性); 附实时位置", safe_range,
+                              "event", effects=("notify.family", "notify.elder", "tts.speak")))
+    kernel.registry.add(Skill("health_scan", "镜头健康检查结果: 鼓励老人, 异常即告家人", "CV 全在设备端; 心率/面部对称/活动力; 阈值确定性", health_scan,
+                              "event", effects=("notify.family", "notify.elder", "tts.speak", "memory.write")))
     kernel.registry.add(Skill("med_reminder", "用药提醒, 确认即心跳", "提示同时布下沉默网", med_reminder,
                               "schedule", effects=("notify.elder", "tts.speak")))
     kernel.registry.add(Skill("escalate_tree", "沿紧急联系人树通知家人", "SILENCE_2 触发; 回调闭环; 走树", escalate_tree,

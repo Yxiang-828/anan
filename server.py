@@ -313,6 +313,8 @@ def state() -> dict:
             "med": CONFIG.get("med", {}),
             "voice_speak": CONFIG.get("voice", {}).get("speak", "both"),
             "praise": CONFIG.get("voice", {}).get("praise", []),
+            "home": CONFIG.get("home", {}),
+            "last_location": store.get("last_location"),
             # elder surface needs names/relations only — chat ids stay server-side
             "contact_tree": [{"name": c.get("name", ""), "relation": c.get("relation", ""),
                               "phone": c.get("phone", "")}
@@ -746,6 +748,21 @@ async def inject_scenario(request: Request) -> dict:
     elif name == "insight":
         clock.skip_to(20, 59)
         clock.advance(1.05)
+    elif name == "wander":
+        # simulated sensor input: a position ~500m from home (scenario, not behavior)
+        h = CONFIG.get("home", {})
+        kernel.submit("location", "scenario",
+                      {"lat": h.get("lat", 0) + 0.0045, "lng": h.get("lng", 0), "accuracy": 10})
+    elif name == "come_home":
+        h = CONFIG.get("home", {})
+        kernel.submit("location", "scenario",
+                      {"lat": h.get("lat", 0), "lng": h.get("lng", 0), "accuracy": 10})
+    elif name == "health_demo":
+        # fixture result (labeled demo): a LOW face-symmetry score exercising
+        # the anomaly path without a camera — the FAST-droop relay on stage
+        kernel.submit("health_score", "scenario",
+                      {"kind": "face_symmetry", "score": 42,
+                       "metrics": {"demo_fixture": True, "median": 42, "variance": 18}})
     store.event(kernel.clock.now().strftime("%Y-%m-%d %H:%M:%S"), "inject", "console",
                 {"scenario": name}, effect="time/scenario injection only")
     return {"ok": True, "now": clock.now().strftime("%H:%M")}
@@ -763,6 +780,34 @@ async def elder_heartbeat(request: Request) -> dict:
 async def elder_say(request: Request) -> dict:
     text = (await request.json()).get("text", "")
     kernel.submit("user_text", "elder_app", {"text": text})
+    return {"ok": True}
+
+
+@app.post("/health/score")
+async def health_score(request: Request) -> dict:
+    """CV runs entirely on the elder's device (Synapxe privacy property kept:
+    frames never leave the phone). Only {kind, score, metrics} arrives, and
+    the AGENT decides what to reflect and whether the guardian hears."""
+    b = await request.json()
+    kind = b.get("kind", "")
+    if kind not in ("heart_rate", "face_symmetry", "fitness"):
+        return {"ok": False, "error": "unknown kind"}
+    kernel.submit("health_score", "elder_app",
+                  {"kind": kind, "score": float(b.get("score", 0)),
+                   "metrics": b.get("metrics", {})})
+    return {"ok": True}
+
+
+@app.post("/elder/location")
+async def elder_location(request: Request) -> dict:
+    """The elder phone streams position (browser geolocation, HTTPS only).
+    The kernel owns the geofence judgement."""
+    b = await request.json()
+    if b.get("lat") is None or b.get("lng") is None:
+        return {"ok": False}
+    kernel.submit("location", "elder_app",
+                  {"lat": float(b["lat"]), "lng": float(b["lng"]),
+                   "accuracy": float(b.get("accuracy", 0))})
     return {"ok": True}
 
 

@@ -241,6 +241,61 @@ class Kernel:
             self.loop.escalated()
         elif kind == "settle":
             self.loop.settle()
+        elif kind == "location":
+            self._location(event["detail"], candidate_wall=event["created_wall"])
+        elif kind == "health_score":
+            self._health(event["detail"], candidate_wall=event["created_wall"])
+
+    def _health(self, detail: dict, candidate_wall: float) -> None:
+        """Camera health checks (all CV runs ON the elder's device — only the
+        score arrives here; frames never leave the phone). Logging always;
+        alerting is DETERMINISTIC thresholds from config (a stroke screen must
+        not depend on a model's mood)."""
+        kind = detail.get("kind", "")
+        score = float(detail.get("score", 0))
+        self.store.log("health_log", at=self._at(), kind=kind, score=score,
+                       metrics=__import__("json").dumps(detail.get("metrics", {}), ensure_ascii=False))
+        self.loop.heartbeat(f"health_check:{kind}")   # doing a check is a touch
+        th = self.config.get("health_thresholds", {})
+        alert = ((kind == "face_symmetry" and score < float(th.get("face_symmetry_min", 60)))
+                 or (kind == "heart_rate" and not
+                     (float(th.get("bpm_min", 45)) <= score <= float(th.get("bpm_max", 120)))))
+        self._pipeline("health_scan", reason=f"{kind} score {score:g}"
+                       + (" — ANOMALOUS, family alert" if alert else " — logged"),
+                       candidate_wall=candidate_wall,
+                       kind=kind, score=score, alert=alert,
+                       metrics=detail.get("metrics", {}))
+
+    def _location(self, detail: dict, candidate_wall: float) -> None:
+        """Wander safety — DETERMINISTIC floor (a dementia geofence must not
+        depend on a model's mood). Breach → safe_range skill; return → all
+        clear. Re-alerts only after rearm_min outside."""
+        import math
+        home = self.config.get("home") or {}
+        lat, lng = detail.get("lat"), detail.get("lng")
+        if not home or lat is None or lng is None:
+            return
+        dlat = math.radians(lat - home["lat"])
+        dlng = math.radians(lng - home["lng"])
+        a = (math.sin(dlat / 2) ** 2 +
+             math.cos(math.radians(home["lat"])) * math.cos(math.radians(lat)) *
+             math.sin(dlng / 2) ** 2)
+        dist_m = 6371000 * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        self.store.put("last_location", {"lat": lat, "lng": lng, "dist_m": round(dist_m),
+                                         "at": self._at()})
+        outside = dist_m > float(home.get("radius_m", 300))
+        flagged = self.store.get("wander_flag")
+        if outside and not flagged:
+            self.store.put("wander_flag", {"since": self._at()})
+            self._pipeline("safe_range", reason=f"geofence breach: {int(dist_m)}m from home "
+                           f"(radius {home.get('radius_m')}m)",
+                           candidate_wall=candidate_wall,
+                           lat=lat, lng=lng, dist_m=int(dist_m))
+        elif not outside and flagged:
+            self.store.put("wander_flag", None)
+            self._pipeline("safe_range", reason="returned inside the safe radius",
+                           candidate_wall=candidate_wall,
+                           lat=lat, lng=lng, dist_m=int(dist_m), returned=True)
 
     def _junction(self, junction: dict, candidate_wall: float) -> None:
         """THINK (bounded choice) → REVALIDATE → apply → act."""

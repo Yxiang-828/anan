@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#faf6ef">
 <link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
 <title>安安 AnAn</title>
 <style>
   /* ---- tokens (craft-frontend §3: named, not a palette dump) ---- */
@@ -106,6 +108,18 @@
   .tab.on { color:var(--ink); background:var(--warm); }
 
   @keyframes bcycle { to { background-position:133.333% 0; } }
+  /* KampungKaki transplant: map + pulsing self dot */
+  #emap { height:230px; border-radius:18px; margin-bottom:10px; background:#eef0f3; }
+  @keyframes kkpulse { 0%{transform:scale(.9);opacity:.7} 70%{transform:scale(1.8);opacity:0} 100%{opacity:0} }
+  .kk-dot { position:relative; width:18px; height:18px; }
+  .kk-dot .halo { position:absolute; inset:0; border-radius:50%; background:var(--blue); animation:kkpulse 1.8s ease-out infinite; }
+  .kk-dot .core { position:absolute; inset:3px; border-radius:50%; background:var(--blue); border:2px solid #fff; }
+  .kk-home { font-size:22px; }
+  #maphint { font-size:16px; margin-bottom:10px; }
+  #maphint.far { color:var(--red); font-weight:700; }
+  #gohome { display:none; text-align:center; text-decoration:none; background:var(--blue); color:#fff;
+            border-radius:16px; padding:16px; font-size:20px; margin-bottom:12px; }
+  #gohome.show { display:block; }
   @media (prefers-reduced-motion: reduce) {
     .card, .btn, .tab, #holdbtn, .call, #sosbtn, #beat { transition:opacity 200ms ease; transform:none !important; }
     .bird { animation:none !important; }
@@ -134,6 +148,32 @@
       </div>
     </section>
 
+    <section class="screen" id="s-health">
+      <h1>健康小检查<small>Health checks — camera only, nothing leaves this phone</small></h1>
+      <div class="card" id="hc-heart">
+        <span class="tag med">❤️ 心率 Heart rate</span>
+        <p class="zh" style="font-size:18px">指尖轻贴摄像头, 保持 20 秒</p>
+        <p class="en">Fingertip over the camera lens, hold 20 seconds</p>
+        <div class="actions"><button class="btn ok" onclick="hrStart(this)">开始 Start</button></div>
+        <p class="zh" id="hr-live" style="margin-top:8px"></p>
+      </div>
+      <div class="card" id="hc-face">
+        <span class="tag chat">😊 笑一笑 Smile check</span>
+        <p class="zh" style="font-size:18px">对着镜头微笑 10 秒 (面部对称)</p>
+        <p class="en">Smile at the camera for 10s (face symmetry screen)</p>
+        <div class="actions"><button class="btn ok" onclick="faceStart(this)">开始 Start</button></div>
+        <p class="zh" id="face-live" style="margin-top:8px"></p>
+      </div>
+      <div class="card" id="hc-fit">
+        <span class="tag greet">🪑 坐立运动 Sit &amp; stand</span>
+        <p class="zh" style="font-size:18px">把手机立好, 全身入镜, 起立坐下 5 次</p>
+        <p class="en">Prop the phone up, whole body in frame, stand up and sit 5 times</p>
+        <div class="actions"><button class="btn ok" onclick="fitStart(this)">开始 Start</button></div>
+        <p class="zh" id="fit-live" style="margin-top:8px"></p>
+      </div>
+      <video id="hvideo" playsinline muted style="width:100%; border-radius:16px; display:none; margin-top:6px"></video>
+    </section>
+
     <section class="screen" id="s-log">
       <h1>它帮我做的事<small>What AnAn did for me</small></h1>
       <div id="loglist"></div>
@@ -141,6 +181,11 @@
 
     <section class="screen" id="s-sos">
       <h1>需要帮忙?<small>Need help?</small></h1>
+      <div class="card" style="padding:12px">
+        <div id="emap"></div>
+        <p id="maphint" class="zh">📍 我在家附近 I'm near home</p>
+        <a id="gohome" href="#" target="_blank">🧭 带我回家 Take me home</a>
+      </div>
       <button id="sosbtn" onclick="sos()">SOS 紧急求助<small>Emergency — alert my family now</small></button>
       <div id="contacts"></div>
       <a href="/family" style="display:block; text-align:center; margin-top:14px; padding:16px;
@@ -153,6 +198,7 @@
   <nav id="tabs">
     <button class="tab on" data-s="home"><span class="ico">🏠</span>今天 Today</button>
     <button class="tab" data-s="talk"><span class="ico">🎙️</span>说话 Talk</button>
+    <button class="tab" data-s="health"><span class="ico">❤️</span>健康 Health</button>
     <button class="tab" data-s="log"><span class="ico">📖</span>记录 Log</button>
     <button class="tab" data-s="sos"><span class="ico">❤️</span>家人 Family</button>
   </nav>
@@ -396,6 +442,215 @@ es.onmessage=m=>{
     if(d.event.kind==='heartbeat'||d.event.kind==='transition') beat(); }
 };
 function refresh(s){ $('clock').textContent=s.time.slice(11,16); }
+
+/* ===================== health checks (Synapxe CV, ported) =====================
+   ALL processing on-device; only {kind, score, metrics} is POSTed. */
+async function hcam(facing){ return navigator.mediaDevices.getUserMedia(
+  {video:{facingMode:facing, width:{ideal:1280}, height:{ideal:720}}}); }
+function hpost(kind, score, metrics){
+  fetch('/health/score',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({kind, score, metrics})}); beat(); }
+function hstop(stream){ try{stream.getTracks().forEach(t=>t.stop());}catch(e){}
+  $('hvideo').style.display='none'; }
+
+/* --- heart rate: contact PPG (red-channel mean → highpass → peaks) --- */
+function movAvg(x,w){ const o=[]; let s=0; for(let i=0;i<x.length;i++){ s+=x[i];
+  if(i>=w) s-=x[i-w]; o.push(s/Math.min(i+1,w)); } return o; }
+async function hrStart(btn){
+  btn.disabled=true;
+  let stream; try{ stream=await hcam('environment'); }catch(e){
+    $('hr-live').textContent='需要摄像头权限 Camera permission needed'; btn.disabled=false; return; }
+  try{ await stream.getVideoTracks()[0].applyConstraints({advanced:[{torch:true}]}); }catch(e){}
+  const v=$('hvideo'); v.style.display='block'; v.srcObject=stream; await v.play();
+  const c=document.createElement('canvas'); c.width=80; c.height=80;
+  const ctx=c.getContext('2d',{willReadFrequently:true});
+  const samples=[]; const t0=Date.now(); birdy('listen', 21000);
+  await new Promise(res=>{
+    (function tick(){
+      const el=(Date.now()-t0)/1000;
+      if(el>=20){ res(); return; }
+      try{
+        ctx.drawImage(v, (v.videoWidth-80)/2, (v.videoHeight-80)/2, 80, 80, 0, 0, 80, 80);
+        const d=ctx.getImageData(0,0,80,80).data;
+        let r=0; for(let i=0;i<d.length;i+=4) r+=d[i];
+        samples.push(r/(d.length/4));
+      }catch(e){}
+      $('hr-live').textContent=`测量中… ${Math.ceil(20-el)}s`;
+      requestAnimationFrame(tick);
+    })();
+  });
+  hstop(stream);
+  const fps=samples.length/20;
+  const low=movAvg(samples, Math.max(2,Math.round(fps*0.15)));
+  const trend=movAvg(samples, Math.max(3,Math.round(fps*1.5)));
+  const sig=low.map((x,i)=>trend[i]-x);
+  const minD=Math.max(5,Math.round(fps*0.3)); let peaks=0, last=-minD;
+  for(let i=1;i<sig.length-1;i++)
+    if(sig[i]>0 && sig[i]>sig[i-1] && sig[i]>=sig[i+1] && i-last>=minD){ peaks++; last=i; }
+  const bpm=Math.round(peaks/20*60);
+  btn.disabled=false;
+  if(bpm<30||bpm>220){ $('hr-live').textContent='没测准, 再试一次? Could not read — try again?'; return; }
+  $('hr-live').textContent=`❤️ ${bpm} bpm`;
+  hpost('heart_rate', bpm, {peaks, samples:samples.length, fps:Math.round(fps*10)/10});
+}
+
+/* --- face symmetry: FaceLandmarker, drop-diff normalized by inter-ocular --- */
+let _vision=null, _faceLm=null, _poseLm=null;
+async function mpVision(){
+  if(_vision) return _vision;
+  _vision = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.32/+esm');
+  return _vision;
+}
+async function faceStart(btn){
+  btn.disabled=true; $('face-live').textContent='加载模型… Loading model…';
+  try{
+    const mp=await mpVision();
+    const files=await mp.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.32/wasm');
+    _faceLm = _faceLm || await mp.FaceLandmarker.createFromOptions(files,{
+      baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task'},
+      runningMode:'VIDEO', numFaces:1});
+  }catch(e){ $('face-live').textContent='模型加载失败 Model failed to load'; btn.disabled=false; return; }
+  let stream; try{ stream=await hcam('user'); }catch(e){
+    $('face-live').textContent='需要摄像头权限 Camera permission needed'; btn.disabled=false; return; }
+  const v=$('hvideo'); v.style.display='block'; v.srcObject=stream; await v.play();
+  const scores=[]; const t0=Date.now(); birdy('happy', 11000);
+  await new Promise(res=>{
+    (function tick(){
+      const el=(Date.now()-t0)/1000;
+      if(el>=10){ res(); return; }
+      try{
+        const r=_faceLm.detectForVideo(v, performance.now());
+        const lm=r.faceLandmarks && r.faceLandmarks[0];
+        if(lm){
+          const eye=Math.hypot(lm[263].x-lm[33].x, lm[263].y-lm[33].y);
+          const dl=lm[61].y-lm[1].y, dr=lm[291].y-lm[1].y;
+          const s=Math.max(0,Math.min(100,Math.round(100-Math.abs(dl-dr)/(0.18*eye)*100)));
+          scores.push(s);
+          $('face-live').textContent=`😊 保持微笑 keep smiling… ${Math.ceil(10-el)}s · ${s}`;
+        } else $('face-live').textContent='看不到脸 face not visible…';
+      }catch(e){}
+      requestAnimationFrame(tick);
+    })();
+  });
+  hstop(stream); btn.disabled=false;
+  if(scores.length<10){ $('face-live').textContent='没看清, 再来一次? Not enough frames — try again?'; return; }
+  scores.sort((a,b)=>a-b);
+  const median=scores[Math.floor(scores.length/2)], best=scores[scores.length-1];
+  const mean=scores.reduce((a,b)=>a+b,0)/scores.length;
+  const variance=scores.reduce((a,b)=>a+(b-mean)**2,0)/scores.length;
+  const final=Math.max(0,Math.min(100,Math.round(median*0.7+best*0.3-variance*0.1)));
+  $('face-live').textContent=`😊 对称度 Symmetry: ${final}/100`;
+  hpost('face_symmetry', final, {median, best, variance:Math.round(variance)});
+}
+
+/* --- fitness: sit-and-stand FSM on PoseLandmarker (hip+knee angles) --- */
+function angle(a,b,c){ let r=Math.abs((Math.atan2(c.y-b.y,c.x-b.x)-Math.atan2(a.y-b.y,a.x-b.x))*180/Math.PI);
+  return r>180?360-r:r; }
+async function fitStart(btn){
+  btn.disabled=true; $('fit-live').textContent='加载模型… Loading model…';
+  try{
+    const mp=await mpVision();
+    const files=await mp.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.32/wasm');
+    _poseLm = _poseLm || await mp.PoseLandmarker.createFromOptions(files,{
+      baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task'},
+      runningMode:'VIDEO', numPoses:1});
+  }catch(e){ $('fit-live').textContent='模型加载失败 Model failed to load'; btn.disabled=false; return; }
+  let stream; try{ stream=await hcam('user'); }catch(e){
+    $('fit-live').textContent='需要摄像头权限 Camera permission needed'; btn.disabled=false; return; }
+  const v=$('hvideo'); v.style.display='block'; v.srcObject=stream; await v.play();
+  let st='IDLE', reps=0; const t0=Date.now(); birdy('happy', 46000);
+  await new Promise(res=>{
+    (function tick(){
+      const el=(Date.now()-t0)/1000;
+      if(el>=45 || reps>=5){ res(); return; }
+      try{
+        const r=_poseLm.detectForVideo(v, performance.now());
+        const lm=r.landmarks && r.landmarks[0];
+        if(lm && lm[24].visibility>0.4 && lm[26].visibility>0.4){
+          const hip=angle(lm[12],lm[24],lm[26]), knee=angle(lm[24],lm[26],lm[28]);
+          if(st==='IDLE' && knee>150 && hip>150) st='STANDING';
+          else if(st==='STANDING' && knee<120 && hip<130){ st='IDLE'; reps++; beat(); }
+          $('fit-live').textContent=`🪑 ${reps}/5 次 reps · ${Math.ceil(45-el)}s`;
+        } else $('fit-live').textContent='请全身入镜 whole body in frame…';
+      }catch(e){}
+      requestAnimationFrame(tick);
+    })();
+  });
+  hstop(stream); btn.disabled=false;
+  $('fit-live').textContent=`🪑 完成 ${reps}/5 次 reps!`;
+  if(reps>0) hpost('fitness', reps, {target:5, duration_sec:Math.min(45,Math.round((Date.now()-t0)/1000))});
+  if(reps>=5) celebrate(btn);
+}
+
+/* --- elder map: home + safe circle + me (KampungKaki mechanism, no keys) --- */
+function circlePolygon(lng,lat,km,n=64){ const ring=[];
+  for(let i=0;i<=n;i++){ const a=(i/n)*Math.PI*2;
+    ring.push([lng+(km/(111.32*Math.cos(lat*Math.PI/180)))*Math.cos(a),
+               lat+(km/110.574)*Math.sin(a)]); }
+  return {type:'Polygon', coordinates:[ring]}; }
+let emap=null, meMarker=null, homeCfg=null;
+function initEmap(home){
+  if(emap || !home || !home.lat || !window.maplibregl) return;
+  homeCfg=home;
+  emap=new maplibregl.Map({container:'emap',
+    style:{version:8, glyphs:'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+      sources:{onemap:{type:'raster',
+        tiles:['https://www.onemap.gov.sg/maps/tiles/Grey/{z}/{x}/{y}.png'],
+        tileSize:256, attribution:'© OneMap SG'}},
+      layers:[{id:'base',type:'raster',source:'onemap'}]},
+    center:[home.lng, home.lat], zoom:15, attributionControl:{compact:true}});
+  emap.on('load',()=>{
+    emap.addSource('safe',{type:'geojson',
+      data:{type:'Feature',geometry:circlePolygon(home.lng,home.lat,(home.radius_m||300)/1000)}});
+    emap.addLayer({id:'sf',type:'fill',source:'safe',paint:{'fill-color':'#2e9e5b','fill-opacity':0.08}});
+    emap.addLayer({id:'sl',type:'line',source:'safe',
+      paint:{'line-color':'#2e9e5b','line-width':2.5,'line-dasharray':[2,2]}});
+    const h=document.createElement('div'); h.className='kk-home'; h.textContent='🏠';
+    new maplibregl.Marker({element:h}).setLngLat([home.lng,home.lat]).addTo(emap);
+  });
+}
+function placeMe(loc){
+  if(!emap||!loc) return;
+  if(!meMarker){ const el=document.createElement('div'); el.className='kk-dot';
+    el.innerHTML='<span class="halo"></span><span class="core"></span>';
+    meMarker=new maplibregl.Marker({element:el,anchor:'center'}).setLngLat([loc.lng,loc.lat]).addTo(emap);
+  } else meMarker.setLngLat([loc.lng,loc.lat]);
+  const far = loc.dist_m > (homeCfg?.radius_m||300);
+  const hint=$('maphint');
+  hint.classList.toggle('far', far);
+  hint.textContent = far
+    ? `⚠️ 离家有点远了 (${loc.dist_m}m) — 跟着蓝色按钮回家吧 · A bit far from home, follow the button back`
+    : `📍 我在家附近 (${loc.dist_m}m) · Near home, all good`;
+  const go=$('gohome');
+  go.classList.toggle('show', far);
+  if(far && homeCfg) go.href=`https://maps.google.com/maps?daddr=${homeCfg.lat},${homeCfg.lng}&dirflg=w`;
+  if(far){ emap.fitBounds([[Math.min(loc.lng,homeCfg.lng),Math.min(loc.lat,homeCfg.lat)],
+                          [Math.max(loc.lng,homeCfg.lng),Math.max(loc.lat,homeCfg.lat)]],
+                         {padding:46, maxZoom:16}); }
+}
+function pollMap(){
+  fetch('/state').then(r=>r.json()).then(s=>{
+    initEmap(s.home);
+    if(s.last_location) placeMe(s.last_location);
+  }).catch(()=>{});
+}
+pollMap(); setInterval(pollMap, 8000);
+
+/* wander safety: stream position when the phone allows it (HTTPS/localhost).
+   Silent by design — the elder never has to think about it. */
+let lastLocPost=0;
+try{
+  if('geolocation' in navigator){
+    navigator.geolocation.watchPosition(pos=>{
+      const now=Date.now();
+      if(now-lastLocPost<20000) return;
+      lastLocPost=now;
+      fetch('/elder/location',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({lat:pos.coords.latitude,lng:pos.coords.longitude,
+                             accuracy:pos.coords.accuracy})}).catch(()=>{});
+    }, ()=>{}, {enableHighAccuracy:false, maximumAge:60000});
+  }
+}catch(e){}
 </script>
 </body>
 </html>
