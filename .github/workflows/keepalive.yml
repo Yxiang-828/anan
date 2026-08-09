@@ -1,0 +1,25 @@
+name: keepalive
+# Render free tier spins down after 15 idle minutes; a judge must never meet a
+# cold start. Ten-minute schedule on purpose: GitHub cron is best-effort and
+# routinely minutes late — 10 + drift still lands inside the window; 14 would
+# not. Fails LOUDLY on a bad status: a keepalive that reports success whatever
+# it receives is a cron job wearing a monitor's hat. (Playbook: keel2/Replay.)
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ping /healthz
+        run: |
+          url="${{ vars.ANAN_URL }}"
+          if [ -z "$url" ]; then echo "ANAN_URL repo variable not set"; exit 1; fi
+          for i in 1 2 3; do
+            code=$(curl -s -o /tmp/body -w '%{http_code}' --max-time 60 "$url/healthz" || echo 000)
+            if [ "$code" = "200" ]; then echo "awake (200) on attempt $i"; cat /tmp/body; exit 0; fi
+            echo "attempt $i: $code"; sleep 20
+          done
+          echo "service did not answer 200"; exit 1

@@ -1,0 +1,16 @@
+keys.env
+.env
+config.json
+__pycache__/
+runtime/
+*.pyc
+out/
+.venv/
+# local workspace, not the product
+skills/
+onboarding/
+research/
+philosophy/
+reference/
+tools/
+MANIFEST.md

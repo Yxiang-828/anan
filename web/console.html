@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>安安 · 演示台</title>
+<style>
+  :root { --bg:#10141f; --panel:#1a2030; --ink:#dfe6f3; --dim:#7d8aa5; --line:#2a3350;
+          --blue:#4f7cff; --green:#35c26e; --amber:#f0a53c; --red:#ef5350; }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--ink); font-family:"JetBrains Mono","PingFang SC",monospace; padding:18px; }
+  h1 { font-size:18px; margin-bottom:4px; }
+  .redline { color:var(--dim); font-size:12px; margin-bottom:16px; }
+  .grid { display:grid; grid-template-columns: 300px 1fr; gap:14px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .panel h2 { font-size:12px; color:var(--dim); text-transform:uppercase; letter-spacing:.12em; margin-bottom:10px; }
+  .clock { font-size:34px; font-weight:700; margin-bottom:10px; }
+  button { background:#232c44; color:var(--ink); border:1px solid var(--line); border-radius:8px;
+           padding:8px 10px; margin:0 6px 8px 0; font:inherit; font-size:12px; cursor:pointer; }
+  button:hover { border-color:var(--blue); }
+  .fsm { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+  .state { padding:6px 10px; border-radius:8px; border:1px solid var(--line); font-size:12px; color:var(--dim); }
+  .state.on { color:#fff; border-color:transparent; animation:pulse 1.2s infinite; }
+  .state.on.IDLE,.state.on.ENGAGED,.state.on.RESOLVED { background:var(--green); }
+  .state.on.CHECKIN_SENT { background:var(--blue); }
+  .state.on.SILENCE_1 { background:var(--amber); }
+  .state.on.SILENCE_2,.state.on.ESCALATED { background:var(--red); }
+  @keyframes pulse { 50% { filter:brightness(1.25); } }
+  #log { height:420px; overflow-y:auto; font-size:12px; line-height:1.7; }
+  #log div { border-bottom:1px solid #1f2740; padding:3px 0; }
+  .k-wake{color:var(--dim)} .k-think{color:var(--blue)} .k-skill{color:var(--green)}
+  .k-transition{color:var(--amber)} .k-inject{color:#9b7ef0} .k-error{color:var(--red)}
+  .k-heartbeat{color:var(--green)}
+  .eff { color:#5f6b85; }
+  .mirror { margin-top:12px; } .mirror .card { background:#212b45; border-radius:8px; padding:10px;
+    margin-bottom:8px; font-size:12px; white-space:pre-wrap; }
+  .mirror .card b { color:var(--amber); }
+  .skills { font-size:11px; color:var(--dim); line-height:1.8; }
+</style>
+</head>
+<body>
+<h1>安安 演示台 <span style="color:var(--dim);font-weight:400">Demo Console</span></h1>
+<div class="redline">红线: 只注入时间与场景, 不操纵行为 — "We inject time, never behavior." 左侧所有按钮只改时钟或发送普通输入。</div>
+<div class="grid">
+  <div>
+    <div class="panel">
+      <h2>⏱ 时间注入 Timeskip</h2>
+      <div class="clock" id="clock">--:--</div>
+      <button onclick="scenario('morning')">跳到 07:30 晨间问候</button>
+      <button onclick="scenario('silence_1')">+61 分钟 无回应</button>
+      <button onclick="scenario('silence_2')">+31 分钟 仍无回应</button>
+      <button onclick="scenario('evening')">跳到 20:00 家庭播报</button>
+      <button onclick="scenario('insight')">跳到 21:00 照护洞察</button>
+      <button onclick="scenario('recover')">婆婆碰了一下屏幕 (心跳)</button>
+      <button onclick="fetch('/seed',{method:'POST'})">播种 6 天历史 (Day 7)</button>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <h2>🧩 Skill 目录 (name + capability)</h2>
+      <div class="skills" id="skills"></div>
+    </div>
+    <div class="panel mirror" style="margin-top:14px">
+      <h2>📱 家属端镜像 (女儿的 Telegram)</h2>
+      <div id="family"></div>
+    </div>
+  </div>
+  <div>
+    <div class="panel">
+      <h2>🫀 状态机实况</h2>
+      <div class="fsm" id="fsm"></div>
+      <h2>📜 事件流 — WAKE ≠ THINK ≠ ACT, 每一行是一张收据</h2>
+      <div id="log"></div>
+    </div>
+  </div>
+</div>
+<script>
+const STATES = ['IDLE','CHECKIN_SENT','ENGAGED','SILENCE_1','SILENCE_2','ESCALATED','RESOLVED'];
+const fsmEl = document.getElementById('fsm');
+STATES.forEach(s=>{ const d=document.createElement('div'); d.className='state '+s; d.id='st-'+s; d.textContent=s; fsmEl.appendChild(d); });
+function setState(s){ STATES.forEach(x=>document.getElementById('st-'+x).classList.toggle('on', x===s)); }
+function scenario(name){ fetch('/inject/scenario',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})}); }
+const log = document.getElementById('log');
+function addEvent(e){
+  const d = document.createElement('div'); d.className='k-'+e.kind;
+  const detail = JSON.stringify(e.detail).slice(0,140);
+  d.innerHTML = `[${e.at.slice(11)}] <b>${e.kind}</b> ${e.source} ${detail}` + (e.effect?` <span class="eff">⇒ ${e.effect}</span>`:'');
+  log.appendChild(d); log.scrollTop = log.scrollHeight;
+  while(log.children.length>250) log.firstChild.remove();
+}
+function addFamily(c){
+  const el = document.createElement('div'); el.className='card';
+  el.innerHTML = `<b>${c.at} · ${c.delivered||''}</b>\n`+c.text + (c.buttons? '\n[✅ 我已回电] [🏠 联系邻居]':'');
+  const box = document.getElementById('family'); box.prepend(el);
+  while(box.children.length>4) box.lastChild.remove();
+}
+const es = new EventSource('/events');
+es.onmessage = m=>{
+  const d = JSON.parse(m.data);
+  if(d.kind==='hello'){ (d.history||[]).forEach(addEvent); refresh(d.state); }
+  if(d.kind==='event'){ addEvent(d.event); refresh(d.state); }
+  if(d.kind==='family_card') addFamily(d);
+};
+function refresh(state){ if(!state) return;
+  document.getElementById('clock').textContent = state.time.slice(11,16);
+  setState(state.fsm.state);
+  document.getElementById('skills').innerHTML = state.skills.map(s=>`- <b>${s.id}</b>: ${s.capability}`).join('<br>');
+}
+</script>
+</body>
+</html>

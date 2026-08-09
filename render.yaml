@@ -1,0 +1,27 @@
+# Render blueprint — AnAn demo server, free tier, no card.
+# Playbook inherited from keel2/Replay (checked Aug 2026): Render free web
+# service takes the Dockerfile as-is; spins down after 15 idle minutes; the
+# keepalive workflow (.github/workflows/keepalive.yml) covers the gaps.
+#
+# Cloud model lanes: the agy CLI does not exist in a container, so the brain
+# falls through to the NVIDIA lane automatically. Set NVIDIA_API_KEY in the
+# dashboard. Telegram runs in EXACTLY ONE place per token — if the cloud
+# instance polls, stop the local one (ANAN_DISABLE_TG=1) or vice versa.
+services:
+  - type: web
+    name: anan
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: singapore
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NVIDIA_API_KEY
+        sync: false          # dashboard only — never in the repo
+      - key: ANAN_BOT_TOKEN
+        sync: false
+      - key: OWNER_TELEGRAM_ID
+        sync: false
+      - key: PYTHONUNBUFFERED
+        value: "1"
