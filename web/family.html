@@ -78,6 +78,15 @@
   <audio id="preview" controls style="display:none"></audio>
 </div>
 
+<div class="card">
+  <b>试听 · Audition the voices</b>
+  <p class="why">改这行字, 点任何声音, 听它读出来 — 包括您刚录的声音。
+    Edit this exact line, tap any voice, hear it spoken — including your own clone.</p>
+  <input id="pvtext" style="width:100%; margin-top:10px; padding:14px; font-size:18px;
+    border:2px solid #efe9dd; border-radius:12px; font-family:inherit" value="">
+  <div id="chips" style="margin-top:12px; display:flex; flex-wrap:wrap; gap:8px"></div>
+</div>
+
 <div class="note">录音只保存在这台电脑上, 只用于关怀语音, 家属随时可删除或换回默认声。
   Consent-first, family-only, local-only.</div>
 
@@ -149,7 +158,7 @@ async function stopRec(){
     clearTimeout(timer);
     const d=await r.json();
     if(d.ok){
-      stage('done'); sampleUrl=d.sample;
+      stage('done'); sampleUrl=d.sample; loadOptions();
       if(sampleUrl){ new Audio(sampleUrl).play().catch(()=>{}); }
       else { $('playsample').style.display='none'; }
     } else { stage('error'); $('etext').textContent=(d.error||'没成功, 再录一次? Failed — try again?'); btn.disabled=false; }
@@ -159,6 +168,38 @@ btn.addEventListener('pointerup', stopRec);
 btn.addEventListener('pointercancel', stopRec);
 btn.addEventListener('pointerleave', ()=>{ if(rec&&rec.state==='recording') stopRec(); });
 $('playsample').addEventListener('click', ()=>{ if(sampleUrl) new Audio(sampleUrl).play(); });
+
+/* ---- audition: exact line × any test voice ---- */
+let pvAudio=null;
+function loadOptions(){
+  fetch('/voice/options').then(r=>r.json()).then(o=>{
+    $('pvtext').value = (o.sample_lines||{})[lang] || $('pvtext').value;
+    const chips=$('chips'); chips.innerHTML='';
+    (o.voices||[]).filter(v=>v.lang===lang||v.lang==='any').forEach(v=>{
+      const b=document.createElement('button');
+      b.style.cssText='padding:12px 16px;font-size:15px;background:#efe9dd;border-radius:12px';
+      b.textContent='▶ '+v.label;
+      b.onclick=async ()=>{
+        const orig=b.textContent; b.textContent='⏳ '+v.label; b.disabled=true;
+        try{
+          const r=await fetch('/voice/preview',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({text:$('pvtext').value, lang, lane:v.lane, id:v.id})});
+          const d=await r.json();
+          if(d.url){ if(pvAudio) pvAudio.pause(); pvAudio=new Audio(d.url);
+            b.textContent='🔊 '+v.label; b.style.background='#dff0e5';
+            pvAudio.onended=()=>{ b.textContent=orig; b.style.background='#efe9dd'; };
+            pvAudio.play(); }
+          else { b.textContent='✗ '+v.label; setTimeout(()=>b.textContent=orig, 1500); }
+        }catch(e){ b.textContent='✗ '+v.label; setTimeout(()=>b.textContent=orig, 1500); }
+        b.disabled=false;
+      };
+      chips.appendChild(b);
+    });
+  });
+}
+loadOptions();
+const _origPick = pick;
+pick = function(l){ _origPick(l); loadOptions(); };
 </script>
 </body>
 </html>

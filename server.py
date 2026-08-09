@@ -311,14 +311,14 @@ _ELEVEN_KEY_NAMES = ["DINOSAUR_ELEVEN_LABS_API_KEY", "MY_ELEVEN_LABS_API_KEY",
 _eleven_sticky = {"idx": 0}
 
 
-def _eleven_tts(text: str, lang: str) -> str | None:
+def _eleven_tts(text: str, lang: str, voice_override: str = "") -> str | None:
     """ElevenLabs lane — the HOSTED demo voice (owner's two-tier doctrine:
     qwen3-TTS is the phone app's voice, ElevenLabs voices the hosted demo)."""
     import urllib.request as _rq
     pool = [(n, os.environ.get(n, "")) for n in _ELEVEN_KEY_NAMES]
     pool = [(n, v) for n, v in pool if v]
     ev = CONFIG.get("voice", {}).get("eleven", {})
-    voice_id = ev.get(lang) or ev.get("en", "")
+    voice_id = voice_override or ev.get(lang) or ev.get("en", "")
     if not pool or not voice_id:
         return None
     key = hashlib.sha1(f"11:{lang}:{voice_id}:{text}".encode()).hexdigest()[:16]
@@ -489,6 +489,66 @@ def family_page() -> str:
 @app.get("/voice/scripts")
 def voice_scripts() -> dict:
     return CONFIG.get("voice", {}).get("scripts", {})
+
+
+@app.get("/voice/options")
+def voice_options() -> dict:
+    """Auditionable test voices on THIS host. Local = qwen pack + any clone;
+    hosted = the ElevenLabs roster. Sample lines included for prefill."""
+    v = CONFIG.get("voice", {})
+    out: dict = {"sample_lines": v.get("sample_lines", {}), "voices": []}
+    if _VOICE_GEN.is_file():
+        for lang, ref in (v.get("clone") or {}).items():
+            out["voices"].append({"lane": "qwen", "id": ref, "lang": lang,
+                                  "label": "您的声音 Your voice" if lang == "zh" else "Your voice (EN)"})
+        out["voices"] += [
+            {"lane": "qwen", "id": "chinese/12_confident_woman_chinese", "lang": "zh", "label": "默认·温暖女声 Warm F"},
+            {"lane": "qwen", "id": "chinese/8_cute_chinese", "lang": "zh", "label": "活泼女声 Bright F"},
+            {"lane": "qwen", "id": "chinese/13_confident_male_chinese", "lang": "zh", "label": "男声 Male"},
+            {"lane": "qwen", "id": "english/15_soothing_woman", "lang": "en", "label": "Soothing F"},
+            {"lane": "qwen", "id": "english/3_warm", "lang": "en", "label": "Warm"},
+        ]
+    ev = v.get("eleven", {})
+    if any(os.environ.get(n) for n in _ELEVEN_KEY_NAMES) and ev:
+        pairs = [("Sarah", ev.get("en", ""))] + [
+            (n.capitalize(), i) for n, i in (ev.get("alts_en") or {}).items()]
+        for label, vid in pairs:
+            if vid:
+                out["voices"].append({"lane": "eleven", "id": vid, "lang": "any",
+                                      "label": f"{label} (demo)"})
+    return out
+
+
+@app.post("/voice/preview")
+async def voice_preview(request: Request) -> dict:
+    """Render an EXACT text line in a chosen test voice — the audition."""
+    body = await request.json()
+    text = (body.get("text") or "").strip()[:200]
+    lang = "zh" if body.get("lang", "zh") == "zh" else "en"
+    lane = body.get("lane", "")
+    vid = body.get("id", "")
+    if not text or not vid:
+        return {"url": None, "error": "need text and a voice"}
+    if lane == "eleven":
+        return {"url": _eleven_tts(text, lang, voice_override=vid)}
+    if lane == "qwen" and _VOICE_GEN.is_file():
+        key = hashlib.sha1(f"pv:{lang}:{vid}:{text}".encode()).hexdigest()[:16]
+        out = TTS_DIR / f"{key}.wav"
+        if not out.is_file():
+            env = {**os.environ, "KEEL_INPUT_TEXT": text, "KEEL_INPUT_VOICE": vid,
+                   "KEEL_INPUT_LANG": "chinese" if lang == "zh" else "english",
+                   "KEEL_INPUT_VERIFY": "off", "KEEL_INPUT_OUT": str(out),
+                   "KEEL_JOB_DIR": str(TTS_DIR)}
+            sidecar = Path(vid).with_suffix(".txt") if vid.startswith("/") else None
+            if sidecar and sidecar.is_file():
+                env["KEEL_INPUT_REF_TEXT"] = sidecar.read_text().strip()
+            try:
+                _sp.run(["python3", str(_VOICE_GEN)], env=env, cwd=_VOICE_GEN.parent,
+                        capture_output=True, text=True, timeout=120)
+            except Exception as exc:  # noqa: BLE001
+                return {"url": None, "error": str(exc)[:80]}
+        return {"url": f"/tts/{key}.wav" if out.is_file() else None}
+    return {"url": None, "error": "voice lane unavailable on this host"}
 
 
 @app.post("/voice/clone")
