@@ -78,6 +78,15 @@
   details summary { cursor:pointer; font-size:12px; color:var(--dim); padding:8px 4px;
                     border-top:1px solid var(--line); list-style:none; }
   details summary::before { content:"▸ "; } details[open] summary::before { content:"▾ "; }
+  /* the skill rack: tool invocation, visible */
+  #planline { font-size:11.5px; color:var(--blue); min-height:18px; margin:2px 0 6px;
+              font-family:system-ui,"PingFang SC",sans-serif; }
+  #rack { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+  .skillchip { border:1px solid var(--line); border-radius:9px; padding:5px 9px; font-size:11px;
+               color:var(--dim); background:#1e2638; transition:all 250ms var(--ease-out); }
+  .skillchip .cnt { color:#5f6b85; margin-left:5px; font-size:10px; }
+  .skillchip.firing { border-color:var(--green); color:#fff; background:#1d3a2a;
+                      box-shadow:0 0 12px rgba(53,194,110,.35); }
   .fsm { display:flex; flex-wrap:wrap; gap:5px; margin:8px 0; }
   .state { padding:4px 8px; border-radius:7px; border:1px solid var(--line); font-size:10.5px; color:var(--dim); }
   .state.on { color:#fff; border-color:transparent; }
@@ -129,6 +138,8 @@
     </div>
     <div class="panel" style="margin-top:12px">
       <span class="roleband role-internal" data-i="band_internal"></span>
+      <div id="planline"><span data-i="plan_idle"></span></div>
+      <div id="rack"></div>
       <div class="fsm" id="fsm"></div>
       <details open><summary data-i="log_sum"></summary><div id="log"></div></details>
       <details><summary data-i="skills_sum"></summary><div class="skills" id="skills"></div></details>
@@ -156,7 +167,9 @@ const T = {
   band_family: ["Family side — the daughter's Telegram (real messages, mirrored)", "家属端 — 女儿的 Telegram (真实消息镜像)"],
   family_hint: ["Escalation alerts and nightly bulletins appear here — sent to real Telegram at the same time.",
                 "升级警报和每晚播报会出现在这里 — 同时发到真实 Telegram。"],
-  band_internal: ["Agent internals — judges' evidence; the elder never sees this", "内核透视 — 评委证据, 老人永远看不到"],
+  band_internal: ["Autonomous planning & tool invocation — every skill call receipted; the elder never sees this",
+                  "自主规划与工具调用 — 每次 skill 调用皆有回执; 老人永远看不到"],
+  plan_idle: ["planner: waiting for a wake…", "planner: 等待唤醒…"],
   log_sum: ["Decision log — every action: WAKE→THINK→REVALIDATE→GATE→ACT→RECEIPT→COMMIT",
             "决策日志 — 每个动作: WAKE→THINK→REVALIDATE→GATE→ACT→RECEIPT→COMMIT"],
   skills_sum: ["Skill catalogue (name + capability — the menu-first context law)",
@@ -172,49 +185,49 @@ const ACTS = [
        "老人不会主动打开 App — <b>主动性就是产品</b>。07:30 的定时问候是全天第一个存活探测: 一句问候, 同时是一次提问。60 分钟回应窗口 (家属可配) 悄悄布下。"],
   watch:["~15s: the phone pops a bilingual card and speaks (live model compose). Trace: wake→think→gate→act→receipt, state → CHECKIN_SENT.",
          "约15秒: 手机弹出双语卡并朗读 (模型实时生成)。日志: wake→think→gate→act→receipt, 状态 → CHECKIN_SENT。"],
-  chips:['📱 phone','🧠 trace']},
+  chips:['⚙ greet_checkin','📱 phone','🧠 trace']},
  {sc:'silence_1',
   t:["Act 2 · +61 min — silence becomes data","第二幕 · +61分钟 — 沉默变成数据"],
   why:["<b>\"Silence is an input.\"</b> Chatbots' input domain is {text}; AnAn's is {time, silence, state}. The window expires and the agent reaches a JUNCTION: retry another channel, escalate now, or extend once. The model chooses inside a bounded envelope — the deterministic floor stands if it fails.",
        "<b>\"沉默是输入。\"</b> 聊天机器人的输入域是{文字}; 安安的是{时间、沉默、状态}。窗口到期, agent 走到决策节点: 换渠道重试 / 立即升级 / 再等一次。模型在受限选项内选择 — 模型失效时确定性兜底照常执行。"],
   watch:["Trace: junction receipt shows options + chosen + how (model/floor). State walks SILENCE_1 → retry on voice channel.",
          "日志: junction 回执显示选项/所选/方式 (model/floor)。状态走到 SILENCE_1 → 语音渠道重试。"],
-  chips:['🧠 trace']},
+  chips:['⚙ greet_checkin (retry)','🧠 trace']},
  {sc:'silence_2',
   t:["Act 3 · +31 min — the escalation promise","第三幕 · +31分钟 — 升级承诺"],
   why:["Channels exhausted means <b>a person may be in trouble</b> — this is the moment the whole product exists for. The agent notifies the daughter's REAL Telegram with action buttons; the button callback, not a spoken promise, is what closes the loop.",
        "渠道用尽 = <b>人可能出事了</b> — 整个产品为这一刻而存在。agent 通知女儿的真实 Telegram, 带操作按钮; 闭环靠按钮回调, 不靠口头承诺。"],
   watch:["The mirror (and the real phone) gets the alert card. State: SILENCE_2 → ESCALATED, callback window armed. Mascot flies.",
          "右侧镜像 (和真手机) 收到警报卡。状态: SILENCE_2 → ESCALATED, 回电窗口布下。吉祥物起飞。"],
-  chips:['✈️ telegram','📱 phone','🧠 trace']},
+  chips:['⚙ escalate_tree','✈️ telegram','📱 phone','🧠 trace']},
  {sc:'escalation_timeout',
   t:["Act 4 · +11 min — the tree actually walks","第四幕 · +11分钟 — 联系人树真的会走"],
   why:["A contact 'tree' that stops at one person is a lie. No callback within the window → the NEXT contact is notified (daughter → son → neighbour), each hop with its own idempotent receipt — double-taps can never double-process.",
        "只停在第一个人的'树'是假的。窗口内无回电 → 通知下一位 (女儿→儿子→邻居), 每一跳有独立幂等回执 — 重复点按不会重复处理。"],
   watch:["Trace: escalation_timeout junction → next_contact receipt with a fresh esc-id. ESCALATED re-arms.",
          "日志: escalation_timeout 节点 → next_contact 回执, 新 esc-id。ESCALATED 重新布防。"],
-  chips:['✈️ telegram','🧠 trace']},
+  chips:['⚙ escalate_tree ×next','✈️ telegram','🧠 trace']},
  {sc:'recover',
   t:["Act 5 · a single touch — the 反悔 beat","第五幕 · 碰一下屏幕 — 反悔镜头"],
   why:["<b>Every touch is a heartbeat</b> — med button, a word, any tap. It dissolves the entire silence net instantly. And if an escalation decision is mid-flight, REVALIDATE kills it before any external action: a decision born from an old snapshot must re-check the world (stale-decision revalidation).",
        "<b>每次触碰都是心跳</b> — 按用药键、说一句话、随手一点, 都会立即消解整张沉默网。若升级决策还在途中, REVALIDATE 会在任何外部动作前取消它: 旧快照生出的决策必须先重看世界 (陈旧决策再验证)。"],
   watch:["State snaps to ENGAGED (or RESOLVED if escalated). If a junction races: 'revalidate → STALE, candidate cancelled'.",
          "状态跳到 ENGAGED (升级中则 RESOLVED)。若与节点赛跑: 'revalidate → STALE, 候选取消'。"],
-  chips:['📱 phone','🧠 trace']},
+  chips:['⚙ kernel revalidate','📱 phone','🧠 trace']},
  {sc:'evening',
   t:["Act 6 · 20:00 — the daily heartbeat to family","第六幕 · 20:00 — 给家人的每日心跳"],
   why:["Reassurance without asking: every evening the family gets meds / mood / today's observation, composed from the actual day's records — never a template pretending to care.",
        "不用问的安心: 每晚家人收到用药/心情/今日观察, 由当天真实记录生成 — 不是装作关心的模板。"],
   watch:["Telegram mirror gets the bilingual report ~20:05. Compare after seeding: Day 7 report visibly knows more than Day 1.",
          "镜像 ~20:05 收到双语播报。播种后对比: 第7天的播报明显比第1天懂她。"],
-  chips:['✈️ telegram']},
+  chips:['⚙ med_reminder','⚙ family_bulletin','✈️ telegram']},
  {sc:'insight',
   t:["Act 7 · 21:00 — it learns her, over time","第七幕 · 21:00 — 随时间更懂她"],
   why:["The time dimension is the proof of learning: each night the agent distills one care observation from today's conversations into memory ('knee pain mentioned 3× this week'). It feeds tomorrow's greeting and the next bulletin.",
        "时间维度是学习的物证: 每晚从当天对话提炼一条照护观察写入记忆 ('本周三次提到膝盖疼'), 反哺明早问候与下次播报。"],
   watch:["Trace: care_insight receipt — 'insight #N written, day N knows more than day 1'.",
          "日志: care_insight 回执 — 'insight #N written, day N knows more than day 1'。"],
-  chips:['🧠 trace','🧬 memory']},
+  chips:['⚙ care_insight','🧬 memory']},
 ];
 function renderActs(){
   const idx = lang==='en'?0:1;
@@ -297,6 +310,26 @@ function addEvent(e){
   log.appendChild(d); log.scrollTop=log.scrollHeight;
   while(log.children.length>300) log.firstChild.remove();
   mascotFromEvent(e);
+  rackFromEvent(e);
+}
+/* skill rack: light up the invoked tool; narrate the planner's choices */
+const rackCounts={};
+function rackFromEvent(e){
+  const det=e.detail||{};
+  if(e.kind==='act'){
+    rackCounts[e.source]=(rackCounts[e.source]||0)+1;
+    renderRack(e.source);
+    setTimeout(()=>renderRack(), 2200);
+  }
+  if(e.kind==='think'&&(det.junction||det.chosen)){
+    const how=det.how||''; const chosen=det.chosen||det.skill||'';
+    if(chosen) $('planline').textContent=`planner @${e.at.slice(11)}: ${det.junction||'wake'} → ${chosen}${how?` (${how})`:''}`;
+  }
+}
+let rackSkills=[];
+function renderRack(firing){
+  $('rack').innerHTML = rackSkills.map(s=>
+    `<span class="skillchip${s.id===firing?' firing':''}">⚙ ${s.id}<span class="cnt">×${rackCounts[s.id]||0}</span></span>`).join('');
 }
 function addFamily(c){
   const el=document.createElement('div'); el.className='card';
@@ -323,6 +356,7 @@ function refresh(s){
   const hour=parseInt(s.time.slice(11,13),10);
   mascot(s.fsm.state==='IDLE'&&(hour>=22||hour<7)?'sleep':(FSM_M[s.fsm.state]||'idle'));
   $('skills').innerHTML=s.skills.map(x=>`- <b>${x.id}</b>: ${x.capability}`).join('<br>');
+  if(rackSkills.length!==s.skills.length){ rackSkills=s.skills; renderRack(); }
 }
 </script>
 </body>
