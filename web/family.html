@@ -173,6 +173,16 @@ $('playsample').addEventListener('click', ()=>{ if(sampleUrl) new Audio(sampleUr
 let pvAudio=null;
 function loadOptions(){
   fetch('/voice/options').then(r=>r.json()).then(o=>{
+    if(o.can_clone===false && !document.getElementById('cloudnote')){
+      $('recbtn').disabled=true;
+      const n=document.createElement('div'); n.id='cloudnote';
+      n.style.cssText='margin-top:12px;padding:14px;border-radius:14px;background:#fdf6e7;color:#8a6d1f;font-size:14px;line-height:1.6';
+      n.innerHTML='☁️ <b>此在线演示无法克隆声音。</b>声音克隆需要本机的 qwen3-TTS (GPU), 只在本地版可用。'+
+        '这里的在线声音由 ElevenLabs 提供 — 下方试听可直接体验。<br>'+
+        '<b>This hosted demo cannot clone voices</b> — cloning runs on the local qwen3-TTS GPU rig. '+
+        'Hosted voices are ElevenLabs; audition them below.';
+      $('recbtn').parentElement.appendChild(n);
+    }
     $('pvtext').value = (o.sample_lines||{})[lang] || $('pvtext').value;
     const chips=$('chips'); chips.innerHTML='';
     (o.voices||[]).filter(v=>v.lang===lang||v.lang==='any').forEach(v=>{

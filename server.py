@@ -496,7 +496,10 @@ def voice_options() -> dict:
     """Auditionable test voices on THIS host. Local = qwen pack + any clone;
     hosted = the ElevenLabs roster. Sample lines included for prefill."""
     v = CONFIG.get("voice", {})
-    out: dict = {"sample_lines": v.get("sample_lines", {}), "voices": []}
+    out: dict = {"sample_lines": v.get("sample_lines", {}), "voices": [],
+                 # capability honesty: cloning needs the local qwen GPU rig —
+                 # the hosted page must SAY so, not show broken buttons
+                 "can_clone": _VOICE_GEN.is_file()}
     if _VOICE_GEN.is_file():
         for lang, ref in (v.get("clone") or {}).items():
             out["voices"].append({"lane": "qwen", "id": ref, "lang": lang,
