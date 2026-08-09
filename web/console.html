@@ -22,7 +22,7 @@
   #mascot { width:64px; height:64px; background-repeat:no-repeat; background-size:400% 100%;
             image-rendering:pixelated; display:flex; align-items:center; justify-content:center; font-size:34px; }
   #mascot.sprite { animation:cycle var(--bspeed,.55s) steps(4) infinite; font-size:0; }
-  @keyframes cycle { to { background-position:-400% 0; } }
+  @keyframes cycle { to { background-position:133.333% 0; } }
   #mstate { font-size:11px; color:var(--dim); }
   .main { flex:1; display:grid; grid-template-columns:310px minmax(360px, 440px) 1fr; gap:14px;
           align-items:start; justify-content:center; }
@@ -307,7 +307,8 @@ function mascot(s,holdMs=0){
   if(now<mhold && s!=='alert' && s!=='fly') return;
   mhold=holdMs?now+holdMs:0;
   const el=$('mascot');
-  const SPEED={idle:'.7s',sleep:'1.3s',fly:'.4s',alert:'.4s',talk:'.45s',work:'.5s',happy:'.5s',listen:'.5s',dizzy:'.5s',think:'.6s'};
+  // per-frame ms × 4 frames = cycle (codex-approved: alert 320ms/f, happy 280ms/f)
+  const SPEED={idle:'1.28s',sleep:'1.8s',fly:'.8s',alert:'1.28s',talk:'.88s',work:'1s',happy:'1.12s',listen:'1s',dizzy:'1s',think:'1.4s'};
   if(sprites[s]){ el.classList.add('sprite'); el.style.backgroundImage=`url(${sprites[s]})`;
     el.style.setProperty('--bspeed', SPEED[s]||'.55s'); el.textContent=''; }
   else { el.classList.remove('sprite'); el.style.backgroundImage=''; el.textContent=M_EMOJI[s]||'🐤'; }

@@ -105,10 +105,10 @@
   .tab .ico { font-size:26px; display:block; }
   .tab.on { color:var(--ink); background:var(--warm); }
 
-  @keyframes bcycle { to { background-position:-400% 0; } }
+  @keyframes bcycle { to { background-position:133.333% 0; } }
   @media (prefers-reduced-motion: reduce) {
     .card, .btn, .tab, #holdbtn, .call, #sosbtn, #beat { transition:opacity 200ms ease; transform:none !important; }
-    #birdy { animation:none !important; }
+    .bird { animation:none !important; }
   }
 </style>
 </head>
@@ -221,7 +221,7 @@ function beat(){ const b=$('beat'); b.classList.add('pulse'); setTimeout(()=>b.c
 /* mascot everywhere (codex sprite pack; graceful if atlases absent).
    Per-state frame pacing: lively when active, calm when idle. */
 const birdSprites={};
-const BSPEED={idle:'.7s',sleep:'1.3s',listen:'.5s',talk:'.45s',happy:'.5s',fly:'.4s',alert:'.4s'};
+const BSPEED={idle:'1.28s',sleep:'1.8s',listen:'1s',talk:'.88s',happy:'1.12s',fly:'.8s',alert:'1.28s'};
 ['idle','listen','talk','happy','sleep'].forEach(s=>{
   const img=new Image();
   img.onload=()=>{ birdSprites[s]=img.src; if(s==='idle') birdy('idle'); };
