@@ -403,17 +403,54 @@ ASR_DIR = RUNTIME / "asr"
 ASR_DIR.mkdir(exist_ok=True)
 
 
+def _eleven_asr(blob: bytes, content_type: str) -> dict:
+    """Hosted ears: ElevenLabs scribe_v1, same sticky key pool as the voice.
+    Verified on this project's own test clip: character-perfect Chinese."""
+    import urllib.request as _rq
+    import uuid as _uuid
+    pool = [(n, os.environ.get(n, "")) for n in _ELEVEN_KEY_NAMES]
+    pool = [(n, v) for n, v in pool if v]
+    if not pool:
+        return {"text": "", "error": "no ASR on this host"}
+    boundary = f"anan-{_uuid.uuid4().hex}"
+    ext = "webm" if "webm" in content_type else ("ogg" if "ogg" in content_type else "wav")
+    parts = [
+        f"--{boundary}\r\nContent-Disposition: form-data; name=\"model_id\"\r\n\r\nscribe_v1\r\n".encode(),
+        (f"--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; "
+         f"filename=\"talk.{ext}\"\r\nContent-Type: {content_type or 'audio/webm'}\r\n\r\n").encode(),
+        blob, b"\r\n", f"--{boundary}--\r\n".encode(),
+    ]
+    body = b"".join(parts)
+    start = _eleven_sticky["idx"] % len(pool)
+    for hop in range(len(pool)):
+        idx = (start + hop) % len(pool)
+        name, api_key = pool[idx]
+        req = _rq.Request("https://api.elevenlabs.io/v1/speech-to-text", data=body,
+                          headers={"xi-api-key": api_key,
+                                   "Content-Type": f"multipart/form-data; boundary={boundary}"},
+                          method="POST")
+        try:
+            with _rq.urlopen(req, timeout=45) as resp:
+                payload = json.load(resp)
+            _eleven_sticky["idx"] = idx
+            return {"text": (payload.get("text") or "").strip(), "lane": "eleven-scribe"}
+        except Exception as exc:  # noqa: BLE001
+            store.event(kernel.clock.now().strftime("%Y-%m-%d %H:%M:%S"), "error", "asr-eleven",
+                        {"key": name, "why": str(exc)[:100]})
+    return {"text": "", "error": "all ASR lanes failed"}
+
+
 @app.post("/asr")
 async def asr(request: Request) -> dict:
-    """Hold-to-talk audio → Whisper (aiko's transcribe contract) → text.
-    Browser records webm/ogg; whisper's own ffmpeg handles the container."""
+    """Hold-to-talk audio → local Whisper (aiko's contract) → ElevenLabs
+    scribe (hosted) → honest error. Browser records webm/ogg."""
     import shutil as _shutil
     blob = await request.body()
     if not blob or len(blob) < 200:
         return {"text": "", "error": "empty audio"}
     whisper_bin = os.environ.get("AIKO_WHISPER_BIN") or _shutil.which("whisper")
     if not whisper_bin:
-        return {"text": "", "error": "no ASR on this host"}
+        return _eleven_asr(blob, request.headers.get("content-type", ""))
     stamp = hashlib.sha1(blob).hexdigest()[:12]
     src = ASR_DIR / f"{stamp}.webm"
     src.write_bytes(blob)
