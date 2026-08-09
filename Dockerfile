@@ -6,5 +6,6 @@ COPY core/ core/
 COPY adapter/ adapter/
 COPY web/ web/
 COPY server.py .
+COPY config.default.json .
 ENV PYTHONUNBUFFERED=1
 CMD ["python", "server.py"]

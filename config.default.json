@@ -1,0 +1,130 @@
+{
+  "agent_name": "安安",
+  "hotline": "995",
+  "profile": {
+    "name": "陈婆婆",
+    "address_as": "婆婆",
+    "age": 78,
+    "conditions": [
+      "高血压",
+      "轻度健忘"
+    ]
+  },
+  "med": {
+    "name": "降压药",
+    "note": "饭后温水服用, 蓝色盒子",
+    "arms_silence": true
+  },
+  "contact_tree": [
+    {
+      "name": "小芸",
+      "relation": "女儿",
+      "recipient_is": "妈妈",
+      "telegram": "",
+      "phone": ""
+    },
+    {
+      "name": "阿强",
+      "relation": "儿子",
+      "recipient_is": "妈妈",
+      "telegram": "",
+      "phone": ""
+    },
+    {
+      "name": "王阿姨",
+      "relation": "邻居",
+      "recipient_is": "邻居陈婆婆",
+      "telegram": "",
+      "phone": ""
+    }
+  ],
+  "schedule": {
+    "07:30": "greet_checkin",
+    "08:00": "med_reminder",
+    "20:00": "med_reminder",
+    "20:05": "family_bulletin",
+    "21:00": "care_insight"
+  },
+  "windows": {
+    "ack_min": 60,
+    "retry_min": 30,
+    "escalation_min": 10,
+    "escalation_rearm_min": 30
+  },
+  "channels": [
+    "app",
+    "voice_call"
+  ],
+  "envelope": {
+    "autonomous": [
+      "tts.speak",
+      "notify.elder",
+      "notify.family",
+      "memory.write"
+    ],
+    "approval": [
+      "contact.neighbor",
+      "config.change"
+    ],
+    "never": [
+      "call.995",
+      "medical.advice",
+      "finance.any"
+    ]
+  },
+  "voice": {
+    "defaults": {
+      "zh": "chinese/12_confident_woman_chinese",
+      "en": "english/15_soothing_woman"
+    },
+    "asr_language": "zh",
+    "asr_model": "medium",
+    "speak": "both",
+    "eleven": {
+      "model": "eleven_multilingual_v2",
+      "en": "EXAVITQu4vr4xnSDxMaL",
+      "zh": "EXAVITQu4vr4xnSDxMaL",
+      "alts_en": {
+        "matilda": "XrExE9yKIg1WjnnlVkGX",
+        "bill": "pqHfZKP75CvOlQylNhV4",
+        "bella": "hpp4J3VqNfWAUOO0d1Us"
+      }
+    },
+    "scripts": {
+      "zh": "婆婆早安, 今天天气很好。记得饭后吃降压药, 我一直陪着您, 别担心。",
+      "en": "Good morning Grandma, the weather is lovely today. Remember your medicine after breakfast. I am always here with you."
+    },
+    "sample_lines": {
+      "zh": "婆婆, 是我呀。以后每天早上都由我来陪您。",
+      "en": "Grandma, it's me. I'll be with you every morning from now on."
+    },
+    "praise": [
+      [
+        "做得好! 按时吃药, 身体棒棒!",
+        "Well done! Right on time — that's how we stay strong!"
+      ],
+      [
+        "真乖, 药吃了, 家里人知道了也放心!",
+        "Wonderful! Your family will be so glad to hear it!"
+      ],
+      [
+        "好样的! 今天也把自己照顾得很好!",
+        "Great job taking care of yourself today!"
+      ]
+    ]
+  },
+  "family_extra_ids": [],
+  "home": {
+    "name": "家 Home (Toa Payoh Blk 85)",
+    "lat": 1.3343,
+    "lng": 103.8563,
+    "radius_m": 300,
+    "rearm_min": 20,
+    "live_tracking": false
+  },
+  "health_thresholds": {
+    "face_symmetry_min": 60,
+    "bpm_min": 45,
+    "bpm_max": 120
+  }
+}

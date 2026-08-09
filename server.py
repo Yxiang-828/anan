@@ -53,12 +53,20 @@ RUNTIME.mkdir(exist_ok=True)
 clock = DemoClock()
 store = Store(RUNTIME / "anan.db")
 
-# DEMO SEED CONFIG — the only place the demo persona exists. In the product
-# this whole block is what the family fills in remotely at onboarding
-# (storyboard §6.2 screen 1). Swap it and AnAn cares for someone else.
+# CONFIG: config.json (live) ← config.default.json (committed, COMPLETE) ← builtin.
+# The default file is the single source — local-vs-cloud config drift was a live
+# defect class (the hosted map shipped with no `home` because additions were
+# scripted into local config only, 2026-08-09).
 _cfg_file = ROOT / "config.json"
+_cfg_default = ROOT / "config.default.json"
 if _cfg_file.is_file():
     CONFIG = json.loads(_cfg_file.read_text())
+elif _cfg_default.is_file():
+    CONFIG = json.loads(_cfg_default.read_text())
+    _own = os.environ.get("OWNER_TELEGRAM_ID") or os.environ.get("TELEGRAM_OWNER_USER_ID", "")
+    if _own and CONFIG.get("contact_tree") and not CONFIG["contact_tree"][0].get("telegram"):
+        CONFIG["contact_tree"][0]["telegram"] = _own
+    _cfg_file.write_text(json.dumps(CONFIG, ensure_ascii=False, indent=2))
 else:
     CONFIG = {
         "agent_name": "安安",
@@ -275,6 +283,24 @@ store.listen(lambda ev: _broadcast({"kind": "event", "event": ev, "state": kerne
 
 kernel.start()
 
+# CAPABILITY RECEIPT (owner law 2026-08-09: differences between hosted and
+# local must be VISIBLE, never silently discovered by the user): every boot
+# states what this instance has and lacks, in its own trace.
+import shutil as _shutil0  # noqa: E402
+CAPS = {
+    "qwen_tts": _VOICE_GEN.is_file() if "_VOICE_GEN" in dir() else (ROOT / "skills" / "voice-gen" / "run.py").is_file(),
+    "whisper_asr": bool(_shutil0.which("whisper")),
+    "eleven_keys": sum(1 for n in ("DINOSAUR_ELEVEN_LABS_API_KEY", "MY_ELEVEN_LABS_API_KEY",
+                                   "HOLO_ELEVEN_LABS_API_KEY") if os.environ.get(n)),
+    "agy_brain": Path("/home/dinosaur/.local/bin/agy").is_file(),
+    "nvidia_brain": bool(os.environ.get("NVIDIA_API_KEY")),
+    "telegram": bool(_tg),
+    "home_geofence": bool(CONFIG.get("home", {}).get("lat")),
+    "voice_clone": bool(CONFIG.get("voice", {}).get("clone")),
+}
+store.event(kernel.clock.now().strftime("%Y-%m-%d %H:%M:%S"), "wake", "environment",
+            CAPS, effect="capability receipt — what THIS instance has and lacks")
+
 
 def _warm_praise_tts() -> None:
     """Pre-render the praise lines so the reward beat's voice is INSTANT —
@@ -324,7 +350,8 @@ def state() -> dict:
 
 @app.get("/healthz")
 def healthz() -> dict:
-    return {"status": "ok", "fsm": kernel.loop.state, "uptime_h": kernel.snapshot()["uptime_h"]}
+    return {"status": "ok", "fsm": kernel.loop.state, "uptime_h": kernel.snapshot()["uptime_h"],
+            "capabilities": CAPS}
 
 
 @app.get("/version")

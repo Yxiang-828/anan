@@ -25,7 +25,9 @@
   @keyframes cycle { to { background-position:133.333% 0; } }
   #mstate { font-size:11px; color:var(--dim); }
   .main { flex:1; display:grid; grid-template-columns:310px minmax(360px, 440px) 1fr; gap:14px;
-          align-items:start; justify-content:center; }
+          align-items:stretch; justify-content:center; min-height:0;
+          height:calc(100vh - 76px); overflow:hidden; }
+  .main > * { min-height:0; overflow-y:auto; }   /* each column scrolls on its own */
   @media (max-width:1100px) { .main { grid-template-columns:1fr; } }
   .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; }
   .roleband { font-size:10px; letter-spacing:.1em; text-transform:uppercase; border-radius:6px;
