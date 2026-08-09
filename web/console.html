@@ -21,7 +21,7 @@
   #mascothead { display:flex; align-items:center; gap:6px; margin-left:auto; }
   #mascot { width:64px; height:64px; background-repeat:no-repeat; background-size:400% 100%;
             image-rendering:pixelated; display:flex; align-items:center; justify-content:center; font-size:34px; }
-  #mascot.sprite { animation:cycle .9s steps(4) infinite; font-size:0; }
+  #mascot.sprite { animation:cycle var(--bspeed,.55s) steps(4) infinite; font-size:0; }
   @keyframes cycle { to { background-position:-400% 0; } }
   #mstate { font-size:11px; color:var(--dim); }
   .main { flex:1; display:grid; grid-template-columns:310px minmax(360px, 440px) 1fr; gap:14px;
@@ -34,14 +34,34 @@
   .role-product { background:#12331f; color:var(--green); }
   .role-mirror { background:#1b2a4a; color:#9db4e8; }
   .role-internal { background:#241b3d; color:var(--purple); }
-  .step { display:block; width:100%; text-align:left; background:#232c44; color:var(--ink);
-          border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:8px;
-          font:inherit; font-size:12.5px; cursor:pointer;
-          transition:transform 120ms var(--ease-out), border-color 120ms; }
-  .step:hover { border-color:var(--blue); } .step:active { transform:scale(0.98); }
-  .step b { display:block; font-size:13px; }
-  .step small { color:var(--dim); font-size:11px; line-height:1.5; display:block; margin-top:2px; }
   .rail-note { font-size:11px; color:var(--dim); line-height:1.6; margin:8px 2px 10px; }
+  /* guided tour: retractable act cards */
+  .act { border:1px solid var(--line); border-radius:12px; margin-bottom:8px; overflow:hidden;
+         background:#1e2638; }
+  .act-head { display:flex; align-items:center; gap:10px; padding:10px 12px; cursor:pointer;
+              font-family:system-ui,"PingFang SC",sans-serif; }
+  .act-num { width:26px; height:26px; border-radius:50%; background:#2a3350; color:var(--dim);
+             display:flex; align-items:center; justify-content:center; font-size:13px;
+             font-weight:700; flex:none; transition:background 200ms, color 200ms; }
+  .act.ran .act-num { background:var(--green); color:#fff; }
+  .act.open .act-num:not(.ran) { background:var(--blue); color:#fff; }
+  .act-title { font-size:13.5px; font-weight:600; color:var(--ink); flex:1; }
+  .act-caret { color:var(--dim); font-size:11px; transition:transform 200ms var(--ease-out); }
+  .act.open .act-caret { transform:rotate(90deg); }
+  .act-body { display:none; padding:0 12px 12px; font-family:system-ui,"PingFang SC",sans-serif; }
+  .act.open .act-body { display:block; }
+  .act-why { font-size:12px; color:#aeb9d0; line-height:1.65; }
+  .act-why b { color:var(--ink); }
+  .act-watch { margin-top:8px; font-size:11.5px; color:var(--dim); line-height:1.6;
+               border-left:2px solid var(--line); padding-left:8px; }
+  .act-chips { margin-top:8px; }
+  .chip { display:inline-block; font-size:10px; border-radius:6px; padding:2px 7px; margin-right:5px;
+          background:#252f4a; color:#9db4e8; }
+  .act-run { margin-top:10px; width:100%; padding:10px; font-size:13px; font-weight:600;
+             color:#fff; background:var(--blue); border:0; border-radius:9px; cursor:pointer;
+             transition:transform 120ms var(--ease-out); font-family:inherit; }
+  .act-run:active { transform:scale(0.98); }
+  .act.ran .act-run { background:#2a5c40; }
   #hero { display:flex; flex-direction:column; align-items:center; }
   #phone { width:100%; max-width:400px; height:min(78vh, 800px); border:10px solid #000;
            border-radius:38px; overflow:hidden; background:#faf6ef;
@@ -89,16 +109,11 @@
   <div class="panel">
     <span class="roleband role-demo" data-i="band_demo"></span>
     <div class="rail-note" data-i="redline"></div>
-    <button class="step" onclick="sc('morning')"><b data-i="s1"></b><small data-i="s1x"></small></button>
-    <button class="step" onclick="sc('silence_1')"><b data-i="s2"></b><small data-i="s2x"></small></button>
-    <button class="step" onclick="sc('silence_2')"><b data-i="s3"></b><small data-i="s3x"></small></button>
-    <button class="step" onclick="sc('escalation_timeout')"><b data-i="s4"></b><small data-i="s4x"></small></button>
-    <button class="step" onclick="sc('recover')"><b data-i="s5"></b><small data-i="s5x"></small></button>
-    <button class="step" onclick="sc('evening')"><b data-i="s6"></b><small data-i="s6x"></small></button>
-    <button class="step" onclick="sc('insight')"><b data-i="s7"></b><small data-i="s7x"></small></button>
+    <div id="acts"></div>
     <details>
       <summary data-i="seeds"></summary>
-      <button class="step" onclick="fetch('/seed',{method:'POST'})"><b data-i="seedbtn"></b><small data-i="seedx"></small></button>
+      <button class="act-run" style="margin-top:8px" onclick="fetch('/seed',{method:'POST'})" data-i="seedbtn"></button>
+      <div class="act-watch" style="margin-top:6px" data-i="seedx"></div>
     </details>
   </div>
   <div id="hero">
@@ -127,27 +142,8 @@ const T = {
   band_demo:   ["Demo controls — NOT part of the product", "演示台 — 不属于产品"],
   redline:     ["Red line: these buttons inject <b>time</b> and ordinary inputs only — never behavior. Follow the numbers; each step says what you should see.",
                 "红线: 这些按钮只注入<b>时间</b>与普通输入, 从不操纵行为。按顺序点, 每步写着应看到什么。"],
-  s1:  ["① Jump to 07:30 — morning check-in", "① 跳到 07:30 晨间问候"],
-  s1x: ["→ ~15s later the phone pops a bilingual greeting and speaks it. Nobody touched the agent.",
-        "→ 约15秒后, 手机弹出双语问候卡并朗读。没有人碰过 agent。"],
-  s2:  ["② +61 min — no response", "② +61分钟 · 婆婆没回应"],
-  s2x: ["→ SILENCE_1: the agent chooses among options (switch channel / escalate / wait once) — see the decision log.",
-        "→ SILENCE_1: agent 在选项中决策 (换渠道/立即升级/再等一次), 见决策日志。"],
-  s3:  ["③ +31 min — still silent", "③ +31分钟 · 仍无回应"],
-  s3x: ["→ SILENCE_2 → escalation: the daughter's real Telegram gets an alert card (mirrored on the right).",
-        "→ SILENCE_2 → 升级: 女儿的真实 Telegram 收到警报卡 (右侧镜像同步)。"],
-  s4:  ["④ +11 min — family hasn't replied", "④ +11分钟 · 家人没回"],
-  s4x: ["→ The contact tree WALKS to the next person (son → neighbour), each hop with its own receipt.",
-        "→ 联系人树走到下一位 (儿子→邻居), 每一跳有独立回执。"],
-  s5:  ["⑤ Grandma touches the screen", "⑤ 婆婆碰了一下屏幕"],
-  s5x: ["→ Heartbeat: any escalation dissolves; a decision in flight gets CANCELLED by revalidation.",
-        "→ 心跳信号: 升级立即消解; 在途决策会被 REVALIDATE 取消 (反悔镜头)。"],
-  s6:  ["⑥ Jump to 20:00 — family bulletin", "⑥ 跳到 20:00 家庭播报"],
-  s6x: ["→ The daughter's Telegram receives the bilingual daily report: meds / mood / observations.",
-        "→ 女儿 Telegram 收到当日双语报告: 用药/心情/观察。"],
-  s7:  ["⑦ Jump to 21:00 — care insight", "⑦ 跳到 21:00 照护洞察"],
-  s7x: ["→ The agent distills one observation from today's conversations into memory — day 7 knows her better than day 1.",
-        "→ agent 从今天的对话提炼一条观察写入记忆 — 第7天比第1天更懂她。"],
+  run: ["▶ Run this act", "▶ 运行这一幕"],
+  watch: ["What to watch:", "看什么:"],
   seeds:   ["Demo seeds (fictional data, labelled as such)", "演示种子 (虚构数据, 标明为演示)"],
   seedbtn: ["Seed 6 days of history", "播种 6 天历史"],
   seedx:   ["→ Writes 6 fictional days of meds/mood/insights so the 'day 7' bulletin has a story. Demo only.",
@@ -167,12 +163,92 @@ const T = {
                "Skill 目录 (name + capability — 菜单先行的上下文法则)"],
   uptime: ["autonomous for", "已自主运行"],
 };
+/* The seven acts — each carries its design rationale (from the convergence
+   docs), what the kernel does, and what to watch on which surface. */
+const ACTS = [
+ {sc:'morning',
+  t:["Act 1 · 07:30 — the agent speaks first","第一幕 · 07:30 — 安安先开口"],
+  why:["Elders don't open apps — <b>the product is proactivity</b>. The 07:30 cron is the day's first liveness probe: a greeting that is also a question. The reply window (60 min, family-configured) arms silently.",
+       "老人不会主动打开 App — <b>主动性就是产品</b>。07:30 的定时问候是全天第一个存活探测: 一句问候, 同时是一次提问。60 分钟回应窗口 (家属可配) 悄悄布下。"],
+  watch:["~15s: the phone pops a bilingual card and speaks (live model compose). Trace: wake→think→gate→act→receipt, state → CHECKIN_SENT.",
+         "约15秒: 手机弹出双语卡并朗读 (模型实时生成)。日志: wake→think→gate→act→receipt, 状态 → CHECKIN_SENT。"],
+  chips:['📱 phone','🧠 trace']},
+ {sc:'silence_1',
+  t:["Act 2 · +61 min — silence becomes data","第二幕 · +61分钟 — 沉默变成数据"],
+  why:["<b>\"Silence is an input.\"</b> Chatbots' input domain is {text}; AnAn's is {time, silence, state}. The window expires and the agent reaches a JUNCTION: retry another channel, escalate now, or extend once. The model chooses inside a bounded envelope — the deterministic floor stands if it fails.",
+       "<b>\"沉默是输入。\"</b> 聊天机器人的输入域是{文字}; 安安的是{时间、沉默、状态}。窗口到期, agent 走到决策节点: 换渠道重试 / 立即升级 / 再等一次。模型在受限选项内选择 — 模型失效时确定性兜底照常执行。"],
+  watch:["Trace: junction receipt shows options + chosen + how (model/floor). State walks SILENCE_1 → retry on voice channel.",
+         "日志: junction 回执显示选项/所选/方式 (model/floor)。状态走到 SILENCE_1 → 语音渠道重试。"],
+  chips:['🧠 trace']},
+ {sc:'silence_2',
+  t:["Act 3 · +31 min — the escalation promise","第三幕 · +31分钟 — 升级承诺"],
+  why:["Channels exhausted means <b>a person may be in trouble</b> — this is the moment the whole product exists for. The agent notifies the daughter's REAL Telegram with action buttons; the button callback, not a spoken promise, is what closes the loop.",
+       "渠道用尽 = <b>人可能出事了</b> — 整个产品为这一刻而存在。agent 通知女儿的真实 Telegram, 带操作按钮; 闭环靠按钮回调, 不靠口头承诺。"],
+  watch:["The mirror (and the real phone) gets the alert card. State: SILENCE_2 → ESCALATED, callback window armed. Mascot flies.",
+         "右侧镜像 (和真手机) 收到警报卡。状态: SILENCE_2 → ESCALATED, 回电窗口布下。吉祥物起飞。"],
+  chips:['✈️ telegram','📱 phone','🧠 trace']},
+ {sc:'escalation_timeout',
+  t:["Act 4 · +11 min — the tree actually walks","第四幕 · +11分钟 — 联系人树真的会走"],
+  why:["A contact 'tree' that stops at one person is a lie. No callback within the window → the NEXT contact is notified (daughter → son → neighbour), each hop with its own idempotent receipt — double-taps can never double-process.",
+       "只停在第一个人的'树'是假的。窗口内无回电 → 通知下一位 (女儿→儿子→邻居), 每一跳有独立幂等回执 — 重复点按不会重复处理。"],
+  watch:["Trace: escalation_timeout junction → next_contact receipt with a fresh esc-id. ESCALATED re-arms.",
+         "日志: escalation_timeout 节点 → next_contact 回执, 新 esc-id。ESCALATED 重新布防。"],
+  chips:['✈️ telegram','🧠 trace']},
+ {sc:'recover',
+  t:["Act 5 · a single touch — the 反悔 beat","第五幕 · 碰一下屏幕 — 反悔镜头"],
+  why:["<b>Every touch is a heartbeat</b> — med button, a word, any tap. It dissolves the entire silence net instantly. And if an escalation decision is mid-flight, REVALIDATE kills it before any external action: a decision born from an old snapshot must re-check the world (stale-decision revalidation).",
+       "<b>每次触碰都是心跳</b> — 按用药键、说一句话、随手一点, 都会立即消解整张沉默网。若升级决策还在途中, REVALIDATE 会在任何外部动作前取消它: 旧快照生出的决策必须先重看世界 (陈旧决策再验证)。"],
+  watch:["State snaps to ENGAGED (or RESOLVED if escalated). If a junction races: 'revalidate → STALE, candidate cancelled'.",
+         "状态跳到 ENGAGED (升级中则 RESOLVED)。若与节点赛跑: 'revalidate → STALE, 候选取消'。"],
+  chips:['📱 phone','🧠 trace']},
+ {sc:'evening',
+  t:["Act 6 · 20:00 — the daily heartbeat to family","第六幕 · 20:00 — 给家人的每日心跳"],
+  why:["Reassurance without asking: every evening the family gets meds / mood / today's observation, composed from the actual day's records — never a template pretending to care.",
+       "不用问的安心: 每晚家人收到用药/心情/今日观察, 由当天真实记录生成 — 不是装作关心的模板。"],
+  watch:["Telegram mirror gets the bilingual report ~20:05. Compare after seeding: Day 7 report visibly knows more than Day 1.",
+         "镜像 ~20:05 收到双语播报。播种后对比: 第7天的播报明显比第1天懂她。"],
+  chips:['✈️ telegram']},
+ {sc:'insight',
+  t:["Act 7 · 21:00 — it learns her, over time","第七幕 · 21:00 — 随时间更懂她"],
+  why:["The time dimension is the proof of learning: each night the agent distills one care observation from today's conversations into memory ('knee pain mentioned 3× this week'). It feeds tomorrow's greeting and the next bulletin.",
+       "时间维度是学习的物证: 每晚从当天对话提炼一条照护观察写入记忆 ('本周三次提到膝盖疼'), 反哺明早问候与下次播报。"],
+  watch:["Trace: care_insight receipt — 'insight #N written, day N knows more than day 1'.",
+         "日志: care_insight 回执 — 'insight #N written, day N knows more than day 1'。"],
+  chips:['🧠 trace','🧬 memory']},
+];
+function renderActs(){
+  const idx = lang==='en'?0:1;
+  const box = document.getElementById('acts'); box.innerHTML='';
+  ACTS.forEach((a,i)=>{
+    const d=document.createElement('div');
+    d.className='act'+(a.ran?' ran':'')+(a.open?' open':'');
+    d.innerHTML=`
+      <div class="act-head" onclick="toggleAct(${i})">
+        <div class="act-num">${a.ran?'✓':i+1}</div>
+        <div class="act-title">${a.t[idx]}</div>
+        <div class="act-caret">▶</div>
+      </div>
+      <div class="act-body">
+        <div class="act-why">${a.why[idx]}</div>
+        <div class="act-watch"><b>${T.watch[idx]}</b> ${a.watch[idx]}</div>
+        <div class="act-chips">${a.chips.map(c=>`<span class="chip">${c}</span>`).join('')}</div>
+        <button class="act-run" onclick="runAct(${i});event.stopPropagation()">${T.run[idx]}</button>
+      </div>`;
+    box.appendChild(d);
+  });
+}
+function toggleAct(i){ ACTS[i].open=!ACTS[i].open; renderActs(); }
+function runAct(i){ sc(ACTS[i].sc); ACTS[i].ran=true; ACTS[i].open=false;
+  if(ACTS[i+1]) ACTS[i+1].open=true; renderActs(); }
+ACTS[0].open=true;
+
 let lang = localStorage.getItem('anan_lang') || 'en';
 function applyLang(){
   const idx = lang==='en' ? 0 : 1;
   document.querySelectorAll('[data-i]').forEach(el=>{ el.innerHTML = T[el.dataset.i][idx]; });
   $('langbtn').textContent = lang==='en' ? '中文' : 'EN';
   document.documentElement.lang = lang;
+  renderActs();
 }
 function toggleLang(){ lang = lang==='en'?'zh':'en'; localStorage.setItem('anan_lang', lang); applyLang(); refresh(lastState); }
 applyLang();
@@ -191,7 +267,9 @@ function mascot(s,holdMs=0){
   if(now<mhold && s!=='alert' && s!=='fly') return;
   mhold=holdMs?now+holdMs:0;
   const el=$('mascot');
-  if(sprites[s]){ el.classList.add('sprite'); el.style.backgroundImage=`url(${sprites[s]})`; el.textContent=''; }
+  const SPEED={idle:'.7s',sleep:'1.3s',fly:'.4s',alert:'.4s',talk:'.45s',work:'.5s',happy:'.5s',listen:'.5s',dizzy:'.5s',think:'.6s'};
+  if(sprites[s]){ el.classList.add('sprite'); el.style.backgroundImage=`url(${sprites[s]})`;
+    el.style.setProperty('--bspeed', SPEED[s]||'.55s'); el.textContent=''; }
   else { el.classList.remove('sprite'); el.style.backgroundImage=''; el.textContent=M_EMOJI[s]||'🐤'; }
   $('mstate').textContent=s;
 }

@@ -63,9 +63,15 @@
 
   /* talk screen */
   #talkpad { display:flex; flex-direction:column; align-items:center; gap:18px; padding-top:30px; }
-  #holdbtn { width:170px; height:170px; border-radius:50%; background:var(--green); color:#fff;
-             font-size:22px; box-shadow:var(--shadow); transition:transform 160ms var(--ease-out), background 200ms; }
-  #holdbtn:active, #holdbtn.listening { transform:scale(0.95); background:#237a46; }
+  .bird { display:inline-block; background-repeat:no-repeat; background-size:400% 100%;
+          image-rendering:pixelated; animation:bcycle var(--bspeed,.55s) steps(4) infinite; }
+  #holdbtn { display:flex; flex-direction:column; align-items:center; gap:10px;
+             background:none; padding:14px 22px 18px; border-radius:26px;
+             transition:transform 160ms var(--ease-out), background 200ms; }
+  #holdbtn:active, #holdbtn.listening { transform:scale(0.96); background:#e3f0e7; }
+  #holdlbl { font-size:20px; color:#fff; background:var(--green); border-radius:16px;
+             padding:12px 20px; box-shadow:var(--shadow); }
+  #holdbtn.listening #holdlbl { background:#237a46; }
   #caption { min-height:80px; text-align:center; padding:0 18px; }
 
   /* log screen */
@@ -109,6 +115,7 @@
 <body>
 <div id="frame"><div id="device">
   <div id="bar"><span id="clock">--:--</span><span style="display:flex;gap:8px;align-items:center">
+    <span id="hbird" class="bird" style="width:42px;height:42px"></span>
     <span id="agentname" style="color:var(--muted)">安安</span><span id="beat"></span></span></div>
   <div id="screens">
 
@@ -120,10 +127,8 @@
     <section class="screen" id="s-talk">
       <h1>跟安安说话<small>Talk with AnAn</small></h1>
       <div id="talkpad">
-        <div id="birdy" style="width:140px;height:140px;background-repeat:no-repeat;
-             background-size:400% 100%;image-rendering:pixelated;display:none;
-             animation:bcycle .9s steps(4) infinite"></div>
-        <button id="holdbtn">🎙️<br>按住说话<br><small style="font-size:14px">Hold to talk</small></button>
+        <button id="holdbtn"><span id="birdy" class="bird" style="width:150px;height:150px"></span>
+          <span id="holdlbl">🎙️ 按住小鸟, 跟我说话<br><small style="font-size:14px">Press &amp; hold the bird to talk</small></span></button>
         <div id="caption"><p class="zh" id="cap-zh">按住绿色按钮, 像打电话一样和我聊。</p>
           <p class="en" id="cap-en">Press and hold the green button and talk to me like a phone call.</p></div>
       </div>
@@ -213,21 +218,26 @@ async function speak(text, enLine=''){
 }
 function beat(){ const b=$('beat'); b.classList.add('pulse'); setTimeout(()=>b.classList.remove('pulse'), 320); birdy('happy',1500); }
 
-/* mascot on the talk screen (codex sprite pack; hidden if atlases absent) */
+/* mascot everywhere (codex sprite pack; graceful if atlases absent).
+   Per-state frame pacing: lively when active, calm when idle. */
 const birdSprites={};
-['idle','listen','talk','happy'].forEach(s=>{
+const BSPEED={idle:'.7s',sleep:'1.3s',listen:'.5s',talk:'.45s',happy:'.5s',fly:'.4s',alert:'.4s'};
+['idle','listen','talk','happy','sleep'].forEach(s=>{
   const img=new Image();
   img.onload=()=>{ birdSprites[s]=img.src; if(s==='idle') birdy('idle'); };
   img.src=`/mascot/${s}-atlas.png`;
 });
 let birdHold=0;
 function birdy(s, holdMs=0){
-  const el=$('birdy'); if(!el || !birdSprites[s]) return;
+  if(!birdSprites[s]) return;
   const now=Date.now();
-  if(now<birdHold && s!=='listen') return;
+  if(now<birdHold && !['listen','talk'].includes(s)) return;
   birdHold = holdMs ? now+holdMs : 0;
-  el.style.display='block';
-  el.style.backgroundImage=`url(${birdSprites[s]})`;
+  ['birdy','hbird'].forEach(id=>{
+    const el=$(id); if(!el) return;
+    el.style.backgroundImage=`url(${birdSprites[s]})`;
+    el.style.setProperty('--bspeed', BSPEED[s]||'.55s');
+  });
 }
 
 function addCard(c){
