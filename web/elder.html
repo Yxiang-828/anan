@@ -255,7 +255,37 @@ function addCard(c){
   while(feed.children.length>5) feed.lastChild.remove();
   if(c.speak) speakCard(zh, en);
 }
-function med(btn){ btn.textContent='✓ 已记录 Recorded'; btn.disabled=true; beat();
+/* reward beat: a due thing DONE deserves celebration (elders run on
+   encouragement; a silent checkmark teaches nothing) */
+const PRAISE=[["做得好! 按时吃药, 身体棒棒!","Well done! Right on time — that's how we stay strong!"],
+              ["真乖, 药吃了, 女儿知道了也放心!","Wonderful! Your family will be so glad to hear it!"],
+              ["好样的! 今天也把自己照顾得很好!","Great job taking care of yourself today!"]];
+function celebrate(anchor){
+  birdy('happy', 3000);
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const rect=anchor.getBoundingClientRect();
+  const icons=['💚','⭐','❤️','🌸','✨'];
+  for(let i=0;i<14;i++){
+    const p=document.createElement('div');
+    p.textContent=icons[i%icons.length];
+    p.style.cssText=`position:fixed;left:${rect.left+rect.width/2}px;top:${rect.top+rect.height/2}px;
+      font-size:${18+Math.random()*14}px;pointer-events:none;z-index:99`;
+    document.body.appendChild(p);
+    const ang=Math.random()*Math.PI*2, dist=60+Math.random()*90;
+    p.animate([{transform:'translate(0,0) scale(.6)',opacity:1},
+               {transform:`translate(${Math.cos(ang)*dist}px,${Math.sin(ang)*dist-40}px) scale(1.15)`,opacity:0}],
+              {duration:900+Math.random()*400,easing:'cubic-bezier(0.23,1,0.32,1)'})
+     .onfinish=()=>p.remove();
+  }
+}
+function med(btn){
+  btn.disabled=true; beat(); celebrate(btn);
+  const [zh,en]=PRAISE[Math.floor(Math.random()*PRAISE.length)];
+  btn.textContent='✓ 做得好! Well done!';
+  const praise=document.createElement('p');
+  praise.innerHTML=`<span class="zh" style="color:var(--green)">${zh}</span><span class="en">${en}</span>`;
+  btn.closest('.card').appendChild(praise);
+  speakCard(zh, en);
   fetch('/elder/heartbeat',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({via:'med_button',med:state.med})}); }
 function medLater(btn){ btn.textContent='好, 等会儿再提醒 OK, later'; btn.disabled=true; beat();
