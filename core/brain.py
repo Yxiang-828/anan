@@ -21,6 +21,10 @@ AGY_BIN = "/home/dinosaur/.local/bin/agy"
 AGY_MODEL = "Gemini 3.6 Flash (High)"
 NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 NVIDIA_MODEL = "nvidia/nemotron-3-ultra-550b-a55b"
+# Ultra is a REASONING model: it burns tokens thinking before answering, and on
+# a slow host that blows the deadline. Super-120b (ponytail's default lane) is
+# the fast third rung when ultra times out or rate-limits.
+NVIDIA_FALLBACK_MODEL = "nvidia/nemotron-3-super-120b-a12b"
 TIMEOUT_S = 90
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -74,17 +78,18 @@ def _agy(prompt: str) -> str:
     return answer
 
 
-def _nvidia(prompt: str, system: str) -> str:
+def _nvidia(prompt: str, system: str, model: str = NVIDIA_MODEL) -> str:
     api_key = os.environ.get("NVIDIA_API_KEY", "")
     if not api_key:
         raise BrainError("NVIDIA_API_KEY not set")
     body = {
-        "model": NVIDIA_MODEL,
+        "model": model,
         "messages": [
             {"role": "system", "content": system},
             {"role": "user", "content": prompt},
         ],
-        "max_tokens": 1200,
+        # generous: reasoning models spend most of this thinking, not speaking
+        "max_tokens": 3000,
         "stream": False,
     }
     request = urllib.request.Request(
@@ -104,7 +109,10 @@ def _nvidia(prompt: str, system: str) -> str:
         content = payload["choices"][0]["message"]["content"]
     except (KeyError, IndexError, TypeError):
         raise BrainError("nvidia returned no assistant message") from None
-    return content if isinstance(content, str) else ""
+    if not (isinstance(content, str) and content.strip()):
+        # reasoning ate the whole budget: an empty answer is a FAILURE, not a reply
+        raise BrainError(f"{model}: empty content (reasoning exhausted budget)")
+    return content
 
 
 def think(prompt: str, system: str = "") -> tuple[str, str]:
@@ -115,4 +123,9 @@ def think(prompt: str, system: str = "") -> tuple[str, str]:
         return _agy(full), "agy/gemini-3.6-flash"
     except BrainError:
         pass
-    return _nvidia(prompt, system or "You are a helpful assistant."), "nvidia/nemotron-ultra"
+    try:
+        return _nvidia(prompt, system or "You are a helpful assistant."), "nvidia/nemotron-ultra"
+    except BrainError:
+        pass
+    return (_nvidia(prompt, system or "You are a helpful assistant.", NVIDIA_FALLBACK_MODEL),
+            "nvidia/nemotron-super")
