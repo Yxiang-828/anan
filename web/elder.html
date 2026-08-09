@@ -631,16 +631,20 @@ function placeMe(loc){
 function pollMap(){
   fetch('/state').then(r=>r.json()).then(s=>{
     initEmap(s.home);
+    if(s.home && s.home.live_tracking) startLiveTracking();
     if(s.last_location) placeMe(s.last_location);
   }).catch(()=>{});
 }
 pollMap(); setInterval(pollMap, 8000);
 
-/* wander safety: stream position when the phone allows it (HTTPS/localhost).
-   Silent by design — the elder never has to think about it. */
-let lastLocPost=0;
-try{
-  if('geolocation' in navigator){
+/* wander safety: stream position ONLY when the deployment enables it
+   (home.live_tracking) — otherwise a demo desktop's real GPS fights the
+   scenario injections (learned live: the PC breached the fence at 13.5km). */
+let lastLocPost=0, trackingStarted=false;
+function startLiveTracking(){
+  if(trackingStarted || !('geolocation' in navigator)) return;
+  trackingStarted=true;
+  try{
     navigator.geolocation.watchPosition(pos=>{
       const now=Date.now();
       if(now-lastLocPost<20000) return;
@@ -649,8 +653,8 @@ try{
         body:JSON.stringify({lat:pos.coords.latitude,lng:pos.coords.longitude,
                              accuracy:pos.coords.accuracy})}).catch(()=>{});
     }, ()=>{}, {enableHighAccuracy:false, maximumAge:60000});
-  }
-}catch(e){}
+  }catch(e){}
+}
 </script>
 </body>
 </html>
