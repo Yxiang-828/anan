@@ -12,6 +12,8 @@ Doctrine (owner): words belong to the MODEL, facts and actions belong to CODE.
 from __future__ import annotations
 
 import json
+import os
+import threading
 
 from core import brain
 from core.kernel import Kernel, Skill
@@ -34,9 +36,16 @@ def _system(kernel: Kernel) -> str:
     return "\n".join(facts)
 
 
-def _say(kernel: Kernel, intent: str, facts: dict, contract: str = "") -> tuple[str | None, str]:
-    """Model composes from intent+facts. Returns (text, lane); text=None means
-    both lanes down — caller degrades to data rendering, never to a script."""
+# How long the kernel's tick thread may spend waiting for words. Composition used
+# to block it for 8-10s per skill, so acts queued and an operator clicking act 4
+# watched act 3 land. The FSM has NO lock — the single tick thread IS the
+# concurrency control — so the fix is not to run skills concurrently but to stop
+# WORDS from being on the critical path. State and receipts stay serial; only the
+# sentence is allowed to arrive late.
+_SAY_WAIT_S = float(os.environ.get("ANAN_SAY_WAIT_S", "2.5"))
+
+
+def _compose(kernel: Kernel, intent: str, facts: dict, contract: str) -> tuple[str | None, str]:
     prompt = f"意图: {intent}\n事实:\n{json.dumps(facts, ensure_ascii=False, indent=1)}"
     if contract:
         prompt += f"\n形式: {contract}"
@@ -45,6 +54,43 @@ def _say(kernel: Kernel, intent: str, facts: dict, contract: str = "") -> tuple[
         return text.strip()[:500], lane
     except brain.BrainError as exc:
         return None, f"degraded (LLM down: {str(exc)[:80]})"
+
+
+def _say(kernel: Kernel, intent: str, facts: dict, contract: str = "",
+         on_late: "callable | None" = None) -> tuple[str | None, str]:
+    """Model composes from intent+facts. Returns (text, lane); text=None means
+    the caller degrades to data rendering, never to a script.
+
+    Waits _SAY_WAIT_S for the words. If they arrive, nothing changes. If they do
+    not, the kernel gets on with its receipt and the sentence keeps composing on
+    a worker thread — `on_late(text, lane)` fires when it lands."""
+    box: dict = {}
+    done = threading.Event()
+
+    def work():
+        try:
+            box["r"] = _compose(kernel, intent, facts, contract)
+        except Exception as exc:  # noqa: BLE001
+            box["r"] = (None, f"degraded ({type(exc).__name__})")
+        finally:
+            done.set()
+
+    threading.Thread(target=work, daemon=True).start()
+    if done.wait(_SAY_WAIT_S):
+        return box.get("r", (None, "degraded (no result)"))
+
+    # slow lane: hand the loop back NOW, deliver the words when they exist
+    if on_late:
+        def later():
+            done.wait(120)
+            text, lane = box.get("r", (None, "degraded (timeout)"))
+            if text:
+                try:
+                    on_late(text, lane)
+                except Exception:
+                    pass
+        threading.Thread(target=later, daemon=True).start()
+    return None, f"composing (words follow; tick not held past {_SAY_WAIT_S}s)"
 
 
 def _elder(kernel: Kernel, card: dict) -> dict:
@@ -345,8 +391,11 @@ def care_insight(kernel: Kernel) -> dict:
         "历史观察": [t for (t,) in kernel.store.rows(
             "SELECT text FROM insights ORDER BY id DESC LIMIT 3")],
     }
-    text, lane = _say(kernel, "从今天的对话提炼一条对家人有用的照护观察 (健康线索/情绪趋势/兴趣)", facts,
-                      contract="一句话, 中英双语")
+    # care_insight is not on anyone's screen — it writes to memory at 21:00. It can
+    # afford to WAIT for real words rather than skip. Everything user-facing keeps
+    # the short wait; only this one buys quality with latency nobody sees.
+    text, lane = _compose(kernel, "从今天的对话提炼一条对家人有用的照护观察 (健康线索/情绪趋势/兴趣)",
+                          facts, "一句话, 中英双语")
     if text is None:
         return {"lane": lane, "effect": "insight skipped — model lanes down, nothing fabricated"}
     kernel.store.log("insights", at=at.strftime("%H:%M"), day=day, kind="daily", text=text)
