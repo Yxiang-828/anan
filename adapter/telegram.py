@@ -148,6 +148,7 @@ class TelegramTransport(StampsOutbound):
         token: str,
         owner_ids: set[str],
         allowed_chat_ids: set[str],
+        remediation: str = "",
         offset_path: Path,
         media_root: Path | None = None,
     ) -> None:
@@ -156,6 +157,11 @@ class TelegramTransport(StampsOutbound):
         self._token = token
         self.owner_ids = {str(item) for item in owner_ids}
         self.allowed_chat_ids = {str(item) for item in allowed_chat_ids}
+        # how THIS host actually allow-lists a room. Inheriting Aiko's
+        # "config.telegram.allowed_chat_ids" sent owners to a key that does
+        # not exist here, so the instruction was unfollowable.
+        self.remediation = remediation or (
+            "If this was you, add the id to `config.telegram.allowed_chat_ids` and restart.")
         self.offset_path = offset_path
         self.media_root = media_root or offset_path.parent / "media"
         self.bot_id = ""
@@ -511,9 +517,8 @@ class TelegramTransport(StampsOutbound):
                             f"{inbound.room_kind} `{inbound.room_id}`",
                             f"added/spoken by: {who}",
                             f"reason: {reason}",
-                            "Nothing reached my brain and nothing was answered. "
-                            "If this was you, add the id to "
-                            "`config.telegram.allowed_chat_ids` and restart.",
+                            "Nothing reached my brain and nothing was answered.",
+                            self.remediation,
                         ]))
                 except Exception as exc:
                     print(f"[telegram] could not alert the owner about {inbound.room_id} "

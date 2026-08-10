@@ -166,8 +166,12 @@ try:
     _family_ids |= {_owner} if _owner else set()
     _family_ids.discard("")
     if _token and _family_ids:
-        _tg = TelegramTransport(token=_token, owner_ids=_family_ids,
-                                allowed_chat_ids=set(), offset_path=RUNTIME / "tg-offset.json")
+        _tg = TelegramTransport(
+            token=_token, owner_ids=_family_ids, allowed_chat_ids=set(),
+            offset_path=RUNTIME / "tg-offset.json",
+            remediation=("AnAn only answers its family. If this was you, add the id to "
+                         "`family_extra_ids` in config.json (or give a contact_tree entry "
+                         "that telegram id) and restart. Groups are never answered."))
         _refused_replied: set = set()
 
         def _on_refused(ib) -> None:
