@@ -9,8 +9,57 @@
           --blue:#4f7cff; --green:#35c26e; --amber:#f0a53c; --red:#ef5350; --purple:#9b7ef0;
           --ease-out:cubic-bezier(0.23,1,0.32,1); }
   * { box-sizing:border-box; margin:0; }
+  html { scroll-behavior:smooth; scroll-snap-type:y proximity; }
   body { background:var(--bg); color:var(--ink); font-family:"JetBrains Mono","PingFang SC",monospace;
-         min-height:100vh; display:flex; flex-direction:column; padding:14px 16px; }
+         min-height:100vh; margin:0; padding:0; }
+  #console-view { scroll-snap-align:start; height:100vh; display:flex; flex-direction:column; padding:14px 16px; }
+
+  /* ---- landing: everything a judge needs before the live console ---- */
+  #landing { scroll-snap-align:start; position:relative; min-height:100vh; display:flex; flex-direction:column;
+             align-items:center; justify-content:center; padding:6vh 20px 4vh; overflow:hidden; text-align:center; }
+  #landing .bg { position:absolute; inset:0; background:url(/story-assets/hero_dawn.jpg) center/cover;
+                 opacity:.48; }
+  #landing .veil { position:absolute; inset:0;
+                   background:linear-gradient(180deg,var(--bg) 0%,rgba(12,15,23,.48) 30%,rgba(12,15,23,.66) 70%,var(--bg) 100%); }
+  #landing > * { position:relative; z-index:2; }
+  #lbird { width:96px; height:96px; image-rendering:pixelated; background-repeat:no-repeat;
+           background-size:400% 100%; background-image:url(/mascot/idle-atlas.png);
+           animation:lbird 1.2s steps(4) infinite; }
+  @keyframes lbird { to { background-position-x:133.3333%; } }
+  #landing h1 { font-size:clamp(40px,7vw,78px); line-height:1.08; margin:6px 0 2px;
+                font-family:system-ui,"PingFang SC",sans-serif; }
+  #landing h1 .zh { color:#c9d2e4; } #landing h1 .en { color:var(--green); }
+  #landing .thesis { font-size:clamp(18px,2.6vw,29px); color:var(--blue); font-weight:700; margin-top:6px;
+                     font-family:system-ui,sans-serif; }
+  #landing .lede { font-size:clamp(13px,1.5vw,16.5px); color:#b9c3d8; max-width:640px; margin:14px auto 0;
+                   line-height:1.65; font-family:system-ui,"PingFang SC",sans-serif; }
+  .lgrid { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:26px; max-width:740px; }
+  .lcard { display:block; text-decoration:none; border-radius:14px; padding:14px 18px; min-width:172px;
+           border:1px solid var(--line); background:rgba(22,27,40,.86); text-align:left;
+           font-family:system-ui,"PingFang SC",sans-serif; transition:transform .16s ease, border-color .16s ease; }
+  .lcard:hover { transform:translateY(-2px); }
+  .lcard:active { transform:scale(.985); }
+  .lcard b { display:block; font-size:15px; margin-bottom:3px; }
+  .lcard span { display:block; font-size:11.5px; color:var(--dim); line-height:1.45; }
+  .lcard.story:hover { border-color:#8b5cf6; } .lcard.story b { color:#d8b3f5; }
+  .lcard.deck:hover  { border-color:#3f7a55; } .lcard.deck b  { color:#6fdc9a; }
+  .lcard.vid:hover   { border-color:#3a5a8a; } .lcard.vid b   { color:#8fb4ff; }
+  .lcard.gh:hover    { border-color:#4a3a6a; } .lcard.gh b    { color:#b79df0; }
+  .lcard.app:hover   { border-color:#8a6a2a; } .lcard.app b   { color:#f0c56a; }
+  .lcard.fam:hover   { border-color:#7a4a4a; } .lcard.fam b   { color:#f0a8a8; }
+  #langdir { margin-top:26px; display:flex; align-items:center; gap:10px; justify-content:center;
+             flex-wrap:wrap; font-family:system-ui,"PingFang SC",sans-serif; }
+  #langdir .lbl { font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--amber); }
+  #langdir button { background:#1a2135; color:var(--ink); border:1px solid var(--line); border-radius:10px;
+                    padding:9px 20px; font:inherit; font-size:14px; cursor:pointer; }
+  #langdir button.on { background:#12331f; border-color:var(--green); color:#fff; font-weight:700; }
+  #scrollcue { margin-top:5vh; color:var(--dim); font-size:12.5px; text-decoration:none; display:block;
+               font-family:system-ui,sans-serif; }
+  #scrollcue .arrow { display:block; font-size:22px; margin-top:4px; animation:bob 1.8s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(6px); } }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior:auto; } #lbird, #scrollcue .arrow { animation:none; }
+  }
   header { display:flex; align-items:center; gap:14px; margin-bottom:12px; flex-wrap:wrap; }
   header h1 { font-size:17px; }
   .clock { font-size:24px; font-weight:700; color:#fff; background:#000; border-radius:8px; padding:2px 12px; }
@@ -25,10 +74,25 @@
   @keyframes cycle { to { background-position:133.333% 0; } }
   #mstate { font-size:11px; color:var(--dim); }
   .main { flex:1; display:grid; grid-template-columns:310px minmax(360px, 440px) 1fr; gap:14px;
-          align-items:stretch; justify-content:center; min-height:0;
-          height:calc(100vh - 76px); overflow:hidden; }
+          align-items:stretch; justify-content:center; min-height:0; overflow:hidden; }
   .main > * { min-height:0; overflow-y:auto; }   /* each column scrolls on its own */
-  @media (max-width:1100px) { .main { grid-template-columns:1fr; } }
+  /* Phones: one column. A fixed 100vh box with overflow:hidden would bury the
+     second and third panels, so the console becomes a normal scrolling page and
+     snap is disabled. */
+  @media (max-width:1100px) {
+    html { scroll-snap-type:none; }
+    #console-view { height:auto; scroll-snap-align:none; }
+    .main { grid-template-columns:1fr; overflow:visible; height:auto; }
+    .main > * { overflow-y:visible; max-height:none; }
+    #landing { min-height:100svh; padding:5vh 16px 4vh; }
+    .lcard { min-width:min(100%,240px); flex:1 1 240px; }
+    /* the receipt log is long unbroken monospace — without wrapping it pushes
+       the whole page sideways on a phone */
+    body { overflow-x:hidden; }
+    .main > * { max-width:100%; }
+    #log, #log div, .planline, pre { white-space:pre-wrap; overflow-wrap:anywhere; }
+    #log { max-height:none; }
+  }
   .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; }
   .roleband { font-size:10px; letter-spacing:.1em; text-transform:uppercase; border-radius:6px;
               padding:4px 8px; margin-bottom:10px; display:inline-block; }
@@ -126,6 +190,40 @@
 </style>
 </head>
 <body>
+
+<section id="landing">
+  <div class="bg"></div><div class="veil"></div>
+  <div id="lbird" aria-hidden="true"></div>
+  <h1><span class="zh">安安</span> <span class="en">AnAn</span></h1>
+  <div class="thesis" data-i="l_thesis">Silence is an input.</div>
+  <p class="lede" data-i="l_lede"></p>
+
+  <div class="lgrid">
+    <a class="lcard story" href="/story" target="_blank"><b>📖 <span data-i="l_story">The Story</span></b>
+      <span data-i="l_story_s"></span></a>
+    <a class="lcard deck" href="/deck.pdf" target="_blank"><b>📊 <span data-i="l_deck">Slides (PDF)</span></b>
+      <span data-i="l_deck_s"></span></a>
+    <a class="lcard vid" href="/demo.mp4" target="_blank"><b>🎬 <span data-i="l_vid">Demo video</span></b>
+      <span data-i="l_vid_s"></span></a>
+    <a class="lcard gh" href="https://github.com/Yxiang-828/anan" target="_blank"><b>💻 <span data-i="l_gh">GitHub</span></b>
+      <span data-i="l_gh_s"></span></a>
+    <a class="lcard app" href="/elder" target="_blank"><b>📱 <span data-i="l_app">Elder app</span></b>
+      <span data-i="l_app_s"></span></a>
+    <a class="lcard fam" href="/family" target="_blank"><b>👨‍👩‍👧 <span data-i="l_fam">Family setup</span></b>
+      <span data-i="l_fam_s"></span></a>
+  </div>
+
+  <div id="langdir">
+    <span class="lbl" data-i="l_lang">Language</span>
+    <button id="lang-en" onclick="setLang('en')">English</button>
+    <button id="lang-zh" onclick="setLang('zh')">中文</button>
+  </div>
+
+  <a id="scrollcue" href="#console-view"><span data-i="l_scroll">scroll down — watch the agent run, live</span>
+    <span class="arrow">↓</span></a>
+</section>
+
+<section id="console-view">
 <header>
   <h1>AnAn 安安</h1>
   <span class="clock" id="clock">--:--</span>
@@ -185,6 +283,23 @@
 const $=id=>document.getElementById(id);
 /* ---- i18n: English first for judges; one button flips everything ---- */
 const T = {
+  l_thesis: ["Silence is an input.", "沉默，也是一种输入。"],
+  l_lede: ["An autonomous companion for seniors living alone. It runs on a clock, not on a prompt — and acts within 60 minutes of silence, instead of waiting to be spoken to.",
+           "为独居长者而做的自主陪伴 agent。它按时间运行, 而不是等你开口 — 沉默 60 分钟内就会有人到场, 而不是等下一通电话。"],
+  l_story:   ["The Story", "完整故事"],
+  l_story_s: ["how it was built, scroll by scroll", "从零到上线, 一页读完"],
+  l_deck:    ["Slides (PDF)", "幻灯片 (PDF)"],
+  l_deck_s:  ["13 slides, the full pitch", "13 页, 完整提案"],
+  l_vid:     ["Demo video", "演示视频"],
+  l_vid_s:   ["5 min, narrated and captioned", "5 分钟, 有旁白与字幕"],
+  l_gh:      ["GitHub", "源码"],
+  l_gh_s:    ["kernel, skills, receipts", "内核 · skills · 回执"],
+  l_app:     ["Elder app", "乐龄端"],
+  l_app_s:   ["what's on Grandma's phone", "婆婆手机上的那一半"],
+  l_fam:     ["Family setup", "家属端"],
+  l_fam_s:   ["contacts, voice, live map", "联系人 · 声纹 · 实时地图"],
+  l_lang:    ["Language", "语言"],
+  l_scroll:  ["scroll down — watch the agent run, live", "向下滚动 — 看 agent 真实运行"],
   band_demo:   ["Demo controls — NOT part of the product", "演示台 — 不属于产品"],
   redline:     ["Red line: these buttons inject <b>time</b> and ordinary inputs only — never behavior. Follow the numbers; each step says what you should see.",
                 "红线: 这些按钮只注入<b>时间</b>与普通输入, 从不操纵行为。按顺序点, 每步写着应看到什么。"],
@@ -308,7 +423,7 @@ function runAct(i){ sc(ACTS[i].sc); ACTS[i].ran=true; ACTS[i].open=false;
 ACTS[0].open=true;
 
 let lang = localStorage.getItem('anan_lang') || 'en';
-function applyLang(){
+function applyLang(){ setTimeout(markLang,0);
   const idx = lang==='en' ? 0 : 1;
   document.querySelectorAll('[data-i]').forEach(el=>{ el.innerHTML = T[el.dataset.i][idx]; });
   $('langbtn').textContent = lang==='en' ? '中文' : 'EN';
@@ -316,7 +431,10 @@ function applyLang(){
   renderActs();
   const st=document.getElementById('storytext'); if(st) st.innerHTML=T.story[idx];
 }
-function toggleLang(){ lang = lang==='en'?'zh':'en'; localStorage.setItem('anan_lang', lang); applyLang(); refresh(lastState); }
+function toggleLang(){ setLang(lang==='en'?'zh':'en'); }
+function setLang(l){ lang = l; localStorage.setItem('anan_lang', lang); applyLang(); refresh(lastState); }
+function markLang(){ const en=document.getElementById('lang-en'), zh=document.getElementById('lang-zh');
+  if(en&&zh){ en.classList.toggle('on', lang==='en'); zh.classList.toggle('on', lang==='zh'); } }
 applyLang();
 
 const STATES=['IDLE','CHECKIN_SENT','ENGAGED','SILENCE_1','SILENCE_2','ESCALATED','RESOLVED'];
@@ -423,5 +541,6 @@ function refresh(s){
   if(rackSkills.length!==s.skills.length){ rackSkills=s.skills; renderRack(); }
 }
 </script>
+</section>
 </body>
 </html>
