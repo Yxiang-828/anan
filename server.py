@@ -113,6 +113,9 @@ else:
 from core import brain  # noqa: E402
 
 
+_CHOICE_CACHE: dict[tuple, str] = {}
+
+
 def bounded_choice(junction: str, options: list, fsm_state: dict) -> str:
     """THINK at a junction: the model picks ONE option token. Anything else —
     timeout, chatter, an option not on the list — and the kernel's floor
@@ -121,13 +124,58 @@ def bounded_choice(junction: str, options: list, fsm_state: dict) -> str:
     # tick thread, so the 90s default froze the whole agent: acts queued behind one
     # slow call and a judge clicking act 4 watched act 3 land. The deterministic
     # floor exists precisely for this — let it act rather than hold the loop.
-    text, _lane = brain.think(
-        f"照护 agent 到达节点 '{junction}'。当前状态: {json.dumps(fsm_state, ensure_ascii=False)}\n"
-        f"可选动作: {options}\n只回其中一个动作的原文, 不要任何其他字。",
-        system="你是照护 agent 内核的决策器。只输出选项原文。",
-        timeout_s=float(os.environ.get("ANAN_CHOOSER_TIMEOUT_S", "8")),
-        fast_first=True)
-    return text.strip().splitlines()[0].strip()
+    key = (junction, str(sorted(options)),
+           str((fsm_state or {}).get("state")), str((fsm_state or {}).get("contact_idx")))
+    hit = _CHOICE_CACHE.get(key)
+    if hit in options:
+        return hit
+
+    prompt = (f"照护 agent 到达节点 '{junction}'。当前状态: {json.dumps(fsm_state, ensure_ascii=False)}\n"
+              f"可选动作: {options}\n只回其中一个动作的原文, 不要任何其他字。")
+    system = "你是照护 agent 内核的决策器。只输出选项原文。"
+    budget = float(os.environ.get("ANAN_CHOOSER_TIMEOUT_S", "8"))
+
+    def ask(timeout_s: float) -> str:
+        text, _lane = brain.think(prompt, system=system, timeout_s=timeout_s, fast_first=True)
+        return text.strip().splitlines()[0].strip()
+
+    try:
+        picked = ask(budget)
+        if picked in options:
+            _CHOICE_CACHE[key] = picked
+        return picked
+    except Exception:
+        # Measured over 10 trials: this lane answers in 7-33s, median ~7-12s. A
+        # budget tight enough to keep the tick thread responsive will miss it
+        # about half the time — and the floor acting immediately is the RIGHT
+        # outcome for the elder either way. So finish the question off-thread and
+        # remember the answer: this junction recurs, and the next time it does the
+        # model's judgment is already in hand at zero latency. Nothing waits on it.
+        _warm(key, ask, options)
+        raise
+
+
+def _warm(key: tuple, ask, options: list) -> None:
+    if _CHOICE_CACHE.get(key) == "__pending__":
+        return
+    _CHOICE_CACHE[key] = "__pending__"
+
+    def run():
+        try:
+            picked = ask(90.0)
+            if picked and picked in options:
+                _CHOICE_CACHE[key] = picked
+                store.event(kernel.clock.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "think", "chooser",
+                            {"junction": key[0], "chosen": picked, "options": options,
+                             "how": "model (late — cached for the next time this junction occurs)"},
+                            effect="no action taken; this only informs a future choice")
+            else:
+                _CHOICE_CACHE.pop(key, None)
+        except Exception:
+            _CHOICE_CACHE.pop(key, None)
+
+    threading.Thread(target=run, daemon=True).start()
 
 
 kernel = Kernel(clock, store, CONFIG, chooser=bounded_choice)

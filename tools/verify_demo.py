@@ -184,9 +184,13 @@ def main():
                 chooser.append(json.loads(r[4]))
             except Exception:
                 pass
+    # A junction with ONE option logs how="floor (no chooser)" — there was nothing
+    # to choose. Counting those as misses would condemn correct behaviour, so the
+    # denominator is only junctions that actually offered a choice.
+    chooser = [d for d in chooser if "no chooser" not in str(d.get("how", ""))]
     if not chooser:
         rec("chooser", "the model chose at a junction", None,
-            "no chooser rows — drive a junction (silence_1) before judging this",
+            "no multi-option junction was reached — drive silence_1 before judging this",
             "receipts show how=model at a junction")
     else:
         by_model = [d for d in chooser if str(d.get("how", "")).startswith("model")]
