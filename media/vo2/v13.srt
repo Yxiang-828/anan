@@ -1,0 +1,23 @@
+1
+00:00:00,000 --> 00:00:01,520
+And it can speak in a voice she already
+
+2
+00:00:01,520 --> 00:00:03,919
+trusts. Her daughter records ten seconds,
+
+3
+00:00:04,440 --> 00:00:06,839
+one language at a time, and qwen three
+
+4
+00:00:06,839 --> 00:00:08,439
+text-to-speech clones it locally. Consent
+
+5
+00:00:08,439 --> 00:00:10,880
+first, family only, never crossed between
+
+6
+00:00:11,400 --> 00:00:11,900
+languages.

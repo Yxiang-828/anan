@@ -1,0 +1,31 @@
+1
+00:00:00,000 --> 00:00:02,240
+This is the moment we are proudest of, and
+
+2
+00:00:02,240 --> 00:00:04,280
+it is a decision that never happened. An
+
+3
+00:00:04,280 --> 00:00:06,320
+escalation was already chosen when grandma
+
+4
+00:00:06,320 --> 00:00:08,880
+touched her screen. Revalidate caught the
+
+5
+00:00:08,880 --> 00:00:11,320
+heartbeat, marked the decision stale, and
+
+6
+00:00:11,320 --> 00:00:12,679
+cancelled it before anything left the
+
+7
+00:00:12,679 --> 00:00:14,300
+machine. The family was never falsely
+
+8
+00:00:14,300 --> 00:00:14,839
+alarmed.

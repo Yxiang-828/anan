@@ -1,0 +1,35 @@
+1
+00:00:00,000 --> 00:00:03,399
+So what is the console for? An autonomous
+
+2
+00:00:03,399 --> 00:00:05,719
+agent's entire value is invisible unless
+
+3
+00:00:05,719 --> 00:00:08,099
+you can watch it decide. And no judge can
+
+4
+00:00:08,099 --> 00:00:09,800
+wait three hours for a silence to
+
+5
+00:00:09,800 --> 00:00:11,880
+escalate. The console is an operating
+
+6
+00:00:11,880 --> 00:00:14,480
+theatre: the skill rack lights as skills
+
+7
+00:00:14,480 --> 00:00:17,059
+fire, the planner narrates each junction,
+
+8
+00:00:17,059 --> 00:00:19,260
+receipts scroll, and the guardian's real
+
+9
+00:00:19,260 --> 00:00:20,339
+Telegram is mirrored live.

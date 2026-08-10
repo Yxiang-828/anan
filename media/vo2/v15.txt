@@ -1,0 +1,1 @@
+That is also why the app lives inside the console, in a real iframe, not a screenshot. One screen holds cause and effect. Touch the bird on the left, and watch the heartbeat resolve an escalation on the right. The guided acts stage each scenario and skip the clock, so a morning takes ninety seconds.

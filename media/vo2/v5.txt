@@ -1,0 +1,1 @@
+Underneath is not a chatbot loop. Every action runs seven phases: wake, think, revalidate, gate, act, receipt, commit. Waking is not thinking, and thinking is not acting. Each phase writes a receipt row before the next may begin, so nothing here is a claim you have to take on faith.

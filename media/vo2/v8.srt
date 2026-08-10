@@ -1,0 +1,31 @@
+1
+00:00:00,000 --> 00:00:02,060
+All of this was built by one person and a
+
+2
+00:00:02,060 --> 00:00:04,559
+fleet of AI agents, with review gates
+
+3
+00:00:04,559 --> 00:00:06,540
+between them. One agent wrote the kernel
+
+4
+00:00:06,540 --> 00:00:09,019
+and the product. A second drew the mascot.
+
+5
+00:00:09,980 --> 00:00:11,779
+A third drafted copy that was thrown away.
+
+6
+00:00:12,320 --> 00:00:14,439
+Skills, doctrine and probe ledgers moved
+
+7
+00:00:14,439 --> 00:00:16,940
+between them as files, and every probe was
+
+8
+00:00:16,940 --> 00:00:18,500
+archived, failures included.

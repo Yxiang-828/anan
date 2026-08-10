@@ -1,0 +1,27 @@
+1
+00:00:00,000 --> 00:00:02,459
+Underneath is not a chatbot loop. Every
+
+2
+00:00:02,459 --> 00:00:05,139
+action runs seven phases: wake, think,
+
+3
+00:00:05,379 --> 00:00:07,580
+revalidate, gate, act, receipt, commit.
+
+4
+00:00:08,220 --> 00:00:10,199
+Waking is not thinking, and thinking is
+
+5
+00:00:10,199 --> 00:00:12,320
+not acting. Each phase writes a receipt
+
+6
+00:00:12,320 --> 00:00:15,000
+row before the next may begin, so nothing
+
+7
+00:00:15,000 --> 00:00:16,839
+here is a claim you have to take on faith.

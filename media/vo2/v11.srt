@@ -1,0 +1,31 @@
+1
+00:00:00,000 --> 00:00:01,459
+The health checks run computer vision
+
+2
+00:00:01,459 --> 00:00:03,700
+entirely on her phone. Heart rate from the
+
+3
+00:00:03,700 --> 00:00:05,860
+camera, sit and stand from pose tracking,
+
+4
+00:00:06,559 --> 00:00:08,339
+and a smile symmetry screen for facial
+
+5
+00:00:08,339 --> 00:00:10,560
+droop. The video never leaves the device.
+
+6
+00:00:11,380 --> 00:00:13,539
+Only the score does. She gets her result,
+
+7
+00:00:13,839 --> 00:00:16,039
+what it means, and AnAn's own words about
+
+8
+00:00:16,039 --> 00:00:16,379
+it.

@@ -1,0 +1,23 @@
+1
+00:00:00,000 --> 00:00:03,100
+On her side there is no text box. Five big
+
+2
+00:00:03,100 --> 00:00:05,120
+bilingual tabs, and a bird that is also
+
+3
+00:00:05,120 --> 00:00:07,320
+the talk button. She holds it, speaks
+
+4
+00:00:07,320 --> 00:00:09,039
+either language, and the kernel decides
+
+5
+00:00:09,039 --> 00:00:11,480
+what she meant: keep her company, or carry
+
+6
+00:00:11,480 --> 00:00:12,380
+her words to her family.

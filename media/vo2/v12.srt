@@ -1,0 +1,19 @@
+1
+00:00:00,000 --> 00:00:01,899
+Her family draws a circle around home.
+
+2
+00:00:02,399 --> 00:00:04,419
+Cross it, and the kernel wakes on its own:
+
+3
+00:00:04,799 --> 00:00:06,839
+her guardian gets a live map link, she
+
+4
+00:00:06,839 --> 00:00:08,539
+gets one large button that walks her back.
+
+5
+00:00:09,019 --> 00:00:11,080
+Come home, and the all clear sends itself.

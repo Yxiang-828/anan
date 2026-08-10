@@ -1,0 +1,1 @@
+The health checks run computer vision entirely on her phone. Heart rate from the camera, sit and stand from pose tracking, and a smile symmetry screen for facial droop. The video never leaves the device. Only the score does. She gets her result, what it means, and AnAn's own words about it.

@@ -1,0 +1,27 @@
+1
+00:00:00,000 --> 00:00:02,319
+We started with vocabulary, not code.
+
+2
+00:00:03,220 --> 00:00:04,240
+Ninety-three words of what an ageing
+
+3
+00:00:04,240 --> 00:00:06,500
+Singapore actually needs, scattered across
+
+4
+00:00:06,500 --> 00:00:08,500
+three poles, then converged on the one
+
+5
+00:00:08,500 --> 00:00:10,699
+cluster only an autonomous agent can
+
+6
+00:00:10,699 --> 00:00:13,099
+serve. If a behaviour could not be named
+
+7
+00:00:13,099 --> 00:00:15,359
+inside that polygon, we did not build it.

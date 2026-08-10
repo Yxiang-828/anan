@@ -1,0 +1,23 @@
+1
+00:00:00,000 --> 00:00:02,080
+Every AI assistant today waits to be
+
+2
+00:00:02,080 --> 00:00:04,759
+spoken to. Its input is text. If she never
+
+3
+00:00:04,759 --> 00:00:07,040
+opens the app, it never existed. So we
+
+4
+00:00:07,040 --> 00:00:09,460
+inverted the contract. AnAn's inputs are
+
+5
+00:00:09,460 --> 00:00:12,539
+time, silence, and state. Silence is an
+
+6
+00:00:12,539 --> 00:00:12,779
+input.

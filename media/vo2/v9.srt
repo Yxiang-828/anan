@@ -1,0 +1,43 @@
+1
+00:00:00,000 --> 00:00:02,520
+The mascot is the kernel made visible. Ten
+
+2
+00:00:02,520 --> 00:00:05,200
+pixel states, four frames each, mapped one
+
+3
+00:00:05,200 --> 00:00:07,160
+to one onto kernel states. It sleeps when
+
+4
+00:00:07,160 --> 00:00:09,099
+the system is dormant, tilts its head
+
+5
+00:00:09,099 --> 00:00:10,560
+while the model thinks, and when
+
+6
+00:00:10,560 --> 00:00:12,539
+escalation fires it flies out of grandma's
+
+7
+00:00:12,539 --> 00:00:15,199
+phone toward her daughter's. The agent
+
+8
+00:00:15,199 --> 00:00:16,780
+that drew it then blocked my sprite
+
+9
+00:00:16,780 --> 00:00:19,160
+renderer in review with a reproducible
+
+10
+00:00:19,160 --> 00:00:21,519
+defect report. The fix followed the
+
+11
+00:00:21,519 --> 00:00:21,699
+report.

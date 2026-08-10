@@ -1,0 +1,39 @@
+1
+00:00:00,000 --> 00:00:02,560
+That gave us nine skills, and only nine.
+
+2
+00:00:03,480 --> 00:00:05,139
+Each one answers a named failure mode.
+
+3
+00:00:05,780 --> 00:00:07,240
+Silence gets a check-in and an escalation
+
+4
+00:00:07,240 --> 00:00:10,300
+tree. Isolation gets conversation and a
+
+5
+00:00:10,300 --> 00:00:12,380
+relay to family. Medication, wandering,
+
+6
+00:00:12,720 --> 00:00:15,039
+and invisible decline each get exactly
+
+7
+00:00:15,039 --> 00:00:16,620
+one. We deliberately refused
+
+8
+00:00:16,620 --> 00:00:18,579
+fall-detection hardware, medical advice,
+
+9
+00:00:19,140 --> 00:00:21,719
+and dialling emergency services, because a
+
+10
+00:00:21,719 --> 00:00:23,519
+demo must not pretend it can.

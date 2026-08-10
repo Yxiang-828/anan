@@ -1,0 +1,31 @@
+1
+00:00:00,000 --> 00:00:01,899
+That is also why the app lives inside the
+
+2
+00:00:01,899 --> 00:00:04,400
+console, in a real iframe, not a
+
+3
+00:00:04,400 --> 00:00:06,700
+screenshot. One screen holds cause and
+
+4
+00:00:06,700 --> 00:00:08,619
+effect. Touch the bird on the left, and
+
+5
+00:00:08,619 --> 00:00:10,380
+watch the heartbeat resolve an escalation
+
+6
+00:00:10,380 --> 00:00:12,859
+on the right. The guided acts stage each
+
+7
+00:00:12,859 --> 00:00:15,439
+scenario and skip the clock, so a morning
+
+8
+00:00:15,439 --> 00:00:16,300
+takes ninety seconds.

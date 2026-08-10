@@ -1,0 +1,691 @@
+{
+ "v1": [
+  [
+   0.0,
+   2.2,
+   "Eighty-eight thousand four hundred seniors"
+  ],
+  [
+   2.2,
+   3.9,
+   "in Singapore live alone, and that number"
+  ],
+  [
+   3.9,
+   6.38,
+   "is set to double. For most families the"
+  ],
+  [
+   6.38,
+   8.72,
+   "entire safety net is a phone call at"
+  ],
+  [
+   8.72,
+   11.02,
+   "night. Between those calls, nothing is"
+  ],
+  [
+   11.02,
+   12.72,
+   "watching. A fall at nine in the morning is"
+  ],
+  [
+   12.72,
+   13.68,
+   "found at nine at night."
+  ]
+ ],
+ "v2": [
+  [
+   0.0,
+   2.08,
+   "Every AI assistant today waits to be"
+  ],
+  [
+   2.08,
+   4.76,
+   "spoken to. Its input is text. If she never"
+  ],
+  [
+   4.76,
+   7.04,
+   "opens the app, it never existed. So we"
+  ],
+  [
+   7.04,
+   9.46,
+   "inverted the contract. AnAn's inputs are"
+  ],
+  [
+   9.46,
+   12.54,
+   "time, silence, and state. Silence is an"
+  ],
+  [
+   12.54,
+   12.78,
+   "input."
+  ]
+ ],
+ "v3": [
+  [
+   0.0,
+   2.32,
+   "We started with vocabulary, not code."
+  ],
+  [
+   3.22,
+   4.24,
+   "Ninety-three words of what an ageing"
+  ],
+  [
+   4.24,
+   6.5,
+   "Singapore actually needs, scattered across"
+  ],
+  [
+   6.5,
+   8.5,
+   "three poles, then converged on the one"
+  ],
+  [
+   8.5,
+   10.7,
+   "cluster only an autonomous agent can"
+  ],
+  [
+   10.7,
+   13.1,
+   "serve. If a behaviour could not be named"
+  ],
+  [
+   13.1,
+   15.36,
+   "inside that polygon, we did not build it."
+  ]
+ ],
+ "v4": [
+  [
+   0.0,
+   2.56,
+   "That gave us nine skills, and only nine."
+  ],
+  [
+   3.48,
+   5.14,
+   "Each one answers a named failure mode."
+  ],
+  [
+   5.78,
+   7.24,
+   "Silence gets a check-in and an escalation"
+  ],
+  [
+   7.24,
+   10.3,
+   "tree. Isolation gets conversation and a"
+  ],
+  [
+   10.3,
+   12.38,
+   "relay to family. Medication, wandering,"
+  ],
+  [
+   12.72,
+   15.04,
+   "and invisible decline each get exactly"
+  ],
+  [
+   15.04,
+   16.62,
+   "one. We deliberately refused"
+  ],
+  [
+   16.62,
+   18.58,
+   "fall-detection hardware, medical advice,"
+  ],
+  [
+   19.14,
+   21.72,
+   "and dialling emergency services, because a"
+  ],
+  [
+   21.72,
+   23.52,
+   "demo must not pretend it can."
+  ]
+ ],
+ "v5": [
+  [
+   0.0,
+   2.46,
+   "Underneath is not a chatbot loop. Every"
+  ],
+  [
+   2.46,
+   5.14,
+   "action runs seven phases: wake, think,"
+  ],
+  [
+   5.38,
+   7.58,
+   "revalidate, gate, act, receipt, commit."
+  ],
+  [
+   8.22,
+   10.2,
+   "Waking is not thinking, and thinking is"
+  ],
+  [
+   10.2,
+   12.32,
+   "not acting. Each phase writes a receipt"
+  ],
+  [
+   12.32,
+   15.0,
+   "row before the next may begin, so nothing"
+  ],
+  [
+   15.0,
+   16.84,
+   "here is a claim you have to take on faith."
+  ]
+ ],
+ "v6": [
+  [
+   0.0,
+   3.48,
+   "The hero loop is six states. Seven thirty,"
+  ],
+  [
+   3.48,
+   5.74,
+   "AnAn speaks first, and a sixty minute"
+  ],
+  [
+   5.74,
+   7.72,
+   "listening window arms silently behind the"
+  ],
+  [
+   8.36,
+   10.22,
+   "greeting. No touch, and it retries on a"
+  ],
+  [
+   10.22,
+   12.36,
+   "second channel. Still nothing, and the"
+  ],
+  [
+   12.36,
+   14.74,
+   "contact tree walks: daughter, son,"
+  ],
+  [
+   15.08,
+   16.12,
+   "neighbour, each hop with its own receipt."
+  ]
+ ],
+ "v7": [
+  [
+   0.0,
+   2.24,
+   "This is the moment we are proudest of, and"
+  ],
+  [
+   2.24,
+   4.28,
+   "it is a decision that never happened. An"
+  ],
+  [
+   4.28,
+   6.32,
+   "escalation was already chosen when grandma"
+  ],
+  [
+   6.32,
+   8.88,
+   "touched her screen. Revalidate caught the"
+  ],
+  [
+   8.88,
+   11.32,
+   "heartbeat, marked the decision stale, and"
+  ],
+  [
+   11.32,
+   12.68,
+   "cancelled it before anything left the"
+  ],
+  [
+   12.68,
+   14.3,
+   "machine. The family was never falsely"
+  ],
+  [
+   14.3,
+   14.84,
+   "alarmed."
+  ]
+ ],
+ "v8": [
+  [
+   0.0,
+   2.06,
+   "All of this was built by one person and a"
+  ],
+  [
+   2.06,
+   4.56,
+   "fleet of AI agents, with review gates"
+  ],
+  [
+   4.56,
+   6.54,
+   "between them. One agent wrote the kernel"
+  ],
+  [
+   6.54,
+   9.02,
+   "and the product. A second drew the mascot."
+  ],
+  [
+   9.98,
+   11.78,
+   "A third drafted copy that was thrown away."
+  ],
+  [
+   12.32,
+   14.44,
+   "Skills, doctrine and probe ledgers moved"
+  ],
+  [
+   14.44,
+   16.94,
+   "between them as files, and every probe was"
+  ],
+  [
+   16.94,
+   18.5,
+   "archived, failures included."
+  ]
+ ],
+ "v9": [
+  [
+   0.0,
+   2.52,
+   "The mascot is the kernel made visible. Ten"
+  ],
+  [
+   2.52,
+   5.2,
+   "pixel states, four frames each, mapped one"
+  ],
+  [
+   5.2,
+   7.16,
+   "to one onto kernel states. It sleeps when"
+  ],
+  [
+   7.16,
+   9.1,
+   "the system is dormant, tilts its head"
+  ],
+  [
+   9.1,
+   10.56,
+   "while the model thinks, and when"
+  ],
+  [
+   10.56,
+   12.54,
+   "escalation fires it flies out of grandma's"
+  ],
+  [
+   12.54,
+   15.2,
+   "phone toward her daughter's. The agent"
+  ],
+  [
+   15.2,
+   16.78,
+   "that drew it then blocked my sprite"
+  ],
+  [
+   16.78,
+   19.16,
+   "renderer in review with a reproducible"
+  ],
+  [
+   19.16,
+   21.52,
+   "defect report. The fix followed the"
+  ],
+  [
+   21.52,
+   21.7,
+   "report."
+  ]
+ ],
+ "v10": [
+  [
+   0.0,
+   3.1,
+   "On her side there is no text box. Five big"
+  ],
+  [
+   3.1,
+   5.12,
+   "bilingual tabs, and a bird that is also"
+  ],
+  [
+   5.12,
+   7.32,
+   "the talk button. She holds it, speaks"
+  ],
+  [
+   7.32,
+   9.04,
+   "either language, and the kernel decides"
+  ],
+  [
+   9.04,
+   11.48,
+   "what she meant: keep her company, or carry"
+  ],
+  [
+   11.48,
+   12.38,
+   "her words to her family."
+  ]
+ ],
+ "v11": [
+  [
+   0.0,
+   1.46,
+   "The health checks run computer vision"
+  ],
+  [
+   1.46,
+   3.7,
+   "entirely on her phone. Heart rate from the"
+  ],
+  [
+   3.7,
+   5.86,
+   "camera, sit and stand from pose tracking,"
+  ],
+  [
+   6.56,
+   8.34,
+   "and a smile symmetry screen for facial"
+  ],
+  [
+   8.34,
+   10.56,
+   "droop. The video never leaves the device."
+  ],
+  [
+   11.38,
+   13.54,
+   "Only the score does. She gets her result,"
+  ],
+  [
+   13.84,
+   16.04,
+   "what it means, and AnAn's own words about"
+  ],
+  [
+   16.04,
+   16.38,
+   "it."
+  ]
+ ],
+ "v12": [
+  [
+   0.0,
+   1.9,
+   "Her family draws a circle around home."
+  ],
+  [
+   2.4,
+   4.42,
+   "Cross it, and the kernel wakes on its own:"
+  ],
+  [
+   4.8,
+   6.84,
+   "her guardian gets a live map link, she"
+  ],
+  [
+   6.84,
+   8.54,
+   "gets one large button that walks her back."
+  ],
+  [
+   9.02,
+   11.08,
+   "Come home, and the all clear sends itself."
+  ]
+ ],
+ "v13": [
+  [
+   0.0,
+   1.52,
+   "And it can speak in a voice she already"
+  ],
+  [
+   1.52,
+   3.92,
+   "trusts. Her daughter records ten seconds,"
+  ],
+  [
+   4.44,
+   6.84,
+   "one language at a time, and qwen three"
+  ],
+  [
+   6.84,
+   8.44,
+   "text-to-speech clones it locally. Consent"
+  ],
+  [
+   8.44,
+   10.88,
+   "first, family only, never crossed between"
+  ],
+  [
+   11.4,
+   11.9,
+   "languages."
+  ]
+ ],
+ "v14": [
+  [
+   0.0,
+   3.4,
+   "So what is the console for? An autonomous"
+  ],
+  [
+   3.4,
+   5.72,
+   "agent's entire value is invisible unless"
+  ],
+  [
+   5.72,
+   8.1,
+   "you can watch it decide. And no judge can"
+  ],
+  [
+   8.1,
+   9.8,
+   "wait three hours for a silence to"
+  ],
+  [
+   9.8,
+   11.88,
+   "escalate. The console is an operating"
+  ],
+  [
+   11.88,
+   14.48,
+   "theatre: the skill rack lights as skills"
+  ],
+  [
+   14.48,
+   17.06,
+   "fire, the planner narrates each junction,"
+  ],
+  [
+   17.06,
+   19.26,
+   "receipts scroll, and the guardian's real"
+  ],
+  [
+   19.26,
+   20.34,
+   "Telegram is mirrored live."
+  ]
+ ],
+ "v15": [
+  [
+   0.0,
+   1.9,
+   "That is also why the app lives inside the"
+  ],
+  [
+   1.9,
+   4.4,
+   "console, in a real iframe, not a"
+  ],
+  [
+   4.4,
+   6.7,
+   "screenshot. One screen holds cause and"
+  ],
+  [
+   6.7,
+   8.62,
+   "effect. Touch the bird on the left, and"
+  ],
+  [
+   8.62,
+   10.38,
+   "watch the heartbeat resolve an escalation"
+  ],
+  [
+   10.38,
+   12.86,
+   "on the right. The guided acts stage each"
+  ],
+  [
+   12.86,
+   15.44,
+   "scenario and skip the clock, so a morning"
+  ],
+  [
+   15.44,
+   16.3,
+   "takes ninety seconds."
+  ]
+ ],
+ "v16": [
+  [
+   0.0,
+   2.46,
+   "One honest note. The full build runs on a"
+  ],
+  [
+   2.46,
+   4.86,
+   "local machine with a GPU: cloned voices,"
+  ],
+  [
+   5.54,
+   7.66,
+   "local speech recognition, a Gemini brain."
+  ],
+  [
+   8.42,
+   9.84,
+   "The public demo runs on a free Render"
+  ],
+  [
+   9.84,
+   12.56,
+   "instance with no GPU at all, so there is"
+  ],
+  [
+   12.56,
+   14.06,
+   "no qwen three text-to-speech on that"
+  ],
+  [
+   14.06,
+   16.28,
+   "server. Every lane degrades by declared"
+  ],
+  [
+   16.28,
+   19.08,
+   "capability, never by silent failure. At"
+  ],
+  [
+   19.94,
+   21.16,
+   "boot the server prints what it can"
+  ],
+  [
+   21.16,
+   23.0,
+   "actually do. What was cut is texture. The"
+  ],
+  [
+   23.96,
+   25.56,
+   "kernel, the receipts, and the stale beat"
+  ],
+  [
+   25.56,
+   26.02,
+   "are identical."
+  ]
+ ],
+ "v17": [
+  [
+   0.0,
+   3.56,
+   "安安 means safe and sound. Once for her,"
+  ],
+  [
+   3.56,
+   6.1,
+   "once for her daughter. From a nightly"
+  ],
+  [
+   6.1,
+   8.06,
+   "phone call to find out, to someone acting"
+  ],
+  [
+   8.06,
+   10.04,
+   "within sixty minutes of silence. It is"
+  ],
+  [
+   10.86,
+   12.82,
+   "live right now, and every claim in this"
+  ],
+  [
+   12.82,
+   14.38,
+   "video is a receipt in that log."
+  ]
+ ]
+}
