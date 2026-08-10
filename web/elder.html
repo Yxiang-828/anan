@@ -361,9 +361,20 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>show
 
 /* device-aware suggestion toast (shows, drains, disappears; sticky if no camera) */
 let toastTimer=null;
+function hideToast(){ const el=$('toast'); el.classList.remove('show'); clearTimeout(toastTimer); }
 function toast(zh, en, ms=6000, warn=false){
   const el=$('toast');
   el.classList.toggle('warn', warn);
+  // a sticky toast (ms=0) must be dismissable or it covers the page forever
+  if(!el.querySelector('.t-x')){
+    const x=document.createElement('button'); x.className='t-x'; x.type='button';
+    x.setAttribute('aria-label','关闭 Close'); x.textContent='×';
+    x.style.cssText='position:absolute;top:6px;right:8px;width:34px;height:34px;border:0;'
+      +'border-radius:10px;background:rgba(0,0,0,.16);color:inherit;font-size:20px;line-height:1;'
+      +'cursor:pointer;-webkit-tap-highlight-color:transparent';
+    x.onclick=hideToast; el.appendChild(x);
+  }
+  el.style.position=el.style.position||'relative';
   el.querySelector('.t-zh').textContent=zh;
   el.querySelector('.t-en').textContent=en;
   const bar=el.querySelector('.t-bar i');
