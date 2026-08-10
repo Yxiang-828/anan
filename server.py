@@ -426,9 +426,17 @@ def deck_pdf():
            JSONResponse({"error": "not bundled"}, status_code=404)
 
 
+# Owner's standing order, 2026-08-11: until the local cut is genuinely better,
+# every "demo video" surface points at YouTube. The mp4 stays bundled and
+# downloadable at /demo.mp4?file=1 — it is not deleted, just not the front door.
+DEMO_VIDEO_URL = "https://youtu.be/wId_GYlmgmU"
+
+
 @app.get("/demo.mp4")
-def demo_mp4():
-    from fastapi.responses import FileResponse
+def demo_mp4(file: int = 0):
+    from fastapi.responses import FileResponse, RedirectResponse
+    if not file:
+        return RedirectResponse(DEMO_VIDEO_URL, status_code=302)
     p = _deliverable("AnAn-DemoVideo-SyntaxError.mp4")
     return FileResponse(p, media_type="video/mp4",
                         filename="AnAn-DemoVideo-SyntaxError.mp4") if p else \
