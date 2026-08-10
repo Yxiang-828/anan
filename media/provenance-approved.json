@@ -1,0 +1,82 @@
+{
+ "v1": {
+  "key": "v1",
+  "kind": "still",
+  "src": "docs/story-assets/night_block.jpg"
+ },
+ "v2": {
+  "key": "v2",
+  "kind": "still",
+  "src": "docs/story-assets/phone_table.jpg"
+ },
+ "v3": {
+  "key": "v3",
+  "kind": "motion",
+  "src": "media/motion/v3.mp4"
+ },
+ "v4": {
+  "key": "v4",
+  "kind": "land",
+  "src": "media/captures/M1_console_master.mp4"
+ },
+ "v5": {
+  "key": "v5",
+  "kind": "land",
+  "src": "media/captures/R2_stale.mp4"
+ },
+ "v6": {
+  "key": "v6",
+  "kind": "land",
+  "src": "media/captures/R1_treewalk.mp4"
+ },
+ "v7": {
+  "key": "v7",
+  "kind": "land",
+  "src": "media/captures/R2_stale.mp4"
+ },
+ "v8": {
+  "key": "v8",
+  "kind": "still",
+  "src": "docs/story-assets/build_night.jpg"
+ },
+ "v9": {
+  "key": "v9",
+  "kind": "still",
+  "src": "docs/img/birds.png"
+ },
+ "v10": {
+  "key": "v10",
+  "kind": "land",
+  "src": "media/captures/C4_bird_talk.mp4"
+ },
+ "v12": {
+  "key": "v12",
+  "kind": "land",
+  "src": "media/captures/C8_wander_map.mp4"
+ },
+ "v13": {
+  "key": "v13",
+  "kind": "still",
+  "src": "docs/img/family.png"
+ },
+ "v14": {
+  "key": "v14",
+  "kind": "still",
+  "src": "docs/img/console.png"
+ },
+ "v15": {
+  "key": "v15",
+  "kind": "land",
+  "src": "media/captures/M1_console_master.mp4"
+ },
+ "v16": {
+  "key": "v16",
+  "kind": "motion",
+  "src": "media/motion/v16.mp4"
+ },
+ "v17": {
+  "key": "v17",
+  "kind": "still",
+  "src": "docs/story-assets/finale_sunrise.jpg"
+ }
+}
