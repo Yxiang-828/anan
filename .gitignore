@@ -16,3 +16,5 @@ tools/
 MANIFEST.md
 media/vo2/chunks/
 media/seg2/
+# motion renders are regenerable from media/motion/<seg>/index.html
+media/motion/*.mp4

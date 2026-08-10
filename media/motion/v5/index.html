@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="vendor/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #14161A; }
+      body { font-family: "EB Garamond", Georgia, serif; color: #E8E4DA; }
+      .mono { font-family: "JetBrains Mono", Consolas, monospace; }
+      #root { position: relative; background: #14161A; overflow: hidden; }
+
+      /* the whole world moves; the camera is what the viewer actually watches */
+      #world { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px;
+               transform-origin: 0 0; }
+
+      #bg { position: absolute; left: -600px; top: -600px; width: 6600px; height: 4400px; opacity: .55;
+            background:
+              radial-gradient(46% 40% at 22% 14%, rgba(255,217,125,.10) 0%, rgba(20,22,26,0) 70%),
+              radial-gradient(40% 36% at 72% 62%, rgba(120,160,255,.07) 0%, rgba(20,22,26,0) 70%); }
+      #grid { position: absolute; left: -600px; top: -600px; width: 6600px; height: 4400px; opacity: .32;
+              background-image:
+                linear-gradient(to right, #1f232a 1px, transparent 1px),
+                linear-gradient(to bottom, #1f232a 1px, transparent 1px);
+              background-size: 96px 96px; }
+
+      #head { position: absolute; left: 120px; top: 300px; width: 1400px; }
+      #head h1 { font-size: 118px; font-weight: normal; letter-spacing: 6px; color: #F7F3EA; }
+      #head .en { font-size: 34px; color: #B9B4A6; margin-top: 26px; letter-spacing: 4px; text-transform: uppercase; }
+      #toc { position: absolute; left: 1180px; top: 296px; width: 420px; }
+      #toc .ti { display: flex; align-items: baseline; gap: 22px; height: 58px; color: #8E939D; }
+      #toc .ti .n { font-size: 17px; letter-spacing: 3px; width: 34px; }
+      #toc .ti .c { font-size: 31px; letter-spacing: 7px; }
+      #toc .ti .e { font-size: 15px; letter-spacing: 3px; text-transform: uppercase; }
+      #head .sub { font-size: 27px; color: #8E939D; margin-top: 44px; letter-spacing: 1px; }
+
+      /* --- the chain lives in world space, far wider than the frame --- */
+      #chain { position: absolute; left: 0; top: 1420px; height: 300px; }
+      .node { position: absolute; top: 0; width: 380px; height: 300px;
+              border: 1px solid #2C313A; border-radius: 20px; background: #1D2026;
+              display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      .node .idx { font-size: 22px; color: #8E939D; letter-spacing: 6px; margin-bottom: 22px; }
+      .node .cn  { font-size: 76px; color: #E8E4DA; letter-spacing: 10px; }
+      .node .en2 { font-size: 22px; color: #B9B4A6; letter-spacing: 5px; margin-top: 22px; text-transform: uppercase; }
+      .node .glow { position: absolute; inset: -1px; border-radius: 20px; border: 1px solid #FFD97D;
+                    opacity: 0; box-shadow: 0 0 70px rgba(255,217,125,.34), inset 0 0 44px rgba(255,217,125,.10); }
+      .node .bar { position: absolute; left: 26px; right: 26px; bottom: 26px; height: 4px;
+                   background: #FFD97D; border-radius: 2px; transform: scaleX(0); transform-origin: left center; }
+      #wire { position: absolute; left: 0; top: 1568px; height: 4px; width: 5000px; overflow: visible; }
+      #tick { position: absolute; top: 1560px; left: 0; width: 22px; height: 22px; border-radius: 50%;
+              background: #FFD97D; box-shadow: 0 0 34px 9px rgba(255,217,125,.55); }
+
+      /* --- the ledger: a separate place the camera flies to --- */
+      #ledger { position: absolute; left: 0; top: 2200px; width: 1920px; padding: 0 130px; }
+      #ledger .cap { font-size: 24px; color: #8E939D; letter-spacing: 5px; text-transform: uppercase; margin-bottom: 34px; }
+      .row { display: flex; align-items: center; height: 74px;
+             border-bottom: 1px solid #1f232a; font-size: 30px; color: #B9B4A6; }
+      .row .t { width: 190px; color: #8E939D; }
+      .row .p { width: 330px; color: #E8E4DA; letter-spacing: 3px; }
+      .row .d { flex: 1; }
+      .row .ok { width: 170px; text-align: right; color: #FFD97D; letter-spacing: 3px; }
+      .row.gate .ok { color: #E5484D; }
+
+      /* --- fixed overlay: does NOT move with the camera --- */
+      #hud { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; }
+      #label { position: absolute; left: 120px; bottom: 56px; opacity: 0; }
+      #label .k { font-size: 22px; color: #B8860B; letter-spacing: 6px; text-transform: uppercase; }
+      #label .v { font-size: 58px; color: #F7F3EA; letter-spacing: 3px; margin-top: 12px; }
+      #prog { position: absolute; left: 120px; bottom: 26px; width: 1680px; height: 3px; background: #23272f; }
+      #progfill { position: absolute; inset: 0; background: #FFD97D; transform: scaleX(0); transform-origin: left center; }
+      #counter { position: absolute; right: 120px; bottom: 62px; font-size: 46px; color: #FFD97D; letter-spacing: 4px; opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="17.4"
+         data-width="1920" data-height="1080" data-fps="30">
+
+      <div id="world" class="clip" data-start="0" data-duration="17.4" data-track-index="1"
+           data-layout-allow-overflow>
+        <div id="bg"></div>
+        <div id="grid"></div>
+
+        <div id="head">
+          <h1>七阶段内核</h1>
+          <div class="en">The seven-phase kernel</div>
+          <div class="sub">每一阶段都写下一行收据 &mdash; every phase writes a receipt, or the tick does not close</div>
+        </div>
+
+        <div id="toc"></div>
+
+        <svg id="wire" viewBox="0 0 5000 4" preserveAspectRatio="none">
+          <line id="wireline" x1="0" y1="2" x2="5000" y2="2" stroke="#2C313A" stroke-width="4" stroke-linecap="round" />
+        </svg>
+        <div id="chain"></div>
+        <div id="tick"></div>
+
+        <div id="ledger">
+          <div class="cap">receipts &mdash; one SQLite row per phase, written before the next begins</div>
+          <div id="rows"></div>
+        </div>
+      </div>
+
+      <div id="hud" class="clip" data-start="0" data-duration="17.4" data-track-index="2">
+        <div id="label"><div class="k mono" id="labk">phase 01</div><div class="v" id="labv">唤醒</div></div>
+        <div id="counter" class="mono">0 / 7</div>
+        <div id="prog"><div id="progfill"></div></div>
+      </div>
+    </div>
+
+    <script>
+      const PHASES = [
+        ["WAKE",       "唤醒", "tick woken by heartbeat",          "0.4ms"],
+        ["THINK",      "思考", "junction chooser proposes",        "812ms"],
+        ["REVALIDATE", "复核", "candidate_wall vs last heartbeat", "1.1ms"],
+        ["GATE",       "闸门", "policy admits · STALE refused",    "0.7ms"],
+        ["ACT",        "行动", "skill invoked · caregiver paged",  "446ms"],
+        ["RECEIPT",    "收据", "outcome written, not inferred",    "0.9ms"],
+        ["COMMIT",     "落账", "transaction closed",               "1.3ms"]
+      ];
+
+      const NODE_W = 380, GAP = 210, STRIDE = NODE_W + GAP;
+      const toc   = document.getElementById("toc");
+      const chain = document.getElementById("chain");
+      const rows  = document.getElementById("rows");
+
+      PHASES.forEach((p, i) => {
+        const n = document.createElement("div");
+        n.className = "node"; n.id = "n" + i;
+        n.style.left = (260 + i * STRIDE) + "px";
+        n.innerHTML = '<div class="glow"></div><div class="bar"></div>' +
+          '<div class="idx mono">' + String(i + 1).padStart(2, "0") + '</div>' +
+          '<div class="cn">' + p[1] + '</div>' +
+          '<div class="en2 mono">' + p[0] + '</div>';
+        chain.appendChild(n);
+
+        const ti = document.createElement("div");
+        ti.className = "ti mono"; ti.id = "t" + i;
+        ti.innerHTML = '<div class="n">' + String(i + 1).padStart(2, "0") + '</div>' +
+                       '<div class="c">' + p[1] + '</div><div class="e">' + p[0] + '</div>';
+        toc.appendChild(ti);
+
+        const r = document.createElement("div");
+        r.className = "row mono" + (p[0] === "GATE" ? " gate" : "");
+        r.id = "r" + i;
+        r.innerHTML = '<div class="t">+' + p[3] + '</div><div class="p">' + p[0] + '</div>' +
+                      '<div class="d">' + p[2] + '</div>' +
+                      '<div class="ok">' + (p[0] === "GATE" ? "GATED" : "OK") + '</div>';
+        rows.appendChild(r);
+      });
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const EO = "power3.out", EIO = "power2.inOut";
+      const world = "#world";
+
+      // camera helper: put world-point (wx,wy) at frame centre, at scale s
+      function cam(wx, wy, s) { return { x: 960 - wx * s, y: 540 - wy * s, scale: s }; }
+
+      gsap.set(world, cam(820, 500, 1.15));
+      gsap.set("#wireline", { strokeDasharray: 5000, strokeDashoffset: 5000 });
+      gsap.set(".row", { opacity: 0, x: -40 });
+      gsap.set("#tick", { opacity: 0 });
+      gsap.set(".node", { opacity: 0, y: 40, scale: 0.94 });
+
+      // ---- title, with the world drifting under it the whole time
+      tl.from("#head h1",   { opacity: 0, y: 60, duration: 1.1, ease: EO }, 0.2)
+        .from("#head .en",  { opacity: 0, y: 26, duration: 0.9, ease: EO }, 0.55)
+        .from("#head .sub", { opacity: 0, y: 22, duration: 0.9, ease: EO }, 0.85)
+        .fromTo(".ti", { opacity: 0, x: 26 }, { opacity: 1, x: 0, duration: 0.55, stagger: 0.075, ease: EO }, 0.7)
+        .to(world, { ...cam(820, 545, 1.19), duration: 2.6, ease: "none" }, 0);
+
+      // ---- camera drops to the chain; nodes rise as it arrives
+      const T0 = 3.5, STEP = 1.35;
+      tl.to(world, { ...cam(450, 1570, 0.86), duration: 1.5, ease: EIO }, 2.3)
+        .to(".node", { opacity: 1, y: 0, scale: 1, duration: 0.8, stagger: 0.07, ease: EO }, 2.5)
+        .to("#wireline", { strokeDashoffset: 0, duration: 2.2, ease: EIO }, 2.6)
+        .to("#tick", { opacity: 1, duration: 0.3 }, 3.1)
+        .to("#label", { opacity: 1, duration: 0.5 }, 3.2)
+        .to("#counter", { opacity: 1, duration: 0.5 }, 3.2);
+
+      // ---- each phase: the camera TRACKS to it, so the whole frame moves
+      PHASES.forEach((p, i) => {
+        const t  = T0 + i * STEP;
+        const cx = 260 + i * STRIDE + NODE_W / 2;
+
+        tl.to(world, { ...cam(cx, 1570, 0.92), duration: STEP * 0.72, ease: EIO }, t - STEP * 0.62)
+          .to("#tick", { x: cx - 11, duration: STEP * 0.72, ease: EIO }, t - STEP * 0.62);
+
+        tl.to("#n" + i + " .glow", { opacity: 1, duration: 0.22 }, t)
+          .to("#n" + i, { scale: 1.06, duration: 0.26, ease: "power2.out" }, t)
+          .to("#n" + i, { scale: 1.0, duration: 0.6, ease: EO }, t + 0.26)
+          .to("#n" + i + " .cn", { color: "#FFD97D", duration: 0.3 }, t)
+          .to("#n" + i + " .bar", { scaleX: 1, duration: STEP * 0.8, ease: "none" }, t)
+          .to("#n" + i + " .glow", { opacity: 0.45, duration: 0.8 }, t + 0.35)
+          .to("#r" + i, { opacity: 1, x: 0, duration: 0.55, ease: EO }, t + 0.1)
+          .to("#progfill", { scaleX: (i + 1) / 7, duration: STEP * 0.7, ease: EIO }, t)
+          .set("#labk", { textContent: "phase " + String(i + 1).padStart(2, "0") + " · " + p[0] }, t)
+          .set("#labv", { textContent: p[1] }, t)
+          .set("#counter", { textContent: (i + 1) + " / 7" }, t)
+          .fromTo("#labv", { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.4, ease: EO }, t)
+          .fromTo("#labk", { opacity: 0 }, { opacity: 1, duration: 0.35 }, t);
+      });
+
+      // ---- pull back to see the whole chain, then fly down to the ledger
+      const END = T0 + 6 * STEP + 0.7;
+      const MID = 260 + 3 * STRIDE + NODE_W / 2;
+      tl.to(world, { ...cam(MID, 1570, 0.40), duration: 1.3, ease: EIO }, END)
+        .to("#tick", { opacity: 0, scale: 0.3, duration: 0.5, ease: "power2.in" }, END)
+        .to("#wireline", { stroke: "#FFD97D", opacity: 0.55, duration: 0.9 }, END)
+        .to("#label", { opacity: 0, duration: 0.4 }, END)
+        .to(world, { ...cam(960, 2560, 0.80), duration: 1.6, ease: EIO }, END + 1.1)
+        .set("#labk", { textContent: "tick sealed" }, END + 1.5)
+        .set("#labv", { textContent: "7 receipts · 0 inferred" }, END + 1.5)
+        .to("#label", { opacity: 1, duration: 0.5 }, END + 1.5)
+        .to(world, { ...cam(960, 2640, 0.85), duration: 2.8, ease: "none" }, END + 2.6);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

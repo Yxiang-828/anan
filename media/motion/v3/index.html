@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="vendor/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #14161A; }
+      body { font-family: "EB Garamond", Georgia, serif; color: #E8E4DA; }
+      .mono { font-family: "JetBrains Mono", Consolas, monospace; }
+      #root { position: relative; background: #14161A; overflow: hidden; }
+      #world { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+
+      #bg { position: absolute; left: -900px; top: -900px; width: 5400px; height: 4200px; opacity: .5;
+            background: radial-gradient(44% 38% at 50% 42%, rgba(255,217,125,.09) 0%, rgba(20,22,26,0) 70%); }
+      #grid { position: absolute; left: -900px; top: -900px; width: 5400px; height: 4200px; opacity: .28;
+              background-image: linear-gradient(to right, #1f232a 1px, transparent 1px),
+                                linear-gradient(to bottom, #1f232a 1px, transparent 1px);
+              background-size: 104px 104px; }
+
+      #head { position: absolute; left: 150px; top: 300px; width: 1500px; }
+      #head h1 { font-size: 106px; font-weight: normal; letter-spacing: 5px; color: #F7F3EA; }
+      #head .en { font-size: 32px; color: #B9B4A6; margin-top: 24px; letter-spacing: 4px; text-transform: uppercase; }
+
+      /* the word field: 93 words scattered, then pulled to three poles */
+      #field { position: absolute; left: 0; top: 1300px; width: 2600px; height: 1700px; }
+      .w { position: absolute; font-size: 25px; color: #8E939D; white-space: nowrap; }
+      .w.on { color: #E8E4DA; }
+
+      .pole { position: absolute; width: 560px; padding: 26px 30px; border: 1px solid #2C313A;
+              border-radius: 16px; background: rgba(29,32,38,.9); opacity: 0; }
+      .pole .t { font-size: 34px; color: #E8E4DA; letter-spacing: 3px; }
+      .pole .n { font-size: 22px; color: #8E939D; margin-top: 12px; letter-spacing: 3px; }
+
+      #ring { position: absolute; left: 1370px; top: 1280px; width: 1020px; height: 1660px;
+              border-radius: 26px; border: 2px solid #FFD97D; opacity: 0;
+              box-shadow: 0 0 90px rgba(255,217,125,.22), inset 0 0 70px rgba(255,217,125,.07); }
+      #ringlab { position: absolute; left: 1370px; top: 2990px; width: 1020px; text-align: center;
+                 font-size: 30px; color: #FFD97D; letter-spacing: 3px; opacity: 0; }
+
+      #rule { position: absolute; left: 300px; top: 3260px; width: 2000px; font-size: 40px;
+              color: #E8E4DA; line-height: 1.55; opacity: 0; }
+      #rule b { color: #FFD97D; }
+
+      #hud { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; }
+      #tally { position: absolute; right: 120px; top: 96px; font-size: 46px; color: #FFD97D;
+               letter-spacing: 4px; opacity: 0; padding: 14px 26px; border-radius: 12px;
+               background: rgba(20,22,26,.86); border: 1px solid #2C313A; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="16"
+         data-width="1920" data-height="1080" data-fps="30">
+      <div id="world" class="clip" data-start="0" data-duration="16" data-track-index="1"
+           data-layout-allow-overflow>
+        <div id="bg"></div>
+        <div id="grid"></div>
+        <div id="head">
+          <h1>先有词汇，再有代码</h1>
+          <div class="en">We started with vocabulary, not code</div>
+        </div>
+        <div id="field"></div>
+        <div id="ring"></div>
+        <div id="ringlab" class="mono">only an autonomous agent can serve this</div>
+        <div id="rule">If a behaviour could not be named inside that polygon,
+          <b>we did not build it.</b></div>
+      </div>
+      <div id="hud" class="clip" data-start="0" data-duration="16" data-track-index="2">
+        <div id="tally" class="mono">0 words</div>
+      </div>
+    </div>
+
+    <script>
+      // A deterministic scatter: seeded, so every render places the words identically.
+      let seed = 20260811;
+      function rnd() { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }
+
+      const WORDS = ("孤独 独居 跌倒 用药 走失 血压 忘记 沉默 陪伴 " +
+        "提醒 复诊 康复 loneliness isolation falls medication wandering blood-pressure " +
+        "forgetting silence companionship reminder follow-up rehab caregiver burnout night-waking " +
+        "appetite mood check-in escalation neighbour daughter son hotline dignity " +
+        "autonomy consent privacy 语音 方言 视力 听力 行动不便 情绪 " +
+        "抑郁 焦虑 家人 邻里 社区 送餐 家访 hearing vision " +
+        "mobility dialect depression anxiety family community meals home-visit routine " +
+        "sleep hydration exercise balance strength memory orientation confusion safety " +
+        "geofence sensor camera wearable subscription cost trust refusal receipt " +
+        "audit evidence timeline handover discharge chronic diabetes stroke dementia " +
+        "frailty 语言 尊严").split(/\s+/).filter(Boolean);
+
+      const POLES = [
+        ["what a family can already do", 0, "#8E939D"],
+        ["what a device can already do", 1, "#8E939D"],
+        ["what only an agent can do",    2, "#FFD97D"]
+      ];
+
+      const field = document.getElementById("field");
+      const placed = [];
+      WORDS.forEach((w, i) => {
+        const d = document.createElement("div");
+        d.className = "w mono"; d.id = "w" + i;
+        d.textContent = w;
+        // A pure random scatter overlapped words into unreadable mush (80 checker
+        // errors). Place on a jittered grid instead: still reads as scattered,
+        // but two words can never land on each other.
+        const COLS = 7, CELLW = 340, CELLH = 104;
+        const cx0 = (i % COLS) * CELLW, cy0 = ((i / COLS) | 0) * CELLH;
+        const x = 70 + cx0 + (rnd() - 0.5) * 54;
+        const y = 50 + cy0 + (rnd() - 0.5) * 30;
+        d.style.left = x + "px"; d.style.top = y + "px";
+        field.appendChild(d);
+        const col = i % COLS;
+        placed.push({ el: "#w" + i, x, y, pole: col < 2 ? 0 : (col < 4 ? 1 : 2) });
+      });
+
+      POLES.forEach((p, i) => {
+        const d = document.createElement("div");
+        d.className = "pole"; d.id = "p" + i;
+        d.style.left = [40, 720, 1400][i] + "px";
+        d.style.top = "-190px";
+        d.style.width = [640, 640, 960][i] + "px";
+        d.innerHTML = '<div class="t">' + ["家人", "设备", "智能体"][i] + '</div>' +
+                      '<div class="n mono">' + p[0] + '</div>';
+        field.appendChild(d);
+      });
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const EO = "power3.out", EIO = "power2.inOut";
+      const W = "#world";
+      function cam(wx, wy, s) { return { x: 960 - wx * s, y: 540 - wy * s, scale: s }; }
+
+      gsap.set(W, cam(880, 480, 1.12));
+      gsap.set(".w", { opacity: 0, scale: 0.86 });
+      gsap.set("#rule", { y: 26 });
+
+      tl.from("#head h1",  { opacity: 0, y: 56, duration: 1.0, ease: EO }, 0.15)
+        .from("#head .en", { opacity: 0, y: 22, duration: 0.85, ease: EO }, 0.5)
+        .to(W, { ...cam(880, 520, 1.16), duration: 2.2, ease: "none" }, 0);
+
+      // the 93 words arrive, scattered
+      tl.to(W, { ...cam(1300, 2020, 0.60), duration: 1.6, ease: EIO }, 1.9)
+        .to(".w", { opacity: 1, scale: 1, duration: 0.5, stagger: 0.012, ease: EO }, 2.1)
+        .to("#tally", { opacity: 1, duration: 0.4 }, 2.2)
+        .to(W, { ...cam(1330, 2050, 0.605), duration: 0.9, ease: "none" }, 3.5);
+      for (let n = 0; n <= WORDS.length; n += 3) {
+        tl.set("#tally", { textContent: Math.min(n, WORDS.length) + " words" },
+               2.2 + (n / WORDS.length) * 1.5);
+      }
+      tl.set("#tally", { textContent: WORDS.length + " words" }, 3.8);
+      if (WORDS.length !== 93) throw new Error("v3: the narration says ninety-three words, the field has " + WORDS.length);
+
+      // they sort to three poles — the scatter resolves into structure
+      tl.to(".pole", { opacity: 1, duration: 0.55, stagger: 0.22, ease: EO }, 4.4)
+        .to(W, { ...cam(1300, 1900, 0.56), duration: 1.8, ease: EIO }, 4.4)
+        .to(W, { ...cam(1345, 1930, 0.575), duration: 1.2, ease: "none" }, 6.2);
+
+      // converge on the one cluster only an agent can serve
+      tl.to(W, { ...cam(1880, 2020, 0.66), duration: 1.7, ease: EIO }, 7.4)
+        .to("#ring", { opacity: 1, duration: 0.7, ease: EO }, 8.2)
+        .from("#ring", { scale: 0.82, duration: 0.9, ease: EO }, 8.2)
+        .to("#ringlab", { opacity: 1, duration: 0.6, ease: EO }, 8.8)
+        .to("#tally", { opacity: 0, duration: 0.5 }, 7.6)
+        .to(".w", { opacity: 0.24, duration: 0.7 }, 8.4)
+        .to(W, { ...cam(1930, 2070, 0.68), duration: 2.1, ease: "none" }, 9.1);
+      placed.filter(p => p.pole === 2).forEach(p => {
+        tl.to(p.el, { opacity: 1, color: "#E8E4DA", duration: 0.6 }, 8.6);
+      });
+
+      // the rule
+      tl.to(W, { ...cam(1300, 3300, 0.72), duration: 1.6, ease: EIO }, 11.2)
+        .to("#rule", { opacity: 1, y: 0, duration: 0.8, ease: EO }, 11.9)
+        .to(W, { ...cam(1300, 3355, 0.762), duration: 3.0, ease: "none" }, 13.0);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

@@ -56,12 +56,24 @@ tpad=stop_mode=clone:stop_duration=$d,$(sub $k)[v]" \
     -map "[v]" -map 1:a -t "$d" -c:v libx264 -preset medium -crf 20 -c:a aac -ar 48000 -ac 2 -pix_fmt yuv420p "$S/$k.mp4"
   echo "  phone  $k  ${d}s  speed x$sp  <- $(basename "$src")"; }
 
+# motion <key> <render> — a rendered HTML composition (motion-compose): real
+# generated motion for the segments that had no footage and could have none.
+# The renders are cut a hair LONGER than their narration, so -t trims rather
+# than the picture running out; tpad is the belt to that braces.
+motion(){ local k=$1 src=$2
+  local d; d=$(vdur $k)
+  ffmpeg -y -loglevel error -i "$src" -i "$V/$k.wav" \
+    -filter_complex "[0:v]fps=30,scale=1920:1080,setsar=1,\
+tpad=stop_mode=clone:stop_duration=$d,$(sub $k)[v]" \
+    -map "[v]" -map 1:a -t "$d" -c:v libx264 -preset medium -crf 20 -c:a aac -ar 48000 -ac 2 -pix_fmt yuv420p "$S/$k.mp4"
+  echo "  motion $k  ${d}s  <- $(basename $src)"; }
+
 echo "── building segments"
 still v1  $A/night_block.jpg      in
 still v2  $A/phone_table.jpg      out
-still v3  docs/img/polygon.png    in
-land  v4  $C/M1_console_master.mp4 8  58
-land  v5  $C/R2_stale.mp4          20 38
+motion v3  media/motion/v3.mp4
+motion v4  media/motion/v4.mp4
+motion v5  media/motion/v5.mp4
 land  v6  $C/R1_treewalk.mp4       22 38
 land  v7  $C/R2_stale.mp4          44 32
 still v8  $A/build_night.jpg      in
@@ -91,7 +103,7 @@ land  v12 $C/C8_wander_map.mp4     16 24
 still v13 docs/img/family.png     in
 still v14 docs/img/console.png    in
 land  v15 $C/M1_console_master.mp4 92 36
-still v16 $A/receipts_macro.jpg   out
+motion v16 media/motion/v16.mp4
 still v17 $A/finale_sunrise.jpg   in
 echo "── segments built"
 

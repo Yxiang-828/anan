@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="vendor/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #14161A; }
+      body { font-family: "EB Garamond", Georgia, serif; color: #E8E4DA; }
+      .mono { font-family: "JetBrains Mono", Consolas, monospace; }
+      #root { position: relative; background: #14161A; overflow: hidden; }
+      #world { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+
+      #bg { position: absolute; left: -800px; top: -800px; width: 7200px; height: 5200px; opacity: .5;
+            background: radial-gradient(42% 34% at 26% 18%, rgba(255,217,125,.10) 0%, rgba(20,22,26,0) 70%),
+                        radial-gradient(38% 32% at 74% 66%, rgba(120,160,255,.07) 0%, rgba(20,22,26,0) 70%); }
+      #grid { position: absolute; left: -800px; top: -800px; width: 7200px; height: 5200px; opacity: .3;
+              background-image: linear-gradient(to right, #1f232a 1px, transparent 1px),
+                                linear-gradient(to bottom, #1f232a 1px, transparent 1px);
+              background-size: 110px 110px; }
+
+      #head { position: absolute; left: 140px; top: 320px; width: 1500px; }
+      #head h1 { font-size: 108px; font-weight: normal; letter-spacing: 5px; color: #F7F3EA; }
+      #head .en { font-size: 33px; color: #B9B4A6; margin-top: 24px; letter-spacing: 4px; text-transform: uppercase; }
+
+      /* 3 x 3 rack of skills, in world space */
+      #rack { position: absolute; left: 0px; top: 1500px; width: 3060px; height: 1420px; }
+      .sk { position: absolute; width: 900px; height: 400px; border: 1px solid #2C313A;
+            border-radius: 20px; background: #1D2026; padding: 40px 44px; }
+      .sk .fail { font-size: 22px; color: #EC5D62; letter-spacing: 4px; text-transform: uppercase; }
+      .sk .id   { font-size: 40px; color: #E8E4DA; letter-spacing: 2px; margin-top: 20px; }
+      .sk .cap  { font-size: 31px; color: #B9B4A6; margin-top: 20px; line-height: 1.5; }
+      .sk .glow { position: absolute; inset: -1px; border-radius: 20px; border: 1px solid #FFD97D; opacity: 0;
+                  box-shadow: 0 0 76px rgba(255,217,125,.30), inset 0 0 46px rgba(255,217,125,.08); }
+
+      /* the refusals */
+      #refuse { position: absolute; left: 260px; top: 3220px; width: 2200px; }
+      #refuse .cap { font-size: 30px; color: #8E939D; letter-spacing: 5px; text-transform: uppercase; margin-bottom: 44px; }
+      .no { display: flex; align-items: center; gap: 34px; height: 116px; font-size: 50px; color: #8E939D; }
+      .no .x { color: #E5484D; font-size: 46px; width: 46px; }
+      .no s { text-decoration-color: #E5484D; }
+      #why { position: absolute; left: 260px; top: 3700px; width: 2200px; font-size: 34px;
+             color: #B9B4A6; line-height: 1.6; opacity: 0; }
+
+      #hud { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; }
+      #count { position: absolute; right: 118px; bottom: 116px; font-size: 46px; color: #FFD97D;
+         letter-spacing: 4px; opacity: 0; padding: 14px 28px; border-radius: 12px;
+         background: rgba(20,22,26,.86); border: 1px solid #2C313A; }
+      #prog { position: absolute; left: 130px; bottom: 60px; width: 1660px; height: 3px; background: #23272f; }
+      #pf { position: absolute; inset: 0; background: #FFD97D; transform: scaleX(0); transform-origin: left center; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="24.9"
+         data-width="1920" data-height="1080" data-fps="30">
+      <div id="world" class="clip" data-start="0" data-duration="24.9" data-track-index="1"
+           data-layout-allow-overflow>
+        <div id="bg"></div>
+        <div id="grid"></div>
+        <div id="head">
+          <h1>九个技能，只有九个</h1>
+          <div class="en">Nine skills, and only nine &mdash; each answers a named failure</div>
+        </div>
+        <div id="rack"></div>
+        <div id="refuse">
+          <div class="cap mono">and what we refused to build</div>
+          <div class="no mono"><span class="x">✕</span><s>fall-detection hardware</s></div>
+          <div class="no mono"><span class="x">✕</span><s>medical advice</s></div>
+          <div class="no mono"><span class="x">✕</span><s>dialling emergency services</s></div>
+        </div>
+        <div id="why">A demo must not pretend it can do these. Refusing them is the design.</div>
+      </div>
+      <div id="hud" class="clip" data-start="0" data-duration="24.9" data-track-index="2">
+        <div id="count" class="mono">0 / 9</div>
+        <div id="prog"><div id="pf"></div></div>
+      </div>
+    </div>
+
+    <script>
+      const SKILLS = [
+        ["silence",     "greet_checkin",   "主动晨间问候, 附昨日摘要"],
+        ["silence",     "escalate_tree",   "沿紧急联系人树通知家人"],
+        ["isolation",   "companion_chat",  "陪伴对话, 内嵌情绪感知"],
+        ["isolation",   "relay_family",    "把老人的话真实转达给家人"],
+        ["medication",  "med_reminder",    "用药提醒, 确认即心跳"],
+        ["wandering",   "safe_range",      "走失预警: 超出安全半径即通知家人"],
+        ["decline",     "health_scan",     "镜头健康检查: 异常即告家人"],
+        ["the unseen",  "family_bulletin", "每晚向家人播报当日状态"],
+        ["the unseen",  "care_insight",    "从对话提炼照护观察"]
+      ];
+      const CW = 900, CH = 400, GX = 180, GY = 110;
+      const rack = document.getElementById("rack");
+      SKILLS.forEach((s, i) => {
+        const col = i % 3, row = (i / 3) | 0;
+        const d = document.createElement("div");
+        d.className = "sk"; d.id = "s" + i;
+        d.style.left = (col * (CW + GX)) + "px";
+        d.style.top = (row * (CH + GY)) + "px";
+        d.innerHTML = '<div class="glow"></div>' +
+          '<div class="fail mono">' + s[0] + '</div>' +
+          '<div class="id mono">' + s[1] + '</div>' +
+          '<div class="cap">' + s[2] + '</div>';
+        rack.appendChild(d);
+      });
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const EO = "power3.out", EIO = "power2.inOut";
+      const W = "#world";
+      function cam(wx, wy, s) { return { x: 960 - wx * s, y: 540 - wy * s, scale: s }; }
+
+      gsap.set(W, cam(890, 500, 1.10));
+      gsap.set(".sk", { opacity: 0, y: 46, scale: 0.95 });
+      gsap.set(".no", { opacity: 0, x: -34 });
+
+      // title, world drifting under it
+      tl.from("#head h1",  { opacity: 0, y: 58, duration: 1.0, ease: EO }, 0.15)
+        .from("#head .en", { opacity: 0, y: 24, duration: 0.9, ease: EO }, 0.5)
+        .to(W, { ...cam(890, 545, 1.14), duration: 2.4, ease: "none" }, 0);
+
+      // fly down into the rack
+      tl.to(W, { ...cam(450, 1700, 0.80), duration: 1.5, ease: EIO }, 2.0)
+        .to(".sk", { opacity: 1, y: 0, scale: 1, duration: 0.7, stagger: 0.06, ease: EO }, 2.2)
+        .to("#count", { opacity: 1, duration: 0.4 }, 2.6);
+
+      // the camera visits each skill as the VO names its failure mode
+      const T0 = 3.6, STEP = 1.62;
+      SKILLS.forEach((s, i) => {
+        const col = i % 3, row = (i / 3) | 0;
+        const cx = col * (CW + GX) + CW / 2;
+        const cy = 1500 + row * (CH + GY) + CH / 2;
+        const t = T0 + i * STEP;
+        tl.to(W, { ...cam(cx, cy - 120, 0.94), duration: STEP * 0.74, ease: EIO }, t - STEP * 0.6)
+          .to("#s" + i + " .glow", { opacity: 1, duration: 0.24 }, t)
+          .to("#s" + i, { scale: 1.045, duration: 0.26, ease: "power2.out" }, t)
+          .to("#s" + i, { scale: 1.0, duration: 0.6, ease: EO }, t + 0.26)
+          .to("#s" + i + " .fail", { color: "#FFD97D", duration: 0.3 }, t)
+          .to("#s" + i + " .glow", { opacity: 0.42, duration: 0.8 }, t + 0.4)
+          .to("#pf", { scaleX: (i + 1) / 9, duration: STEP * 0.7, ease: EIO }, t)
+          .set("#count", { textContent: (i + 1) + " / 9" }, t);
+      });
+
+      // pull back over all nine, then down to the refusals
+      const END = T0 + 8 * STEP + 0.8;
+      tl.to(W, { ...cam(1530, 2210, 0.34), duration: 1.4, ease: EIO }, END)
+        .to("#count", { opacity: 0, duration: 0.4 }, END + 0.6)
+        .to(W, { ...cam(1360, 3400, 0.62), duration: 1.5, ease: EIO }, END + 1.3)
+        .to(".no", { opacity: 1, x: 0, duration: 0.5, stagger: 0.28, ease: EO }, END + 1.7)
+        .to("#why", { opacity: 1, duration: 0.6, ease: EO }, END + 2.9)
+        .to(W, { ...cam(1360, 3470, 0.64), duration: 1.6, ease: "none" }, END + 2.6);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

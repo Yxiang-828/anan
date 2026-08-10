@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="vendor/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #14161A; }
+      body { font-family: "EB Garamond", Georgia, serif; color: #E8E4DA; }
+      .mono { font-family: "JetBrains Mono", Consolas, monospace; }
+      #root { position: relative; background: #14161A; overflow: hidden; }
+      #world { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+
+      #bg { position: absolute; left: -900px; top: -900px; width: 5600px; height: 4600px; opacity: .5;
+            background: radial-gradient(44% 36% at 30% 20%, rgba(255,217,125,.09) 0%, rgba(20,22,26,0) 70%),
+                        radial-gradient(40% 34% at 76% 70%, rgba(120,160,255,.06) 0%, rgba(20,22,26,0) 70%); }
+      #grid { position: absolute; left: -900px; top: -900px; width: 5600px; height: 4600px; opacity: .28;
+              background-image: linear-gradient(to right, #1f232a 1px, transparent 1px),
+                                linear-gradient(to bottom, #1f232a 1px, transparent 1px);
+              background-size: 108px 108px; }
+
+      #head { position: absolute; left: 150px; top: 310px; width: 1560px; }
+      #head h1 { font-size: 104px; font-weight: normal; letter-spacing: 5px; color: #F7F3EA; }
+      #head .en { font-size: 32px; color: #B9B4A6; margin-top: 24px; letter-spacing: 4px; text-transform: uppercase; }
+      #head .sub { font-size: 30px; color: #8E939D; margin-top: 40px; line-height: 1.5; }
+
+      #tbl { position: absolute; left: 120px; top: 1440px; width: 2760px; }
+      .hdr { display: flex; height: 96px; align-items: flex-end; padding-bottom: 22px;
+             border-bottom: 1px solid #2C313A; }
+      .hdr div { font-size: 26px; color: #8E939D; letter-spacing: 4px; text-transform: uppercase; }
+      .c1 { width: 460px; } .c2 { width: 1130px; } .c3 { flex: 1; }
+      .row { display: flex; align-items: center; min-height: 152px; padding: 26px 0;
+             border-bottom: 1px solid #1f232a; opacity: 0; }
+      .row .c1 { font-size: 40px; color: #FFD97D; letter-spacing: 1px; }
+      .row .c2 { font-size: 32px; color: #E8E4DA; line-height: 1.45; padding-right: 60px; }
+      .row .c3 { font-size: 32px; color: #B9B4A6; line-height: 1.45; padding-right: 30px; }
+      .row.keep .c3 { color: #FFD97D; }
+      .row.cut  .c3 { color: #EC5D62; }
+      .row .glow { position: absolute; left: 0; width: 2760px; height: 152px; border-radius: 14px;
+                   border: 1px solid #FFD97D; opacity: 0; pointer-events: none; }
+
+      #punch { position: absolute; left: 200px; top: 2960px; width: 2500px; opacity: 0; }
+      #punch .big { font-size: 72px; color: #F7F3EA; line-height: 1.35; letter-spacing: 2px; }
+      #punch .big b { color: #FFD97D; }
+      #punch .small { font-size: 32px; color: #8E939D; margin-top: 40px; line-height: 1.55; }
+
+      #hud { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; }
+      #tag { position: absolute; left: 120px; bottom: 56px; opacity: 0; }
+      #tag .k { font-size: 22px; color: #B8860B; letter-spacing: 6px; text-transform: uppercase; }
+      #tag .v { font-size: 52px; color: #F7F3EA; letter-spacing: 2px; margin-top: 12px; }
+      #prog { position: absolute; left: 120px; bottom: 26px; width: 1680px; height: 3px; background: #23272f; }
+      #pf { position: absolute; inset: 0; background: #FFD97D; transform: scaleX(0); transform-origin: left center; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="27"
+         data-width="1920" data-height="1080" data-fps="30">
+      <div id="world" class="clip" data-start="0" data-duration="27" data-track-index="1"
+           data-layout-allow-overflow>
+        <div id="bg"></div>
+        <div id="grid"></div>
+        <div id="head">
+          <h1>一句实话</h1>
+          <div class="en">One honest note</div>
+          <div class="sub">每条通道都按<b style="color:#FFD97D">声明的能力</b>降级 &mdash; 绝不静默失败<br/>
+            Every lane degrades by declared capability, never by silent failure.</div>
+        </div>
+
+        <div id="tbl">
+          <div class="hdr mono"><div class="c1">lane</div><div class="c2">actual &mdash; local, with a GPU</div>
+            <div class="c3">hosted &mdash; free Render, no GPU</div></div>
+          <div id="rows"></div>
+        </div>
+
+        <div id="punch">
+          <div class="big">What was cut is <b>texture</b>.<br/>
+            The kernel, the receipts and the stale beat are <b>identical</b>.</div>
+          <div class="small mono">at boot the server probes what it can actually do, and prints a capability receipt</div>
+        </div>
+      </div>
+
+      <div id="hud" class="clip" data-start="0" data-duration="27" data-track-index="2">
+        <div id="tag"><div class="k mono">lane</div><div class="v">brain</div></div>
+        <div id="prog"><div id="pf"></div></div>
+      </div>
+    </div>
+
+    <script>
+      const ROWS = [
+        ["brain",       "agy CLI → Gemini 3.6 Flash",            "NVIDIA Nemotron Ultra → Super", "cut"],
+        ["voice out",   "qwen3-TTS · cloned family voice",        "ElevenLabs → browser TTS", "cut"],
+        ["voice clone", "per-language (clip, script) pairs",      "disabled — declared, greyed out, never faked", "cut"],
+        ["ears",        "Whisper medium/zh, local",               "ElevenLabs scribe", "cut"],
+        ["telegram",    "live bot, real guardians",               "same live bot", "keep"],
+        ["receipts",    "SQLite, full seven-phase rows",          "identical — autonomy is not cut", "keep"]
+      ];
+      const ROWH = 204;
+      const rows = document.getElementById("rows");
+      ROWS.forEach((r, i) => {
+        const d = document.createElement("div");
+        d.className = "row " + r[3]; d.id = "r" + i;
+        d.innerHTML = '<div class="c1 mono">' + r[0] + '</div>' +
+                      '<div class="c2">' + r[1] + '</div>' +
+                      '<div class="c3">' + r[2] + '</div>';
+        rows.appendChild(d);
+      });
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const EO = "power3.out", EIO = "power2.inOut";
+      const W = "#world";
+      function cam(wx, wy, s) { return { x: 960 - wx * s, y: 540 - wy * s, scale: s }; }
+
+      gsap.set(W, cam(900, 520, 1.06));
+      gsap.set(".row", { opacity: 0, x: -34 });
+      gsap.set("#punch", { y: 30 });
+
+      // 0-4.6  the honest note
+      tl.from("#head h1",   { opacity: 0, y: 56, duration: 1.0, ease: EO }, 0.2)
+        .from("#head .en",  { opacity: 0, y: 22, duration: 0.9, ease: EO }, 0.55)
+        .from("#head .sub", { opacity: 0, y: 22, duration: 1.0, ease: EO }, 1.5)
+        .to(W, { ...cam(900, 575, 1.10), duration: 4.4, ease: "none" }, 0);
+
+      // 4.4  down to the table
+      tl.to(W, { ...cam(1180, 1620, 0.70), duration: 1.7, ease: EIO }, 4.4)
+        .to("#tag", { opacity: 1, duration: 0.5 }, 5.4);
+
+      // each lane, in turn — the camera rides down the table
+      const T0 = 6.3, STEP = 2.5;
+      ROWS.forEach((r, i) => {
+        const t = T0 + i * STEP;
+        const cy = 1440 + 96 + i * ROWH + ROWH / 2;
+        tl.to(W, { ...cam(1380, cy, 0.74), duration: STEP * 0.66, ease: EIO }, t - STEP * 0.5)
+          .to("#r" + i, { opacity: 1, x: 0, duration: 0.6, ease: EO }, t)
+          .to("#pf", { scaleX: (i + 1) / 6, duration: STEP * 0.7, ease: EIO }, t)
+          .set("#tag .v", { textContent: r[0] }, t)
+          .set("#tag .k", { textContent: r[3] === "keep" ? "identical on both" : "degraded, and declared" }, t)
+          .fromTo("#tag .v", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.4, ease: EO }, t)
+          // never let the camera rest: a held frame in a motion graphic is the defect
+          .to(W, { ...cam(1395, cy + 16, 0.75), duration: STEP * 0.34, ease: "none" }, t + STEP * 0.16);
+      });
+
+      // the punchline
+      const END = T0 + 5 * STEP + 1.0;
+      tl.to(W, { ...cam(1420, 2000, 0.40), duration: 1.5, ease: EIO }, END)
+        .to("#tag", { opacity: 0, duration: 0.4 }, END)
+        .to(W, { ...cam(1450, 3160, 0.62), duration: 1.7, ease: EIO }, END + 1.4)
+        .to("#punch", { opacity: 1, y: 0, duration: 0.9, ease: EO }, END + 2.1)
+        .to(W, { ...cam(1450, 3195, 0.635), duration: 2.6, ease: "none" }, END + 3.1);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
