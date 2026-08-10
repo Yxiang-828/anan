@@ -78,4 +78,3 @@ map UI (MapLibre + OneMap, zero keys) and clinical CV pages (rPPG / pose / face-
 reused verbatim), a sprite mascot drawn by a second AI agent — which also adversarially
 blocked and corrected this agent's renderer in review.
 
-Submission naming: `AnAn-<Deliverable>-SyntaxError`.

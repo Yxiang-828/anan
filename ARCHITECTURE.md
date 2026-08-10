@@ -245,4 +245,4 @@ token (cloud owns the bot; local runs `ANAN_DISABLE_TG=1`). Secrets only in env.
   voice cloning + on-device CV; receipts for every claim.
 
 ## Team
-**SyntaxError** — Yao Xiang (solo). Submission naming: `AnAn-<Deliverable>-SyntaxError`.
+**SyntaxError** — Yao Xiang (solo).

@@ -74,6 +74,11 @@
   @keyframes tgpop { from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none} }
   #tgping .dot { width:9px; height:9px; border-radius:50%; background:#4f7cff; flex:none; }
   @media (prefers-reduced-motion: reduce){ .tg-alerting{animation:none} #tgping{animation:none} }
+  .act-status { margin-top:8px; font-size:11.5px; font-family:system-ui,sans-serif; min-height:16px; }
+  .run-wait { color:var(--amber); } .run-wait b { font-variant-numeric:tabular-nums; }
+  .run-hint { display:block; color:var(--dim); font-size:10.5px; margin-top:2px; }
+  .run-done { color:var(--green); } .run-done b { font-variant-numeric:tabular-nums; }
+  .run-eff { color:var(--dim); }
   header { display:flex; align-items:center; gap:14px; margin-bottom:12px; flex-wrap:wrap; }
   header h1 { font-size:17px; }
   .clock { font-size:24px; font-weight:700; color:#fff; background:#000; border-radius:8px; padding:2px 12px; }
@@ -323,6 +328,11 @@ const T = {
   story: ["<b>One day with 陈婆婆.</b> She is 78 and lives alone in a Toa Payoh flat — hypertension, a little forgetful, fiercely independent. Her daughter 小芸 works across the city and calls when she can. On the phone beside the kettle lives 安安 — an agent whose inputs are <b>time, silence, and state</b>.<br>What follows is one of her days, compressed. <b>Nobody will touch the agent.</b> Every act below sets the scene, then you press play and watch it happen for real — on the phone in the middle, on the daughter's Telegram, and in the agent's own receipts.",
           "<b>陈婆婆的一天。</b>78 岁, 独居大巴窑组屋 — 高血压, 有点健忘, 但要强。女儿小芸在城市另一头上班, 有空才能打电话。水壶旁的手机里住着安安 — 一个以<b>时间、沉默、状态</b>为输入的 agent。<br>下面是她被压缩的一天。<b>全程没有人碰 agent。</b>每一幕先讲场景, 你按下播放, 然后看它真实发生 — 在中间的手机上、在女儿的 Telegram 里、在 agent 自己的回执里。"],
   run: ["▶ Run this act", "▶ 运行这一幕"],
+  running: ["⏳ Running…", "⏳ 运行中…"],
+  waiting: ["the agent is thinking —", "安安正在思考 —"],
+  waithint: ["a real model call; 10-25s is normal. Let it finish before the next act.",
+             "这是真实的模型调用, 10-25 秒属正常。请等它结束再点下一幕。"],
+  landed: ["landed in", "用时"],
   watch: ["What to watch:", "看什么:"],
   seeds:   ["Demo seeds (fictional data, labelled as such)", "演示种子 (虚构数据, 标明为演示)"],
   seedbtn: ["Seed 6 days of history", "播种 6 天历史"],
@@ -429,10 +439,40 @@ function renderActs(){
         <div class="act-why">${a.why[idx]}</div>
         <div class="act-watch"><b>${T.watch[idx]}</b> ${a.watch[idx]}</div>
         <div class="act-chips">${a.chips.map(c=>`<span class="chip">${c}</span>`).join('')}</div>
-        <button class="act-run" onclick="runAct(${i});event.stopPropagation()">${T.run[idx]}</button>
+        <button class="act-run" onclick="runAct(${i});event.stopPropagation()"${a.running?' disabled style="opacity:.55;cursor:progress"':''}>${a.running?T.running[idx]:T.run[idx]}</button>
+        <div class="act-status" id="actst-${i}">${actStatusHTML(a, idx)}</div>
       </div>`;
     box.appendChild(d);
   });
+}
+function actStatusHTML(a, idx){
+  if(a.running){
+    const secs=((Date.now()-a.startedAt)/1000).toFixed(1);
+    return `<span class="run-wait">⏳ ${T.waiting[idx]} <b>${secs}s</b>`
+         + `<span class="run-hint">${T.waithint[idx]}</span></span>`;
+  }
+  if(a.tookMs!=null){
+    return `<span class="run-done">✓ ${T.landed[idx]} <b>${(a.tookMs/1000).toFixed(1)}s</b>`
+         + (a.lastEffect?` — <span class="run-eff">${a.lastEffect}</span>`:'')+`</span>`;
+  }
+  return '';
+}
+let actTicker=null;
+function tickActs(){
+  ACTS.forEach((a,i)=>{ if(a.running){
+    const el=document.getElementById('actst-'+i);
+    if(el) el.innerHTML=actStatusHTML(a, lang==='en'?0:1);
+  }});
+}
+/* An act is a live model call taking 10-25s. Without this the console looked
+   dead and judges clicked the next act, which made them watch the previous
+   one land. */
+function actLanded(effect){
+  let changed=false;
+  ACTS.forEach(a=>{ if(a.running){
+    a.running=false; a.tookMs=Date.now()-a.startedAt;
+    a.lastEffect=(effect||'').slice(0,60); changed=true; }});
+  if(changed) renderActs();
 }
 function toggleAct(i){ ACTS[i].open=!ACTS[i].open; renderActs(); }
 function jumpToMirror(){
@@ -454,7 +494,10 @@ function announceTelegram(){
   if(p){ p.style.display='flex'; clearTimeout(tgPingTimer);
     tgPingTimer=setTimeout(()=>{p.style.display='none';}, 9000); }
 }
-function runAct(i){ sc(ACTS[i].sc); ACTS[i].ran=true; ACTS[i].open=false;
+function runAct(i){ sc(ACTS[i].sc);
+  ACTS[i].ran=true; ACTS[i].running=true; ACTS[i].startedAt=Date.now();
+  ACTS[i].tookMs=null; ACTS[i].lastEffect='';
+  if(!actTicker) actTicker=setInterval(tickActs, 100);
   if(ACTS[i+1]) ACTS[i+1].open=true; renderActs(); }
 ACTS[0].open=true;
 
@@ -565,6 +608,8 @@ es.onmessage=m=>{
   if(d.kind==='reset'){ location.reload(); }
   if(d.kind==='event'){ addEvent(d.event); refresh(d.state); }
   if(d.kind==='family_card'){ addFamily(d); announceTelegram(); }
+  if(d.kind==='event' && d.event && /receipt|transition/.test(d.event.kind||''))
+    actLanded(d.event.effect || d.event.kind);
 };
 function refresh(s){
   if(!s) return; lastState=s;

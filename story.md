@@ -100,4 +100,4 @@ P5 FSM(A2) · P6 polygon(A3) · P7 mascot+multi-agent(A4) · P8 skills+registry(
 P9 voice(A6) · P10 five surfaces(A7) · P11 receipts+反悔+envelope(A8) · P12 lineage(A9) ·
 P13 impact+close(A10)
 
-Submission naming: `AnAn-WebLink-SyntaxError` · `AnAn-Deck-SyntaxError` · `AnAn-DemoVideo-SyntaxError`
+Live demo: https://anan-iax1.onrender.com · Story: https://yxiang-828.github.io/anan · Source: https://github.com/Yxiang-828/anan
