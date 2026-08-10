@@ -173,6 +173,36 @@ def main():
         rec("receipts", f"phase '{phase}' is recorded", phase in kinds,
             f"{kinds.count(phase)} rows", "visible in the decision log")
 
+    # The chooser was DECORATIVE for the whole build and nothing noticed: every
+    # junction logged how="floor (chooser failed: ...)" while the deck claimed a
+    # model-backed bounded chooser. "A think row exists" is not the claim — the
+    # claim is that the MODEL made the choice. Check the thing that was false.
+    chooser = []
+    for r in rows:
+        if r[2] == "think" and r[3] == "chooser":
+            try:
+                chooser.append(json.loads(r[4]))
+            except Exception:
+                pass
+    if not chooser:
+        rec("chooser", "the model chose at a junction", None,
+            "no chooser rows — drive a junction (silence_1) before judging this",
+            "receipts show how=model at a junction")
+    else:
+        by_model = [d for d in chooser if str(d.get("how", "")).startswith("model")]
+        failed = [d for d in chooser if "failed" in str(d.get("how", ""))]
+        rec("chooser", "the model — not the floor — made at least one junction choice",
+            bool(by_model),
+            f"{len(by_model)}/{len(chooser)} model, {len(failed)} chooser failures; "
+            f"last how={chooser[-1].get('how')}",
+            "a receipt reading how=model, not 'floor (chooser failed)'")
+        for d in by_model:
+            if d.get("chosen") not in (d.get("options") or [d.get("chosen")]):
+                rec("chooser", "the model's pick stayed inside the options envelope", False,
+                    f"chose {d.get('chosen')!r}, options {d.get('options')}",
+                    "the envelope is the options list itself")
+                break
+
     report()
 
 
