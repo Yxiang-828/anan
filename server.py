@@ -117,10 +117,15 @@ def bounded_choice(junction: str, options: list, fsm_state: dict) -> str:
     """THINK at a junction: the model picks ONE option token. Anything else —
     timeout, chatter, an option not on the list — and the kernel's floor
     stands. The envelope is the options list itself."""
+    # A junction chooser picks ONE token off a list. It runs on the kernel's single
+    # tick thread, so the 90s default froze the whole agent: acts queued behind one
+    # slow call and a judge clicking act 4 watched act 3 land. The deterministic
+    # floor exists precisely for this — let it act rather than hold the loop.
     text, _lane = brain.think(
         f"照护 agent 到达节点 '{junction}'。当前状态: {json.dumps(fsm_state, ensure_ascii=False)}\n"
         f"可选动作: {options}\n只回其中一个动作的原文, 不要任何其他字。",
-        system="你是照护 agent 内核的决策器。只输出选项原文。")
+        system="你是照护 agent 内核的决策器。只输出选项原文。",
+        timeout_s=float(os.environ.get("ANAN_CHOOSER_TIMEOUT_S", "6")))
     return text.strip().splitlines()[0].strip()
 
 
