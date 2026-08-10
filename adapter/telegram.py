@@ -415,8 +415,15 @@ class TelegramTransport(StampsOutbound):
             user = callback.get("from") if isinstance(callback.get("from"), Mapping) else {}
             message = callback.get("message") if isinstance(callback.get("message"), Mapping) else {}
             chat = message.get("chat") if isinstance(message.get("chat"), Mapping) else {}
+            # A button pressed in a DM is a PRIVATE room. Hardcoding "group" here
+            # made every callback look like an uninvited group chat, so the
+            # allow-list refused it and the family's [Called back] button never
+            # closed an escalation — it answered the owner with a security alert
+            # naming their own DM as a group.
+            _ct = str(chat.get("type") or "private")
+            _kind = "private" if _ct == "private" else ("channel" if _ct == "channel" else "group")
             return Inbound(
-                channel="telegram", room_id=str(chat.get("id") or ""), room_kind="group",
+                channel="telegram", room_id=str(chat.get("id") or ""), room_kind=_kind,
                 event_id=str(callback.get("id") or update_id),
                 actor_id=str(user.get("id") or ""), actor_name=str(user.get("first_name") or ""),
                 actor_handle=str(user.get("username") or ""), actor_is_bot=False,
@@ -497,8 +504,8 @@ class TelegramTransport(StampsOutbound):
                 reason = ("actor is not an owner" if not inbound.is_owner
                           else "chat id is not in allowed_chat_ids")
                 print(f"[telegram] REFUSED {inbound.room_kind} {inbound.room_id} "
-                      f"({reason}) — message dropped before the brain; add the id to "
-                      f"config.telegram.allowed_chat_ids to let it through", flush=True)
+                      f"({reason}) — message dropped before the brain. {self.remediation}",
+                      flush=True)
                 # TELL THE OWNER (owner 2026-07-26: "should send a message to me
                 # at least, there's only one owner per adaptor and it's a
                 # constant"). A refusal is a security event: someone put this

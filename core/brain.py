@@ -53,20 +53,20 @@ def _agy_env() -> dict[str, str]:
     }
 
 
-def _agy(prompt: str) -> str:
+def _agy(prompt: str, timeout_s: float = TIMEOUT_S) -> str:
     command = [
         AGY_BIN,
         "--dangerously-skip-permissions",
         "--conversation", str(uuid.uuid4()),
         "--model", AGY_MODEL,
-        "--print-timeout", f"{TIMEOUT_S}s",
+        "--print-timeout", f"{timeout_s}s",
         "--print", prompt,
     ]
     try:
         result = subprocess.run(
             command, cwd=ROOT, env=_agy_env(), text=True,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            timeout=TIMEOUT_S, check=False,
+            timeout=timeout_s, check=False,
         )
     except FileNotFoundError:
         raise BrainError("agy binary not found") from None
@@ -78,7 +78,8 @@ def _agy(prompt: str) -> str:
     return answer
 
 
-def _nvidia(prompt: str, system: str, model: str = NVIDIA_MODEL) -> str:
+def _nvidia(prompt: str, system: str, model: str = NVIDIA_MODEL,
+            timeout_s: float = TIMEOUT_S) -> str:
     api_key = os.environ.get("NVIDIA_API_KEY", "")
     if not api_key:
         raise BrainError("NVIDIA_API_KEY not set")
@@ -99,7 +100,7 @@ def _nvidia(prompt: str, system: str, model: str = NVIDIA_MODEL) -> str:
         method="POST",
     )
     try:
-        with urllib.request.urlopen(request, timeout=TIMEOUT_S) as response:
+        with urllib.request.urlopen(request, timeout=timeout_s) as response:
             payload = json.load(response)
     except urllib.error.HTTPError as exc:
         raise BrainError(f"nvidia HTTP {exc.code}") from None
@@ -115,12 +116,18 @@ def _nvidia(prompt: str, system: str, model: str = NVIDIA_MODEL) -> str:
     return content
 
 
-def think(prompt: str, system: str = "") -> tuple[str, str]:
+def think(prompt: str, system: str = "", timeout_s: float | None = None) -> tuple[str, str]:
     """Returns (text, lane). Raises BrainError only if BOTH lanes fail —
-    callers catch it and use their template fallback."""
+    callers catch it and use their template fallback.
+
+    timeout_s bounds THIS call. A junction chooser picking one token from a list
+    must not be allowed the same 90s a paragraph gets: it runs on the kernel's
+    single tick thread, so a slow answer freezes the whole agent and the operator
+    sees a dead console."""
+    t = float(timeout_s or TIMEOUT_S)
     full = (system + "\n\n" + prompt).strip() if system else prompt
     try:
-        return _agy(full), "agy/gemini-3.6-flash"
+        return _agy(full, timeout_s=t), "agy/gemini-3.6-flash"
     except BrainError:
         pass
     try:
