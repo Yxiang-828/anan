@@ -150,6 +150,98 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
   };
 }
 
+/* Result screen: the transplanted checks POST a score and then call tg.close(),
+   which does nothing outside Telegram — in the app the elder was left staring at a
+   finished camera with no score, no reading and no way back. The shell owns the
+   ending: intercept the score POST, show what it means plus AnAn's own words, and
+   walk the elder back to the health tab. */
+(() => {
+  const q = new URLSearchParams(location.search);
+  const back = q.get('back') || '/elder?tab=health';
+  const origFetch = window.fetch.bind(window);
+  const NAMES = { heart_rate: ['心率 Heart rate', '❤️'], face_symmetry: ['面部对称 Face symmetry', '😊'],
+                  fitness: ['起坐活动 Sit &amp; stand', '🪑'] };
+
+  function show(res) {
+    if (document.getElementById('anan-result')) return;
+    const [label, icon] = NAMES[res.kind] || ['检查 Check', '✅'];
+    const b = res.band || {}, ok = b.ok !== false;
+    const wrap = document.createElement('div');
+    wrap.id = 'anan-result';
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(8,11,18,.94);' +
+      'backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px;' +
+      'font-family:system-ui,"PingFang SC",sans-serif;opacity:0;transition:opacity .3s ease';
+    wrap.innerHTML =
+      '<div style="background:#F7F3EA;color:#2D2A26;border-radius:22px;max-width:430px;width:100%;' +
+        'padding:26px 24px;box-shadow:0 30px 80px rgba(0,0,0,.6);max-height:92vh;overflow:auto">' +
+        '<div style="font-size:44px;line-height:1;text-align:center">' + icon + '</div>' +
+        '<div style="text-align:center;font-size:14px;color:#7A7466;margin-top:8px">' + label + '</div>' +
+        '<div style="text-align:center;font-family:Georgia,serif;font-weight:700;font-size:58px;' +
+          'color:' + (ok ? '#1D9E6B' : '#E5484D') + ';margin:6px 0 2px">' +
+          (Math.round(res.score * 10) / 10) + '<span style="font-size:22px">' + (b.unit || '') + '</span></div>' +
+        (b.range ? '<div style="text-align:center;font-size:12px;color:#9a9384">正常 normal ' + b.range + '</div>' : '') +
+        '<div style="margin:16px 0;padding:12px 14px;border-radius:14px;background:' +
+          (ok ? '#E8F6EE' : '#FDECEA') + ';border-left:8px solid ' + (ok ? '#1D9E6B' : '#E5484D') + '">' +
+          '<div style="font-size:15px;font-weight:700">' + (b.zh || '') + '</div>' +
+          '<div style="font-size:12.5px;color:#6b6558;margin-top:3px">' + (b.en || '') + '</div></div>' +
+        '<div id="anan-says" style="border:1px solid #E3DCCB;border-radius:14px;padding:14px 16px;background:#fff">' +
+          '<div style="font-size:11px;letter-spacing:2px;color:#B8860B;font-weight:700;margin-bottom:6px">' +
+          '安安说 · ANAN SAYS</div>' +
+          '<div id="anan-says-body" style="font-size:14px;line-height:1.6;color:#9a9384">' +
+          '安安正在看您的结果…<br>AnAn is reading your result…</div></div>' +
+        '<button id="anan-back" style="width:100%;margin-top:18px;padding:16px;border:0;border-radius:14px;' +
+          'background:#1D9E6B;color:#fff;font-size:17px;font-weight:700;cursor:pointer">' +
+          '返回健康页 Back to Health <span id="anan-count"></span></button>' +
+      '</div>';
+    document.body.appendChild(wrap);
+    requestAnimationFrame(() => wrap.style.opacity = '1');
+    // the check is over — release the camera so the light goes out
+    document.querySelectorAll('video').forEach(v => {
+      try { v.srcObject && v.srcObject.getTracks().forEach(t => t.stop()); } catch (e) {}
+    });
+
+    const go = () => location.href = back;
+    document.getElementById('anan-back').onclick = go;
+    const countEl = document.getElementById('anan-count');
+    let iv = null;
+    const startCountdown = (n) => {
+      countEl.textContent = '(' + n + ')';
+      iv = setInterval(() => { n -= 1; countEl.textContent = '(' + n + ')';
+        if (n <= 0) { clearInterval(iv); go(); } }, 1000);
+    };
+
+    // AnAn composes for ~10s (longer when a guardian also has to be told), so the
+    // countdown only starts once her words are on screen — nobody gets yanked away
+    // mid-sentence.
+    const body = document.getElementById('anan-says-body');
+    origFetch('/api/score/analysis?mark=' + (res.mark || 0))
+      .then(r => r.json())
+      .then(d => {
+        if (d && d.ready && d.analysis) {
+          body.style.color = '#2D2A26';
+          body.style.whiteSpace = 'pre-line';
+          body.textContent = d.analysis;
+        } else {
+          body.textContent = '已记录，安安稍后会在今天的回顾里提到。\nRecorded — AnAn will mention it in today’s review.';
+        }
+      })
+      .catch(() => { body.textContent = '已记录。Recorded.'; })
+      .finally(() => startCountdown(12));
+  }
+
+  window.fetch = async (input, init) => {
+    const url = typeof input === 'string' ? input : (input && input.url) || '';
+    const res = await origFetch(input, init);
+    if (url.includes('/api/score')) {
+      res.clone().json().then(d => { if (d && d.status === 'ok') show(d); }).catch(() => {});
+    }
+    return res;
+  };
+  // Safety net: the page only POSTs when a uid is present. If it finished without
+  // one, still end the session rather than stranding the elder on a dead camera.
+  window.__ananResult = show;
+})();
+
 /* Autoplay repair: React renders `muted` as a property, never as an attribute, so a
    <video autoPlay muted> from these pages is NOT muted in the DOM and phones refuse to
    start it — the preview stays black with the camera light on. Force every video that

@@ -902,6 +902,30 @@ def health_lab_asset(name: str):
     return FileResponse(path, media_type=media)
 
 
+def _health_band(kind: str, score: float) -> dict:
+    """Deterministic reading of a score — plain code, never the model. The same
+    thresholds the kernel uses to decide whether a guardian is told."""
+    if kind == "heart_rate":
+        ok = 50 <= score <= 100
+        return {"ok": ok, "unit": "BPM",
+                "zh": "心率正常" if ok else "心率超出正常范围",
+                "en": "Heart rate is in the normal range" if ok else "Heart rate is outside the normal range",
+                "range": "50–100 BPM"}
+    if kind == "face_symmetry":
+        ok = score >= 70
+        return {"ok": ok, "unit": "%",
+                "zh": "面部对称，未见异常" if ok else "面部不对称，建议尽快确认 (FAST)",
+                "en": "Face is symmetric — nothing unusual" if ok else "Facial asymmetry — please confirm soon (FAST)",
+                "range": "≥ 70%"}
+    if kind == "fitness":
+        ok = score >= 5
+        return {"ok": ok, "unit": " reps",
+                "zh": "活动能力达标" if ok else "完成次数偏少，慢慢来",
+                "en": "Mobility target met" if ok else "Fewer reps than target — take it slowly",
+                "range": "≥ 5 reps"}
+    return {"ok": True, "unit": "", "zh": "已记录", "en": "Recorded", "range": ""}
+
+
 @app.post("/api/score")
 async def api_score(request: Request) -> dict:
     """The transplanted pages POST their original shape here — their UI now
@@ -912,10 +936,28 @@ async def api_score(request: Request) -> dict:
     kind = gmap.get(b.get("game_type", ""))
     if not kind:
         return {"status": "ignored"}
+    score = float(b.get("score", 0))
+    mark = len(elder_feed)
     kernel.submit("health_score", "health_lab",
-                  {"kind": kind, "score": float(b.get("score", 0)),
-                   "metrics": b.get("metrics", {})})
-    return {"status": "ok"}
+                  {"kind": kind, "score": score, "metrics": b.get("metrics", {})})
+    # Return the deterministic reading INSTANTLY — the elder sees the number and
+    # what it means with no wait. AnAn's own words take ~10s to compose (longer when
+    # an anomaly also has to be relayed), so the page fetches those separately
+    # rather than holding a spinner over a finished check.
+    return {"status": "ok", "kind": kind, "score": score,
+            "band": _health_band(kind, score), "mark": mark, "analysis": ""}
+
+
+@app.get("/api/score/analysis")
+def api_score_analysis(mark: int = 0) -> dict:
+    """AnAn's composed reflection for a check, once the kernel has produced it.
+    Long-polls up to 25s so the result screen fills in by itself."""
+    deadline = _time.time() + 25.0
+    while _time.time() < deadline:
+        if len(elder_feed) > mark:
+            return {"ready": True, "analysis": (elder_feed[-1] or {}).get("text", "")}
+        _time.sleep(0.4)
+    return {"ready": False, "analysis": ""}
 
 
 @app.post("/elder/location")
