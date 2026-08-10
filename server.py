@@ -125,7 +125,8 @@ def bounded_choice(junction: str, options: list, fsm_state: dict) -> str:
         f"照护 agent 到达节点 '{junction}'。当前状态: {json.dumps(fsm_state, ensure_ascii=False)}\n"
         f"可选动作: {options}\n只回其中一个动作的原文, 不要任何其他字。",
         system="你是照护 agent 内核的决策器。只输出选项原文。",
-        timeout_s=float(os.environ.get("ANAN_CHOOSER_TIMEOUT_S", "6")))
+        timeout_s=float(os.environ.get("ANAN_CHOOSER_TIMEOUT_S", "8")),
+        fast_first=True)
     return text.strip().splitlines()[0].strip()
 
 
@@ -826,6 +827,7 @@ async def inject_time(request: Request) -> dict:
 async def inject_scenario(request: Request) -> dict:
     """Scenarios are TIME jumps + ordinary INPUTS — never state writes."""
     name = (await request.json()).get("name", "")
+    before = str((kernel.loop.snapshot() or {}).get("state", "?"))
     win = CONFIG.get("windows", {})
     if name == "morning":
         clock.skip_to(7, 29)
@@ -861,7 +863,28 @@ async def inject_scenario(request: Request) -> dict:
                        "metrics": {"demo_fixture": True, "median": 42, "variance": 18}})
     store.event(kernel.clock.now().strftime("%Y-%m-%d %H:%M:%S"), "inject", "console",
                 {"scenario": name}, effect="time/scenario injection only")
-    return {"ok": True, "now": clock.now().strftime("%H:%M")}
+    return {"ok": True, "now": clock.now().strftime("%H:%M"), **_applicability(name, before)}
+
+
+# Which scenarios only mean something from certain FSM states. A judge pressing
+# "escalation timeout" while the FSM sits in CHECKIN_SENT saw nothing happen and
+# no reason why — the clock jumped 11 minutes toward a deadline 30 minutes away,
+# which is correct behaviour reported as silence. Say so instead.
+_NEEDS_STATE = {
+    "silence_1": ("CHECKIN_SENT",),
+    "silence_2": ("SILENCE_1", "CHECKIN_SENT"),
+    "escalation_timeout": ("ESCALATING", "SILENCE_2"),
+}
+
+
+def _applicability(name: str, before: str) -> dict:
+    wants = _NEEDS_STATE.get(name)
+    if not wants or before in wants:
+        return {"applicable": True, "from_state": before}
+    return {"applicable": False, "from_state": before,
+            "why": (f"'{name}' only changes anything from {' or '.join(wants)}; "
+                    f"the loop is in {before}. The clock moved, the state did not — "
+                    f"run the earlier steps first.")}
 
 
 # --- elder surface inputs (real inputs, also usable by the demo) ------------

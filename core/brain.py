@@ -12,6 +12,7 @@ import json
 import os
 import shutil
 import subprocess
+import time
 import urllib.error
 import urllib.request
 import uuid
@@ -71,7 +72,7 @@ def _agy(prompt: str, timeout_s: float = TIMEOUT_S) -> str:
     except FileNotFoundError:
         raise BrainError("agy binary not found") from None
     except subprocess.TimeoutExpired:
-        raise BrainError(f"agy timed out after {TIMEOUT_S}s") from None
+        raise BrainError(f"agy timed out after {timeout_s:.1f}s") from None
     answer = result.stdout.strip()
     if result.returncode or not answer or answer.lower().startswith("error:"):
         raise BrainError(f"agy failed (rc={result.returncode}): {answer[:200]}")
@@ -79,10 +80,17 @@ def _agy(prompt: str, timeout_s: float = TIMEOUT_S) -> str:
 
 
 def _nvidia(prompt: str, system: str, model: str = NVIDIA_MODEL,
-            timeout_s: float = TIMEOUT_S) -> str:
+            timeout_s: float = TIMEOUT_S, no_think: bool = False) -> str:
     api_key = os.environ.get("NVIDIA_API_KEY", "")
     if not api_key:
         raise BrainError("NVIDIA_API_KEY not set")
+    if no_think:
+        # Nemotron's documented switch. Measured on the real chooser prompt
+        # (junction + 185 chars of FSM state): thinking on 19.1s, off 2.7s —
+        # same correct answer. Capping max_tokens instead was worse on both
+        # counts: 20.2s AND it truncated mid-reasoning and answered with prose.
+        # Only for BOUNDED calls; narration still gets to think.
+        system = "detailed thinking off\n" + system
     body = {
         "model": model,
         "messages": [
@@ -116,7 +124,8 @@ def _nvidia(prompt: str, system: str, model: str = NVIDIA_MODEL,
     return content
 
 
-def think(prompt: str, system: str = "", timeout_s: float | None = None) -> tuple[str, str]:
+def think(prompt: str, system: str = "", timeout_s: float | None = None,
+          fast_first: bool = False) -> tuple[str, str]:
     """Returns (text, lane). Raises BrainError only if BOTH lanes fail —
     callers catch it and use their template fallback.
 
@@ -126,13 +135,39 @@ def think(prompt: str, system: str = "", timeout_s: float | None = None) -> tupl
     sees a dead console."""
     t = float(timeout_s or TIMEOUT_S)
     full = (system + "\n\n" + prompt).strip() if system else prompt
-    try:
-        return _agy(full, timeout_s=t), "agy/gemini-3.6-flash"
-    except BrainError:
-        pass
-    try:
-        return _nvidia(prompt, system or "You are a helpful assistant."), "nvidia/nemotron-ultra"
-    except BrainError:
-        pass
-    return (_nvidia(prompt, system or "You are a helpful assistant.", NVIDIA_FALLBACK_MODEL),
-            "nvidia/nemotron-super")
+    sys_msg = system or "You are a helpful assistant."
+
+    # The budget is for the CALL, not for each lane. Bounding only the first lane
+    # meant a 6s chooser could still hold the kernel's single tick thread for
+    # ~186s (6 + 90 + 90) by failing over twice — the acts-queue-behind-one-slow-
+    # call defect, moved rather than fixed. Each lane gets what is left.
+    deadline = time.monotonic() + t
+
+    def left(floor: float = 1.5) -> float:
+        return max(floor, deadline - time.monotonic())
+
+    # fast_first is for BOUNDED calls — a junction chooser picking one token off a
+    # list. agy is a CLI: measured 7.4s for a one-word answer, all of it startup.
+    # With a 6s tick-thread budget it can never land, so the chooser fell to the
+    # floor every single time and the model was decorative. Nemotron-super over
+    # HTTP answers a one-token question in about a second. Order by what the call
+    # actually needs, not by which lane is nominally primary.
+    if fast_first:
+        lanes = [(lambda t: _nvidia(prompt, sys_msg, NVIDIA_FALLBACK_MODEL, timeout_s=t,
+                                    no_think=True), "nvidia/nemotron-super"),
+                 (lambda t: _agy(full, timeout_s=t), "agy/gemini-3.6-flash")]
+    else:
+        lanes = [(lambda t: _agy(full, timeout_s=t), "agy/gemini-3.6-flash"),
+                 (lambda t: _nvidia(prompt, sys_msg, timeout_s=t), "nvidia/nemotron-ultra"),
+                 (lambda t: _nvidia(prompt, sys_msg, NVIDIA_FALLBACK_MODEL, timeout_s=t),
+                  "nvidia/nemotron-super")]
+
+    last: BrainError | None = None
+    for i, (call, name) in enumerate(lanes):
+        if i and time.monotonic() >= deadline:
+            break
+        try:
+            return call(left()), name
+        except BrainError as exc:
+            last = exc
+    raise last or BrainError("no lane answered")
