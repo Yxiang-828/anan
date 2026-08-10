@@ -1,0 +1,19 @@
+1
+00:00:00,000 --> 00:00:02,439
+That is not an assistant voice. That is
+
+2
+00:00:02,439 --> 00:00:04,599
+her family, saying the thing she needed to
+
+3
+00:00:04,599 --> 00:00:06,599
+hear this morning. The feature is not text
+
+4
+00:00:06,599 --> 00:00:08,820
+to speech. The feature is that she is not
+
+5
+00:00:08,820 --> 00:00:10,080
+being spoken to by a machine.

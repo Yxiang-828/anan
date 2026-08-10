@@ -1,0 +1,31 @@
+1
+00:00:00,000 --> 00:00:01,659
+Sit and stand, shoulder abduction,
+
+2
+00:00:02,240 --> 00:00:04,400
+standing march. Pose tracking counts every
+
+3
+00:00:04,400 --> 00:00:06,740
+repetition on the device itself, and the
+
+4
+00:00:06,740 --> 00:00:08,839
+whole battery is here uncut, just sped up.
+
+5
+00:00:09,179 --> 00:00:11,179
+When it finishes, the score goes to the
+
+6
+00:00:11,179 --> 00:00:13,820
+agent — and the agent decides whether this
+
+7
+00:00:13,820 --> 00:00:15,960
+is worth telling her family about, or
+
+8
+00:00:15,960 --> 00:00:18,140
+worth only a word of encouragement to her.

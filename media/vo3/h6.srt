@@ -1,0 +1,27 @@
+1
+00:00:00,000 --> 00:00:02,560
+This is the whole voice setup, uncut. He
+
+2
+00:00:02,560 --> 00:00:04,320
+picks a language, reads one line aloud,
+
+3
+00:00:05,059 --> 00:00:06,240
+and those few seconds become the
+
+4
+00:00:06,240 --> 00:00:08,880
+reference. Nothing is uploaded — the clone
+
+5
+00:00:08,880 --> 00:00:11,140
+is built on this machine and never crosses
+
+6
+00:00:11,140 --> 00:00:13,580
+between languages. Listen to him, and then
+
+7
+00:00:13,580 --> 00:00:14,539
+listen to what she hears.

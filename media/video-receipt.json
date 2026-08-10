@@ -1,0 +1,401 @@
+{
+ "out": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/AnAn-DemoVideo-v3.mp4",
+ "seconds": 292.433,
+ "size": [
+  1920,
+  1080
+ ],
+ "segments": [
+  {
+   "id": "s01",
+   "kind": "still",
+   "source": "docs/story-assets/night_block.jpg",
+   "vo_seconds": 14.105,
+   "captions": true,
+   "still": true,
+   "aspect_in": 1.75,
+   "fit": "contain",
+   "seconds": 14.105,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s01.mp4"
+  },
+  {
+   "id": "s02",
+   "kind": "still",
+   "source": "docs/story-assets/phone_table.jpg",
+   "vo_seconds": 13.333,
+   "captions": true,
+   "still": true,
+   "aspect_in": 1.75,
+   "fit": "contain",
+   "seconds": 13.333,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s02.mp4"
+  },
+  {
+   "id": "s03",
+   "kind": "clip",
+   "source": "media/captures/M1_console_master.mp4",
+   "vo_seconds": 17.354,
+   "captions": true,
+   "motion_probe": {
+    "samples": 6,
+    "max_frame_delta": 2.187,
+    "mean_frame_delta": 1.165,
+    "luma_spread": 250,
+    "static": false,
+    "flat": false
+   },
+   "window": [
+    52.0,
+    40.0
+   ],
+   "speed": 2.305,
+   "kept_source_audio": false,
+   "loops": 0,
+   "aspect_in": 1.778,
+   "fit": "contain",
+   "seconds": 17.367,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s03.mp4"
+  },
+  {
+   "id": "s04",
+   "kind": "clip",
+   "source": "media/captures/R1_treewalk.mp4",
+   "vo_seconds": 16.704,
+   "captions": true,
+   "motion_probe": {
+    "samples": 6,
+    "max_frame_delta": 17.832,
+    "mean_frame_delta": 3.773,
+    "luma_spread": 248,
+    "static": false,
+    "flat": false
+   },
+   "window": [
+    90.0,
+    40.0
+   ],
+   "speed": 2.3947,
+   "kept_source_audio": false,
+   "loops": 0,
+   "aspect_in": 1.778,
+   "fit": "contain",
+   "seconds": 16.733,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s04.mp4"
+  },
+  {
+   "id": "s05",
+   "kind": "clip",
+   "source": "media/captures/R2_stale.mp4",
+   "vo_seconds": 15.255,
+   "captions": true,
+   "motion_probe": {
+    "samples": 6,
+    "max_frame_delta": 3.135,
+    "mean_frame_delta": 0.898,
+    "luma_spread": 249,
+    "static": false,
+    "flat": false
+   },
+   "window": [
+    42.0,
+    32.0
+   ],
+   "speed": 2.0977,
+   "kept_source_audio": false,
+   "loops": 0,
+   "aspect_in": 1.778,
+   "fit": "contain",
+   "seconds": 15.267,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s05.mp4"
+  },
+  {
+   "id": "s06",
+   "kind": "clip",
+   "source": "media_dump/stomach (0:34 - 0:45.9).mp4",
+   "vo_seconds": 6.876,
+   "captions": true,
+   "motion_probe": {
+    "samples": 6,
+    "max_frame_delta": 44.664,
+    "mean_frame_delta": 14.815,
+    "luma_spread": 250,
+    "static": false,
+    "flat": false
+   },
+   "drives": "source",
+   "window": [
+    0.0,
+    14.135
+   ],
+   "speed": 2.0,
+   "kept_source_audio": true,
+   "loops": 0,
+   "aspect_in": 1.778,
+   "fit": "contain",
+   "seconds": 7.1,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s06.mp4"
+  },
+  {
+   "id": "s07",
+   "kind": "clip",
+   "source": "media_dump/wander-2026-08-09_23.53.37.mp4",
+   "vo_seconds": 12.954,
+   "captions": true,
+   "motion_probe": {
+    "samples": 6,
+    "max_frame_delta": 63.711,
+    "mean_frame_delta": 41.414,
+    "luma_spread": 125,
+    "static": false,
+    "flat": false
+   },
+   "drives": "source",
+   "window": [
+    0.0,
+    26.04
+   ],
+   "speed": 2.0,
+   "kept_source_audio": true,
+   "loops": 0,
+   "aspect_in": 1.778,
+   "fit": "contain",
+   "seconds": 13.033,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s07.mp4"
+  },
+  {
+   "id": "s08",
+   "kind": "clip",
+   "source": "/home/dinosaur/Downloads/smile.mp4",
+   "vo_seconds": 7.742,
+   "captions": true,
+   "motion_probe": {
+    "samples": 6,
+    "max_frame_delta": 111.754,
+    "mean_frame_delta": 33.141,
+    "luma_spread": 248,
+    "static": false,
+    "flat": false
+   },
+   "drives": "source",
+   "window": [
+    0.0,
+    16.497
+   ],
+   "speed": 2.0,
+   "kept_source_audio": true,
+   "loops": 0,
+   "aspect_in": 0.461,
+   "fit": "contain",
+   "seconds": 8.267,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s08.mp4"
+  },
+  {
+   "id": "s09",
+   "kind": "clip",
+   "source": "/home/dinosaur/Downloads/mobility.mp4",
+   "vo_seconds": 18.508,
+   "captions": true,
+   "motion_probe": {
+    "samples": 6,
+    "max_frame_delta": 17.043,
+    "mean_frame_delta": 9.613,
+    "luma_spread": 248,
+    "static": false,
+    "flat": false
+   },
+   "drives": "source",
+   "window": [
+    0.0,
+    62.981
+   ],
+   "speed": 2.5,
+   "kept_source_audio": true,
+   "loops": 0,
+   "aspect_in": 0.461,
+   "fit": "contain",
+   "seconds": 25.2,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s09.mp4"
+  },
+  {
+   "id": "s10",
+   "kind": "clip",
+   "source": "media_dump/heart_rate_tracker.mp4",
+   "vo_seconds": 10.42,
+   "captions": true,
+   "motion_probe": {
+    "samples": 6,
+    "max_frame_delta": 128.901,
+    "mean_frame_delta": 28.351,
+    "luma_spread": 105,
+    "static": false,
+    "flat": false
+   },
+   "drives": "source",
+   "window": [
+    0.0,
+    29.237
+   ],
+   "speed": 2.0,
+   "kept_source_audio": true,
+   "loops": 0,
+   "aspect_in": 0.459,
+   "fit": "contain",
+   "seconds": 14.633,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s10.mp4"
+  },
+  {
+   "id": "s11",
+   "kind": "clip",
+   "source": "media_dump/reference_voice-2026-08-09_23.56.03.mp4",
+   "vo_seconds": 14.979,
+   "captions": true,
+   "motion_probe": {
+    "samples": 6,
+    "max_frame_delta": 5.219,
+    "mean_frame_delta": 1.974,
+    "luma_spread": 252,
+    "static": false,
+    "flat": false
+   },
+   "window": [
+    0.0,
+    43.114
+   ],
+   "speed": 1.0,
+   "kept_source_audio": true,
+   "loops": 0,
+   "aspect_in": 1.778,
+   "fit": "contain",
+   "ramp": [
+    [
+     0,
+     13.9,
+     3.0
+    ],
+    [
+     13.9,
+     27.6,
+     1.0
+    ],
+    [
+     27.6,
+     43.1,
+     3.0
+    ]
+   ],
+   "ramped_seconds": 23.5,
+   "drives": "source",
+   "seconds": 23.5,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s11.mp4"
+  },
+  {
+   "id": "s12",
+   "kind": "still",
+   "source": "docs/img/ui_elder_home.png",
+   "vo_seconds": 8.4,
+   "captions": false,
+   "still": true,
+   "aspect_in": 1.778,
+   "fit": "contain",
+   "seconds": 8.4,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s12.mp4"
+  },
+  {
+   "id": "s13",
+   "kind": "still",
+   "source": "docs/img/family.png",
+   "vo_seconds": 10.622,
+   "captions": true,
+   "still": true,
+   "aspect_in": 0.622,
+   "fit": "contain",
+   "seconds": 10.633,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s13.mp4"
+  },
+  {
+   "id": "s14",
+   "kind": "still",
+   "source": "docs/story-assets/build_night.jpg",
+   "vo_seconds": 19.123,
+   "captions": true,
+   "still": true,
+   "aspect_in": 1.75,
+   "fit": "contain",
+   "seconds": 19.133,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s14.mp4"
+  },
+  {
+   "id": "s15",
+   "kind": "still",
+   "source": "docs/img/birds.png",
+   "vo_seconds": 22.405,
+   "captions": true,
+   "still": true,
+   "aspect_in": 1.644,
+   "fit": "contain",
+   "seconds": 22.405,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s15.mp4"
+  },
+  {
+   "id": "s16",
+   "kind": "clip",
+   "source": "media/captures/M1_console_master.mp4",
+   "vo_seconds": 21.143,
+   "captions": true,
+   "motion_probe": {
+    "samples": 6,
+    "max_frame_delta": 3.337,
+    "mean_frame_delta": 1.557,
+    "luma_spread": 250,
+    "static": false,
+    "flat": false
+   },
+   "window": [
+    36.0,
+    44.0
+   ],
+   "speed": 2.0811,
+   "kept_source_audio": false,
+   "loops": 0,
+   "aspect_in": 1.778,
+   "fit": "contain",
+   "seconds": 21.167,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s16.mp4"
+  },
+  {
+   "id": "s17",
+   "kind": "still",
+   "source": "docs/story-assets/receipts_macro.jpg",
+   "vo_seconds": 26.87,
+   "captions": true,
+   "still": true,
+   "aspect_in": 1.75,
+   "fit": "contain",
+   "seconds": 26.869,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s17.mp4"
+  },
+  {
+   "id": "s18",
+   "kind": "still",
+   "source": "docs/story-assets/finale_sunrise.jpg",
+   "vo_seconds": 15.255,
+   "captions": true,
+   "still": true,
+   "aspect_in": 1.75,
+   "fit": "contain",
+   "seconds": 15.267,
+   "file": "/tmp/claude-1000/-home-dinosaur-aiko-alibaba/fee93853-3bd8-4b2e-86a9-ac2724d51f1c/scratchpad/bjob/s18.mp4"
+  }
+ ],
+ "still_ratio": 0.445,
+ "segments_keeping_source_audio": [
+  "s06",
+  "s07",
+  "s08",
+  "s09",
+  "s10",
+  "s11"
+ ],
+ "music": "\"Restored Soul\" by Keffy Kay — CC BY 3.0 · jamendo.com",
+ "warnings": []
+}
