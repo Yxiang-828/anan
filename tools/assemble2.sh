@@ -88,6 +88,7 @@ phone(){ local k=$1 src=$2 ss=${3:-0} len=${4:-0}
 tpad=stop_mode=clone:stop_duration=$d,$(sub $k)[v]" \
     -map "[v]" -map 1:a -t "$d" -c:v libx264 -preset medium -crf 20 -c:a aac -ar 48000 -ac 2 -pix_fmt yuv420p "$S/$k.mp4"
   echo "{\"key\":\"$k\",\"kind\":\"phone\",\"src\":\"$src\"}" >> $S/provenance.jsonl
+  echo "{\"key\":\"$k\",\"src\":\"$src\",\"ss\":$ss,\"len\":$sd,\"slot\":$d,\"rate\":$sp,\"audio\":\"preserve\"}" >> $S/editplan.jsonl
   echo "  phone  $k  ${d}s  speed x$sp  <- $(basename "$src")"; }
 
 # motion <key> <render> — a rendered HTML composition (motion-compose): real
@@ -105,6 +106,7 @@ tpad=stop_mode=clone:stop_duration=$d,$(sub $k)[v]" \
 
 : > $S/geometry.jsonl
 : > $S/provenance.jsonl
+: > $S/editplan.jsonl
 echo "── building segments"
 still v1  $A/night_block.jpg      in
 still v2  $A/phone_table.jpg      out
@@ -125,6 +127,7 @@ piece(){ local out=$1 src=$2 ss=$3 len=$4 slot=$5
 [bg]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,gblur=sigma=42,eq=brightness=-0.16[b];\
 [fg]scale=-2:1010[f];[b][f]overlay=(W-w)/2:(H-h)/2,setsar=1[v]" \
     -map "[v]" -an -t "$slot" -c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p "$S/$out.mp4"
+  echo "{\"key\":\"$out\",\"src\":\"$src\",\"ss\":$ss,\"len\":$len,\"slot\":$slot,\"rate\":$sp,\"audio\":\"drop\"}" >> $S/editplan.jsonl
   echo "    piece $out  x$sp"; }
 D11=$(vdur v11); T=$(python3 -c "print(round($D11/3,3))")
 piece p11a "$DL/smile.mp4"             2  14 "$T"   # smile symmetry, 98%→58%
@@ -201,6 +204,8 @@ else:
     print(f"  footage gate: {sum(1 for v in cur.values() if v['kind'] in FOOTAGE)} "
           f"footage segments intact")
 PYEOF
+
+if [ -z "${ALLOW_CLIP_CUT:-}" ]; then bash tools/clip_guard.sh || exit 1; else echo "  clip guard: cutting explicitly allowed"; fi
 
 echo "── end card (CC-BY attribution is a licence condition, not decoration)"
 ffmpeg -y -loglevel error -loop 1 -t 7 -i media/endcard.png \

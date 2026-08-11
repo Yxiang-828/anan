@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "contract_id": "owner-heart_rate-001-contract",
+  "source": {
+    "asset_id": "owner-heart_rate-001",
+    "uri": "/home/dinosaur/Project/anan/media_dump/heart_rate_tracker.mp4",
+    "sha256": "7a3482328479590a5135d2e07ef67de16f511ab3e4671b62fdc2ce3fe57ceb30",
+    "duration_s": 29.2366,
+    "width": 588,
+    "height": 1280,
+    "has_audio": true,
+    "authority": "canonical_evidence"
+  },
+  "meaning": {
+    "summary": "TODO: describe what happens",
+    "proof_claim": "TODO: what this source proves",
+    "owner_quote": "TODO: owner's words",
+    "why_full_clip": "TODO: why setup, action, and payoff must survive",
+    "false_redundancy_warning": "TODO: what appears repetitive but is not",
+    "human_confirmed": false
+  },
+  "essential_events": [
+    {
+      "id": "event-01",
+      "description": "TODO",
+      "setup": {
+        "start_s": 0.0,
+        "end_s": 0.5
+      },
+      "action": {
+        "start_s": 0.5,
+        "end_s": 28.7366
+      },
+      "payoff": {
+        "start_s": 28.7366,
+        "end_s": 29.2366
+      },
+      "proves": [
+        "TODO"
+      ],
+      "depends_on": [],
+      "importance": "essential"
+    }
+  ],
+  "must_keep_intervals": [
+    {
+      "start_s": 0.0,
+      "end_s": 29.2366,
+      "reason": "whole source pending owner refinement"
+    }
+  ],
+  "protected_audio": [
+    {
+      "start_s": 0.0,
+      "end_s": 29.2366,
+      "kind": "source",
+      "policy": "preserve"
+    }
+  ],
+  "visual_anchors": [
+    {
+      "description": "TODO",
+      "crop_policy": "contain"
+    }
+  ],
+  "permissions": {
+    "whole_clip_policy": "preserve",
+    "trim": "forbidden",
+    "crop": "contain-only",
+    "mute": "forbidden-on-protected",
+    "overlay": "allowed-outside-visual-anchors",
+    "replacement": "forbidden",
+    "generated_material_status": "illustration-only"
+  },
+  "speed_policy": {
+    "mode": "fixed",
+    "global_min_rate": 1.0,
+    "global_max_rate": 1.0,
+    "protected_ranges": [
+      {
+        "start_s": 0.0,
+        "end_s": 29.2366,
+        "rate": 1.0
+      }
+    ],
+    "preserve_pitch": true,
+    "minimum_payoff_hold_s": 1.0
+  },
+  "approval": {
+    "owner": "dinosaur",
+    "confirmed_at": null,
+    "exceptions": []
+  }
+}

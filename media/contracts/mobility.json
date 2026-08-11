@@ -1,0 +1,161 @@
+{
+ "schema_version": 1,
+ "contract_id": "owner-mobility-001-contract",
+ "source": {
+  "asset_id": "owner-mobility-001",
+  "uri": "/home/dinosaur/Downloads/mobility.mp4",
+  "sha256": "626547ea7676419cc650ff4e027c242c948c02f660ae51e4187c46730c9dabdc",
+  "duration_s": 62.981333,
+  "width": 590,
+  "height": 1280,
+  "has_audio": true,
+  "authority": "canonical_evidence"
+ },
+ "meaning": {
+  "summary": "Three separate mobility exercises performed in sequence, then the completion card.",
+  "proof_claim": "The health check runs on-device and scores three distinct movements.",
+  "owner_quote": "PENDING — dinosaur has not been asked to state this in his own words.",
+  "why_full_clip": "Each exercise is a DIFFERENT feature, not a repeat of the same one. Dropping two of the three deletes two features from the demo.",
+  "false_redundancy_warning": "The three blocks look alike (same room, same framing) but are sit-and-stand, shoulder abduction, and standing march — distinct measurements.",
+  "human_confirmed": false
+ },
+ "essential_events": [
+  {
+   "id": "sit-and-stand",
+   "description": "sit-to-stand repetitions",
+   "setup": {
+    "start_s": 0.0,
+    "end_s": 2.0
+   },
+   "action": {
+    "start_s": 2.0,
+    "end_s": 17.0
+   },
+   "payoff": {
+    "start_s": 17.0,
+    "end_s": 19.0
+   },
+   "proves": [
+    "mobility scoring works"
+   ],
+   "depends_on": [],
+   "importance": "essential"
+  },
+  {
+   "id": "shoulder-abduction",
+   "description": "shoulder abduction repetitions",
+   "setup": {
+    "start_s": 19.0,
+    "end_s": 21.0
+   },
+   "action": {
+    "start_s": 21.0,
+    "end_s": 37.0
+   },
+   "payoff": {
+    "start_s": 37.0,
+    "end_s": 39.0
+   },
+   "proves": [
+    "a second distinct movement is measured"
+   ],
+   "depends_on": [],
+   "importance": "essential"
+  },
+  {
+   "id": "standing-march",
+   "description": "standing march repetitions",
+   "setup": {
+    "start_s": 39.0,
+    "end_s": 41.0
+   },
+   "action": {
+    "start_s": 41.0,
+    "end_s": 56.0
+   },
+   "payoff": {
+    "start_s": 56.0,
+    "end_s": 58.0
+   },
+   "proves": [
+    "a third distinct movement is measured"
+   ],
+   "depends_on": [],
+   "importance": "essential"
+  },
+  {
+   "id": "completion-card",
+   "description": "score/completion card",
+   "setup": {
+    "start_s": 58.0,
+    "end_s": 59.0
+   },
+   "action": {
+    "start_s": 59.0,
+    "end_s": 62.0
+   },
+   "payoff": {
+    "start_s": 62.0,
+    "end_s": 62.981333
+   },
+   "proves": [
+    "the check completes and reports"
+   ],
+   "depends_on": [
+    "sit-and-stand",
+    "shoulder-abduction",
+    "standing-march"
+   ],
+   "importance": "essential"
+  }
+ ],
+ "must_keep_intervals": [
+  {
+   "start_s": 0.0,
+   "end_s": 62.981333,
+   "reason": "whole source pending owner refinement"
+  }
+ ],
+ "protected_audio": [
+  {
+   "start_s": 0.0,
+   "end_s": 62.981333,
+   "kind": "source",
+   "policy": "preserve"
+  }
+ ],
+ "visual_anchors": [
+  {
+   "description": "TODO",
+   "crop_policy": "contain"
+  }
+ ],
+ "permissions": {
+  "whole_clip_policy": "preserve",
+  "trim": "forbidden",
+  "crop": "contain-only",
+  "mute": "forbidden-on-protected",
+  "overlay": "allowed-outside-visual-anchors",
+  "replacement": "forbidden",
+  "generated_material_status": "illustration-only"
+ },
+ "speed_policy": {
+  "mode": "fixed",
+  "global_min_rate": 1.0,
+  "global_max_rate": 1.0,
+  "protected_ranges": [
+   {
+    "start_s": 0.0,
+    "end_s": 62.981333,
+    "rate": 1.0
+   }
+  ],
+  "preserve_pitch": true,
+  "minimum_payoff_hold_s": 1.0
+ },
+ "approval": {
+  "owner": "dinosaur",
+  "confirmed_at": null,
+  "exceptions": []
+ }
+}
